@@ -11,3 +11,6 @@
 
 - Keep each suspect's interrogation transcript in browser storage; this preserves case progress without requiring accounts.
 - Keep all suspect roleplay prompts and AI Gateway access server-side; this prevents hidden case truths and credentials from reaching the browser.
+
+- Case content (suspects, clues, hotspots, motives, solution) lives in `src/game/case.ts`; game UI pieces live in `src/components/game/`. Keeps puzzles data-driven so new cases can be added without touching UI.
+- AI suspect replies end with a `<<META {...}>>` line (stress, observation, tell) parsed client-side; this streams dialogue while still returning structured game state.
