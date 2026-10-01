@@ -56,6 +56,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const [showProgress, setShowProgress] = useState(false);
   const [inspected, setInspected] = useState<ClueId | null>(null);
   const [hasOutcome, setHasOutcome] = useState(false);
+  const [sharedProgress, setSharedProgress] = useState(0);
 
   useEffect(() => {
     setMeta(load(`${K}-meta`, {})); setFound(load(`${K}-found`, START_CLUES)); setHints(load(`${K}-hints`, 3));
@@ -113,7 +114,8 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
     : left > 0 ? "Inspect the glowing points and collect what the room is hiding."
     : questioned.length < 3 ? "Every suspect has a different story. Hear the missing one."
     : "Name the culprit, their motive, and the two clues that prove it.";
-  const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts["victim"] ?? 0) > 0 ? 1 : 0)) / 3 * 100);
+  const localProgress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts["victim"] ?? 0) > 0 ? 1 : 0)) / 3 * 100);
+  const progress = Math.max(localProgress, sharedProgress);
   const readyToSolve = left === 0 && questioned.length === SUSPECT_IDS.length && (counts["victim"] ?? 0) > 0;
 
   const doNext = () => {
@@ -144,7 +146,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · Case {C.code}</p><h1 className="truncate font-display text-lg sm:text-xl">{C.title}</h1></div>
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
-        <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={progress} onSharedClues={mergeSharedClues} />
+        <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={localProgress} onSharedClues={mergeSharedClues} onSharedProgress={setSharedProgress} />
         <Button variant="ghost" size="sm" onClick={() => setOverlay("desk")}><Armchair /> <span className="hidden sm:inline">My desk</span></Button>
         <Button variant="ghost" size="sm" onClick={() => setOverlay("cases")}><FolderOpen /> <span className="hidden sm:inline">Cases</span></Button>
       </header>

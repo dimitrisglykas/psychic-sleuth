@@ -8,19 +8,20 @@ import { Eyebrow, Overlay } from "./ui";
 type Credentials = { roomId: string; memberToken: string; inviteCode: string };
 const read = (key: string): Credentials | null => { try { return JSON.parse(localStorage.getItem(key) ?? "null") as Credentials | null; } catch { return null; } };
 
-export function CaseLobby({ caseCode, storageKey, clues, progress, onSharedClues }: { caseCode: string; storageKey: string; clues: string[]; progress: number; onSharedClues: (clues: string[]) => void }) {
+export function CaseLobby({ caseCode, storageKey, clues, progress, onSharedClues, onSharedProgress }: { caseCode: string; storageKey: string; clues: string[]; progress: number; onSharedClues: (clues: string[]) => void; onSharedProgress: (progress: number) => void }) {
   const key = `${storageKey}-lobby`; const create = useServerFn(createLobby); const join = useServerFn(joinLobby); const refresh = useServerFn(getLobby); const update = useServerFn(updateLobby); const saveOutcome = useServerFn(saveLobbyOutcome);
   const [open, setOpen] = useState(false); const [mode, setMode] = useState<"start" | "create" | "join">("start");
   const [name, setName] = useState(""); const [code, setCode] = useState(""); const [credentials, setCredentials] = useState<Credentials | null>(null); const [state, setState] = useState<LobbyState | null>(null); const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
   const lastSent = useRef("");
+  const outcomeSeen = useRef(false);
 
   useEffect(() => { setCredentials(read(key)); }, [key]);
   useEffect(() => {
     if (!credentials) return;
     let live = true;
-    const poll = async () => { try { const next = await refresh({ data: credentials }); if (!live) return; setState(next); onSharedClues(next.clues); } catch { if (live) setError("This room is no longer available."); } };
+    const poll = async () => { try { const next = await refresh({ data: credentials }); if (!live) return; setState(next); onSharedClues(next.clues); onSharedProgress(next.progress); if (next.outcome && !outcomeSeen.current) { outcomeSeen.current = true; setOpen(true); } } catch { if (live) setError("This room is no longer available."); } };
     void poll(); const timer = window.setInterval(poll, 3500); return () => { live = false; window.clearInterval(timer); };
-  }, [credentials]);
+  }, [credentials, onSharedClues, onSharedProgress]);
   useEffect(() => {
     if (!credentials) return; const signature = [...clues].sort().join("|") + progress; if (signature === lastSent.current) return; lastSent.current = signature;
     void update({ data: { ...credentials, clues, progress, event: "A teammate advanced the investigation." } }).then(setState).catch(() => undefined);
