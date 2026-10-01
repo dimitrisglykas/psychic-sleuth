@@ -17,20 +17,29 @@ export type Database = {
       case_files: {
         Row: {
           case_code: string
+          ending_lines: Json | null
+          ending_win: string | null
           facts: string
           setting: string
+          solution: Json | null
           trap_detail: string
         }
         Insert: {
           case_code: string
+          ending_lines?: Json | null
+          ending_win?: string | null
           facts: string
           setting: string
+          solution?: Json | null
           trap_detail: string
         }
         Update: {
           case_code?: string
+          ending_lines?: Json | null
+          ending_win?: string | null
           facts?: string
           setting?: string
+          solution?: Json | null
           trap_detail?: string
         }
         Relationships: []
