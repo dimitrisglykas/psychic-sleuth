@@ -104,6 +104,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
     : questioned.length < 3 ? "Every suspect has a different story. Hear the missing one."
     : "Name the culprit, their motive, and the two clues that prove it.";
   const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts["victim"] ?? 0) > 0 ? 1 : 0)) / 3 * 100);
+  const readyToSolve = left === 0 && questioned.length === SUSPECT_IDS.length && (counts["victim"] ?? 0) > 0;
 
   const doNext = () => {
     if (!(counts[guide.suspect] ?? 0)) { switchSuspect(guide.suspect); askClue(guide.clue); return; }
@@ -136,7 +137,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       <div className="border-b bg-accent/40 px-4 py-3 lg:px-6">
         <div className="mx-auto flex max-w-5xl items-center gap-3">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><Target className="size-4" /></span>
-          <div className="min-w-0 flex-1"><p className="text-[9px] font-bold uppercase tracking-[.18em] text-primary">Do this next</p><p className="text-sm font-semibold">{nextStep}</p><p className="hidden text-[11px] text-muted-foreground sm:block">{nextHint}</p></div>
+          <div className="min-w-0 flex-1"><p className="truncate text-[10px] text-muted-foreground"><span className="font-bold uppercase text-foreground">The case:</span> {C.tagline}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-[.18em] text-primary">Do this next</p><p className="text-sm font-semibold">{nextStep}</p><p className="hidden text-[11px] text-muted-foreground sm:block">{nextHint}</p></div>
           <Button size="sm" onClick={doNext}>Go</Button>
         </div>
         <div className="mx-auto mt-2 flex max-w-5xl items-center gap-2"><div className="h-1 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px] text-muted-foreground">Case {progress}%</span></div>
@@ -183,7 +184,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <div className="mx-auto grid max-w-2xl grid-cols-3 gap-2">
           <Button variant="outline" className="h-12 flex-col gap-0.5 text-[11px] sm:flex-row sm:text-sm" onClick={() => window.dispatchEvent(new Event("focus-question"))}><MessageSquareQuote /> Ask question</Button>
           <Button variant="outline" className="h-12 flex-col gap-0.5 border-primary/60 text-[11px] text-primary sm:flex-row sm:text-sm" onClick={jane}><Lightbulb /> Intuition ({hints})</Button>
-          <Button className="h-12 flex-col gap-0.5 bg-destructive text-[11px] text-destructive-foreground hover:bg-destructive/90 sm:flex-row sm:text-sm" onClick={() => setOverlay("accuse")}><Gavel /> Solve case</Button>
+          <Button variant={readyToSolve ? "default" : "outline"} className={`h-12 flex-col gap-0.5 text-[11px] sm:flex-row sm:text-sm ${readyToSolve ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "border-destructive/50 text-muted-foreground"}`} onClick={() => setOverlay("accuse")}><Gavel /> Solve case</Button>
         </div>
       </footer>
 

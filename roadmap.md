@@ -11,6 +11,7 @@
 - [x] Jane intuition overlay, hint shop (preview) when empty
 - [x] Cases overlay with locked Case 002 + Season Pass modal (preview pricing)
 - [x] Progress tracker (clues, suspects questioned, stress per suspect)
+- [x] Simplified case summary, guided next step, clue list, and progressive tactics/progress controls
 
 ## Stage 2 — content
 - [x] Case 002: The Gala Heist (suspects, evidence, scene, solution)
