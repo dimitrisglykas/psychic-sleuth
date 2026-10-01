@@ -71,3 +71,27 @@ export const lockedCases = [
   { code: "002", title: "The Gala Heist", teaser: "A diamond vanishes at the museum gala. A guard lies dead by the vault." },
   { code: "003", title: "Red Lantern Wharf", teaser: "A shipping heir drowns in three feet of water. Nobody saw a thing." },
 ];
+
+export const connections: { a: ClueId; b: ClueId; text: string }[] = [
+  { a: "print", b: "glass", text: "The tray print and the tidy glass share a habit — someone who **serves** and someone who **cleans up**. Same person?" },
+  { a: "watch", b: "clock", text: "Two broken clocks, two different times. A real death only needs **one**. Someone was **staging the time**." },
+  { a: "ash", b: "safe", text: "The safe gave up Evelyn's letters, but the fire ate **different ones — blue ones**. Who wanted those gone?" },
+  { a: "invoice", b: "watch", text: "Julian's lie is about **money**, not time. A fraud hides in ledgers, not in **9:40**." },
+];
+
+export const janeQuotes = [
+  "\"Tea is the most underrated tool of detection. Nobody lies well to a man holding a teacup.\"",
+  "\"I'm not psychic. I just pay attention. Let the room talk for a minute.\"",
+  "\"The trick is to stop looking for the answer and start looking at the people.\"",
+  "\"Everyone's guilty of something. The question is — of what?\"",
+];
+
+export const timeline = [
+  { time: "9:15 PM", text: "Julian **says** he left the manor.", claimed: true },
+  { time: "9:30 PM", text: "Evelyn meets Alistair in the study." },
+  { time: "9:40 PM", text: "Alistair's watch **stops**." },
+  { time: "9:45 PM", text: "Arthur **says** he went down to the cellar.", claimed: true },
+  { time: "after 9:45", text: "Fresh tea poured — **Arthur's print** on the tray." },
+  { time: "10:17 PM", text: "Study clock **set forward** to this time." },
+  { time: "10:20 PM", text: "Arthur **says** he left the cellar.", claimed: true },
+];
