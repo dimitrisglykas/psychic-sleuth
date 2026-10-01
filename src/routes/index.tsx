@@ -56,7 +56,7 @@ function MysteryGame() {
   const suspect = suspects[suspectId];
   return (
     <main className="min-h-dvh bg-background text-foreground lg:grid lg:h-dvh lg:grid-cols-[76px_minmax(0,1fr)] lg:overflow-hidden">
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-[76px] flex-col border-r bg-panel lg:flex">
+      <aside className="hidden w-[76px] flex-col border-r bg-panel lg:flex">
         <div className="flex h-20 items-center justify-center border-b"><div className="grid size-10 place-items-center border border-primary/45 bg-accent text-primary"><Fingerprint className="size-5" /></div></div>
         <nav className="flex flex-1 flex-col items-center gap-3 py-5">{nav.map(({icon: Icon,label,active}) => <button key={label} title={label} aria-label={label} className={`grid size-11 place-items-center border-l-2 transition-colors ${active ? "border-primary bg-accent text-primary" : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"}`}><Icon className="size-[18px]" /></button>)}</nav>
         <div className="mb-5 flex justify-center"><div className="grid size-9 place-items-center rounded-full bg-primary font-semibold text-primary-foreground">J</div></div>
