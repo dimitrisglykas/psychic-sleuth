@@ -10,19 +10,21 @@ import victorImage from "@/assets/victor-crane.jpg";
 import ninaImage from "@/assets/nina-reyes.jpg";
 import marcusImage from "@/assets/marcus-hale.jpg";
 import galaCinematicImage from "@/assets/gala-crime-scene-cinematic.jpg";
+import galaEvidenceImage from "@/assets/gala-evidence-collection.jpg";
+import blackwoodEvidenceImage from "@/assets/blackwood-evidence-collection.jpg";
 
 export type SuspectId = string;
 export type PersonId = string;
 export type ClueId = string;
 export type MotiveId = string;
 export type Person = { name: string; short: string; role: string; age: number; image: string; stress: number; bio: string; alibi: string; motive: string; opener: string };
-export type Clue = { id: ClueId; title: string; detail: string; prompt: string; icon: LucideIcon };
+export type Clue = { id: ClueId; title: string; detail: string; prompt: string; icon: LucideIcon; visualSlot: number };
 
 export type CaseData = {
   code: string; title: string; tagline: string; storageKey: string;
   suspectIds: SuspectId[]; suspects: Record<SuspectId, Person>; victim: Person; people: Record<PersonId, Person>;
   clues: Clue[]; startClues: ClueId[];
-  scene: { image: string; label: string; alt: string };
+  scene: { image: string; evidenceImage: string; label: string; alt: string; stamp: string };
   hotspots: { id: string; label: string; clue: ClueId; x: number; y: number }[];
   motives: { id: MotiveId; label: string }[];
   connections: { a: ClueId; b: ClueId; text: string }[];
@@ -44,16 +46,16 @@ export const case001 = mk({
   },
   victim: { name: "Alistair Blackwood", short: "Alistair", role: "The Victim · Reconstruction", age: 58, image: alistairImage, stress: 20, bio: "Head of the Blackwood firm. Jane **reconstructs his last hour** from what the room remembers.", alibi: "Found dead in his study. **Last seen alive around 9:50 PM.**", motive: "Planned to **make something public** the night he died.", opener: "(Jane closes his eyes.) …Tea. I'd rung for tea. Ask me about tonight, detective — my memory is all I have left." },
   clues: [
-    { id: "watch", icon: Watch, title: "Broken Watch", detail: "Alistair's watch **stopped at 9:40 PM** — right after Evelyn's visit.", prompt: "Alistair's watch stopped at 9:40 PM. Where were you at that exact moment?" },
-    { id: "invoice", icon: FileText, title: "Altered Ledger", detail: "An invoice for **£80,000** was changed in Julian's handwriting.", prompt: "The £80,000 invoice in the ledger was altered in your handwriting. What were you hiding?" },
-    { id: "ash", icon: Flame, title: "Burned Blue Letters", detail: "Scraps of **blue paper** in the fire. One reads: \"…the Blackwood name…\"", prompt: "Someone burned blue letters in the fireplace mentioning the Blackwood name. What were they?" },
-    { id: "print", icon: Fingerprint, title: "Print on Tea Tray", detail: "**Arthur's fingerprint** in fresh tea — made **after 9:45 PM**.", prompt: "Your fingerprint is on the tea tray, in tea poured after 9:45. How, if you were in the cellar?" },
-    { id: "clock", icon: Clock, title: "Moved Study Clock", detail: "The mantel clock was **lifted and set forward to 10:17**. Dust gives it away.", prompt: "Someone moved the study clock forward to 10:17. Who would want to confuse the time?" },
-    { id: "safe", icon: LockKeyhole, title: "Empty Letter Folder", detail: "The safe was opened with a key. **Evelyn's letters are gone.**", prompt: "Your letters are missing from Alistair's safe. Did you take them tonight?" },
-    { id: "glass", icon: GlassWater, title: "Swept Watch Glass", detail: "The broken watch glass was **swept into a neat pile** — a servant's habit.", prompt: "The watch glass was swept into a tidy pile. Who in this house cleans up without thinking?" },
+    { id: "watch", icon: Watch, visualSlot: 0, title: "Broken Watch", detail: "Alistair's watch **stopped at 9:40 PM** — right after Evelyn's visit.", prompt: "Alistair's watch stopped at 9:40 PM. Where were you at that exact moment?" },
+    { id: "invoice", icon: FileText, visualSlot: 1, title: "Altered Ledger", detail: "An invoice for **£80,000** was changed in Julian's handwriting.", prompt: "The £80,000 invoice in the ledger was altered in your handwriting. What were you hiding?" },
+    { id: "ash", icon: Flame, visualSlot: 2, title: "Burned Blue Letters", detail: "Scraps of **blue paper** in the fire. One reads: \"…the Blackwood name…\"", prompt: "Someone burned blue letters in the fireplace mentioning the Blackwood name. What were they?" },
+    { id: "print", icon: Fingerprint, visualSlot: 3, title: "Print on Tea Tray", detail: "**Arthur's fingerprint** in fresh tea — made **after 9:45 PM**.", prompt: "Your fingerprint is on the tea tray, in tea poured after 9:45. How, if you were in the cellar?" },
+    { id: "clock", icon: Clock, visualSlot: 4, title: "Moved Study Clock", detail: "The mantel clock was **lifted and set forward to 10:17**. Dust gives it away.", prompt: "Someone moved the study clock forward to 10:17. Who would want to confuse the time?" },
+    { id: "safe", icon: LockKeyhole, visualSlot: 5, title: "Empty Letter Folder", detail: "The safe was opened with a key. **Evelyn's letters are gone.**", prompt: "Your letters are missing from Alistair's safe. Did you take them tonight?" },
+    { id: "glass", icon: GlassWater, visualSlot: 6, title: "Swept Watch Glass", detail: "The broken watch glass was **swept into a neat pile** — a servant's habit.", prompt: "The watch glass was swept into a tidy pile. Who in this house cleans up without thinking?" },
   ],
   startClues: ["watch", "invoice"],
-  scene: { image: studyImage, label: "Alistair's study", alt: "Alistair Blackwood's study at night" },
+  scene: { image: studyImage, evidenceImage: blackwoodEvidenceImage, label: "Alistair's study", alt: "Alistair Blackwood's study at night", stamp: "Blackwood Manor · 11:42 PM" },
   hotspots: [
     { id: "mantel", label: "Mantel clock", clue: "clock", x: 11, y: 15 },
     { id: "fireplace", label: "Fireplace", clue: "ash", x: 12, y: 52 },
@@ -95,22 +97,22 @@ export const case002 = mk({
   },
   victim: { name: "Marcus Hale", short: "Marcus", role: "The Victim · Reconstruction", age: 45, image: marcusImage, stress: 20, bio: "Night guard, 12 years at the museum. Jane **reconstructs his last half hour**.", alibi: "Found dead by the vault gallery. **Last radio call at 10:14 PM.**", motive: "Needed money for **his daughter's surgery**.", opener: "(Jane closes his eyes.) …The screens hummed. Upstairs, the auction. Ask me about my last rounds, detective." },
   clues: [
-    { id: "gap", icon: Video, title: "Camera Loop", detail: "The vault camera **replayed old footage from 10:12 to 10:16 PM**. Needs admin access.", prompt: "The vault camera was looped from 10:12 to 10:16. Who could do that, and where were you?" },
-    { id: "bribe", icon: Banknote, title: "Envelope Marked V.C.", detail: "**£20,000 in cash** in Marcus's locker, envelope initialled **\"V.C.\"**", prompt: "There was £20,000 in Marcus's locker in an envelope marked V.C. What was it for?" },
-    { id: "paste", icon: Gem, title: "Paste Fragment", detail: "A chip from the case is **glass, not diamond**. The Lisbon Star on display was a **replica**.", prompt: "The stone in the case was a paste replica. When did the real Lisbon Star disappear?" },
-    { id: "badge", icon: BadgeCheck, title: "Keycard Log", detail: "The vault door opened at **10:13 PM** with contractor card **TECH-02**.", prompt: "The vault door opened at 10:13 with contractor keycard TECH-02. Whose card is that?" },
-    { id: "radio", icon: Radio, title: "Marcus's Last Call", detail: "10:14 PM radio: **\"Oh, it's you — thought you'd fixed it.\"** He knew his killer.", prompt: "Marcus's last words on the radio were 'Oh, it's you — thought you'd fixed it.' Who was he talking to?" },
-    { id: "tie", icon: Cable, title: "Clipped Cable Tie", detail: "A **black cable tie snipped** at the camera junction box — installer's kit.", prompt: "A cable tie was clipped at the camera junction box. Who carries those and the cutters?" },
-    { id: "claim", icon: ScrollText, title: "Insurance Draft", detail: "A claim for **£12 million**, typed on Helena's computer **at 10:40 PM** — before police arrived.", prompt: "You drafted a £12 million insurance claim before the police even arrived. Why so fast?" },
+    { id: "gap", icon: Video, visualSlot: 0, title: "Camera Loop", detail: "The vault camera **replayed old footage from 10:12 to 10:16 PM**. Needs admin access.", prompt: "The vault camera was looped from 10:12 to 10:16. Who could do that, and where were you?" },
+    { id: "bribe", icon: Banknote, visualSlot: 1, title: "Envelope Marked V.C.", detail: "**£20,000 in cash** in Marcus's locker, envelope initialled **\"V.C.\"**", prompt: "There was £20,000 in Marcus's locker in an envelope marked V.C. What was it for?" },
+    { id: "paste", icon: Gem, visualSlot: 4, title: "Paste Fragment", detail: "A chip from the case is **glass, not diamond**. The Lisbon Star on display was a **replica**.", prompt: "The stone in the case was a paste replica. When did the real Lisbon Star disappear?" },
+    { id: "badge", icon: BadgeCheck, visualSlot: 5, title: "Keycard Log", detail: "The vault door opened at **10:13 PM** with contractor card **TECH-02**.", prompt: "The vault door opened at 10:13 with contractor keycard TECH-02. Whose card is that?" },
+    { id: "radio", icon: Radio, visualSlot: 6, title: "Marcus's Last Call", detail: "10:14 PM radio: **\"Oh, it's you — thought you'd fixed it.\"** He knew his killer.", prompt: "Marcus's last words on the radio were 'Oh, it's you — thought you'd fixed it.' Who was he talking to?" },
+    { id: "tie", icon: Cable, visualSlot: 2, title: "Clipped Cable Tie", detail: "A **black cable tie snipped** at the camera junction box — installer's kit.", prompt: "A cable tie was clipped at the camera junction box. Who carries those and the cutters?" },
+    { id: "claim", icon: ScrollText, visualSlot: 3, title: "Insurance Draft", detail: "A claim for **£12 million**, typed on Helena's computer **at 10:40 PM** — before police arrived.", prompt: "You drafted a £12 million insurance claim before the police even arrived. Why so fast?" },
   ],
   startClues: ["gap", "bribe"],
-  scene: { image: galaCinematicImage, label: "The vault gallery", alt: "The Aldridge Museum vault gallery after the gala" },
+  scene: { image: galaCinematicImage, evidenceImage: galaEvidenceImage, label: "The vault gallery", alt: "The Aldridge Museum vault gallery after the gala", stamp: "Aldridge Museum · 11:58 PM" },
   hotspots: [
-    { id: "junction", label: "Junction box", clue: "tie", x: 20, y: 8 },
-    { id: "office", label: "Curator's office", clue: "claim", x: 8, y: 44 },
-    { id: "case", label: "Display case", clue: "paste", x: 44, y: 46 },
-    { id: "reader", label: "Keycard reader", clue: "badge", x: 78, y: 37 },
-    { id: "radio", label: "Guard's radio", clue: "radio", x: 86, y: 86 },
+    { id: "junction", label: "Junction box", clue: "tie", x: 92, y: 24 },
+    { id: "office", label: "Curator's office", clue: "claim", x: 15, y: 31 },
+    { id: "case", label: "Display case", clue: "paste", x: 48, y: 38 },
+    { id: "reader", label: "Keycard reader", clue: "badge", x: 78, y: 34 },
+    { id: "radio", label: "Guard's radio", clue: "radio", x: 18, y: 82 },
   ],
   motives: [{ id: "debt", label: "Pay off dangerous debts" }, { id: "cover", label: "Hide that the diamond was fake" }, { id: "own", label: "Finally own the Lisbon Star" }, { id: "silence", label: "Silence a guard taking bribes" }],
   connections: [

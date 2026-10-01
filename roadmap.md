@@ -32,3 +32,8 @@
 - [x] Cinematic suspect portraits, stress reactions, and evidence cards
 - [x] Visual overlays for tea, My Desk, Intuition, and Cold Read
 - [x] End-to-end Gala playthrough and two-player isolation check
+
+## Cinematic case system
+- [x] Apply cinematic crime scenes, portraits, evidence cards, and overlays to every playable case
+- [x] Drive scene imagery, evidence sheets, crop slots, timestamps, and hotspot coordinates from case data
+- [x] Verify every hotspot reveals and displays its matching evidence card in both cases
