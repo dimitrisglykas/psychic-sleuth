@@ -1,15 +1,15 @@
 import { Check, Search } from "lucide-react";
-import sceneImage from "@/assets/crime-scene-study.jpg";
-import { clueById, hotspots, type ClueId } from "@/game/case";
+import { clueOf, useCase, type ClueId } from "@/game/case";
 import { Eyebrow, Overlay, Rich } from "./ui";
 
 export function CrimeScene({ found, onDiscover, onClose }: { found: ClueId[]; onDiscover: (id: ClueId) => void; onClose: () => void }) {
+  const C = useCase(); const { hotspots } = C; const clueById = (id: ClueId) => clueOf(C, id);
   const left = hotspots.filter((h) => !found.includes(h.clue)).length;
   return (
     <Overlay label="Crime scene" onClose={onClose} className="max-w-5xl p-0">
-      <div className="p-5 pb-3"><Eyebrow>Crime scene · Alistair's study</Eyebrow><h2 className="font-display text-2xl">Search the room</h2><p className="text-sm text-muted-foreground">Tap the glowing spots. {left ? <><strong className="text-amber-soft">{left} hidden clue{left > 1 ? "s" : ""}</strong> left.</> : "You've searched everything."}</p></div>
+      <div className="p-5 pb-3"><Eyebrow>Crime scene · {C.scene.label}</Eyebrow><h2 className="font-display text-2xl">Search the room</h2><p className="text-sm text-muted-foreground">Tap the glowing spots. {left ? <><strong className="text-amber-soft">{left} hidden clue{left > 1 ? "s" : ""}</strong> left.</> : "You've searched everything."}</p></div>
       <div className="relative overflow-hidden border-y">
-        <img src={sceneImage} alt="Alistair Blackwood's study at night" width={1536} height={1024} className="w-full" />
+        <img src={C.scene.image} alt={C.scene.alt} width={1536} height={1024} className="w-full" />
         {hotspots.map((h) => {
           const done = found.includes(h.clue);
           return (
