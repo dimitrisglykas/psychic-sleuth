@@ -100,8 +100,8 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts["victim"] ?? 0) > 0 ? 1 : 0)) / 3 * 100);
 
   const clueButtons = (compact: boolean) => found.map((id) => {
-    const c = clueById(id); const guide = (guiding && id === guide.clue) || !!tea?.pair.includes(id);
-    return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${guide ? "guide-ring border-primary" : ""}`}>
+    const c = clueById(id); const glow = (guiding && id === guide.clue) || !!tea?.pair.includes(id);
+    return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${glow ? "guide-ring border-primary" : ""}`}>
       <c.icon className="size-4 shrink-0 text-primary" />
       {compact ? <span className="text-[11px] font-medium">{c.title}</span> : <span className="min-w-0"><span className="block text-xs font-semibold">{c.title}</span><span className="block text-[11px] leading-4 text-muted-foreground"><Rich text={c.detail} /></span></span>}
       {guiding && id === guide.clue && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask {suspects[guide.suspect]!.short} about this</span>}
