@@ -14,10 +14,10 @@ import galaEvidence from "@/assets/gala-evidence-collection.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
-    { title: "The Enigma at Blackwood Manor — Psychic Sleuth" },
-    { name: "description", content: "Question three AI suspects, search the crime scene and solve the murder at Blackwood Manor." },
-    { property: "og:title", content: "The Enigma at Blackwood Manor — Psychic Sleuth" },
-    { property: "og:description", content: "Question every alibi. Read every tell. Name the killer." },
+    { title: "Psychic Sleuth — Cinematic AI Mystery Game" },
+    { name: "description", content: "Search cinematic crime scenes, question AI suspects, read every tell, and solve each Psychic Sleuth case." },
+    { property: "og:title", content: "Psychic Sleuth — Cinematic AI Mystery Game" },
+    { property: "og:description", content: "Search the scene. Question every alibi. Read every tell. Name the killer." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),
