@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Armchair, Clock3, Coffee, FolderOpen, Wind, Gavel, Lightbulb, MessageSquareQuote, Search, Target } from "lucide-react";
+import { Armchair, Clock3, Coffee, FolderOpen, Wind, Gavel, Lightbulb, MessageSquareQuote, Search, Target, Ghost } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AccuseModal } from "@/components/game/accuse";
@@ -9,7 +9,7 @@ import { Desk } from "@/components/game/desk";
 import { startAmbience, stopAmbience } from "@/game/ambience";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Rich, StressBar, stressLabel } from "@/components/game/ui";
-import { clueById, clues, connections, janeQuotes, START_CLUES, SUSPECT_IDS, suspects, type ClueId, type SuspectId } from "@/game/case";
+import { clueById, clues, connections, janeQuotes, people, START_CLUES, SUSPECT_IDS, suspects, type ClueId, type PersonId } from "@/game/case";
 
 
 export const Route = createFileRoute("/")({
@@ -29,9 +29,9 @@ const load = <T,>(k: string, fb: T): T => { try { const v = localStorage.getItem
 const save = (k: string, v: unknown) => localStorage.setItem(k, JSON.stringify(v));
 
 function MysteryGame() {
-  const [suspectId, setSuspectId] = useState<SuspectId>("partner");
-  const [meta, setMeta] = useState<Partial<Record<SuspectId, Meta>>>({});
-  const [counts, setCounts] = useState<Partial<Record<SuspectId, number>>>({});
+  const [suspectId, setSuspectId] = useState<PersonId>("partner");
+  const [meta, setMeta] = useState<Partial<Record<PersonId, Meta>>>({});
+  const [counts, setCounts] = useState<Partial<Record<PersonId, number>>>({});
   const [found, setFound] = useState<ClueId[]>(START_CLUES);
   const [hints, setHints] = useState(3);
   const [overlay, setOverlay] = useState<OverlayKind>(null);
@@ -46,22 +46,22 @@ function MysteryGame() {
 
   useEffect(() => {
     setMeta(load("blackwood-meta", {})); setFound(load("blackwood-found", START_CLUES)); setHints(load("blackwood-hints", 3));
-    const c: Partial<Record<SuspectId, number>> = {};
-    for (const id of SUSPECT_IDS) c[id] = load<{ role: string }[]>(`blackwood-chat-${id}`, []).filter((m) => m.role === "user").length;
+    const c: Partial<Record<PersonId, number>> = {};
+    for (const id of [...SUSPECT_IDS, "victim" as const]) c[id] = load<{ role: string }[]>(`blackwood-chat-${id}`, []).filter((m) => m.role === "user").length;
     setCounts(c);
     const s = load<number | null>("blackwood-started", null) ?? Date.now(); save("blackwood-started", s); setStartedAt(s);
     if (!load("blackwood-intro", false)) setOverlay("intro");
   }, []);
 
-  const suspect = suspects[suspectId];
-  const stressOf = (id: SuspectId) => meta[id]?.stress ?? suspects[id].stress;
+  const suspect = people[suspectId];
+  const stressOf = (id: PersonId) => meta[id]?.stress ?? people[id].stress;
   const questioned = SUSPECT_IDS.filter((id) => (counts[id] ?? 0) > 0);
   const guiding = !(counts.partner ?? 0) && suspectId === "partner";
 
-  const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<SuspectId, Meta>>; save("blackwood-meta", next); return next; });
+  const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<PersonId, Meta>>; save("blackwood-meta", next); return next; });
   const askClue = (id: ClueId) => setInjected({ id, n: Date.now() });
   const discover = (id: ClueId) => { setFound((f) => { const next = f.includes(id) ? f : [...f, id]; save("blackwood-found", next); return next; }); setDiscovered(id); window.setTimeout(() => setDiscovered(null), 2600); };
-  const switchSuspect = (id: SuspectId) => { setSuspectId(id); setInjected(null); };
+  const switchSuspect = (id: PersonId) => { setSuspectId(id); setInjected(null); };
   const jane = () => {
     const m = meta[suspectId];
     if (hints <= 0) { setOverlay("shop"); return; }
@@ -84,10 +84,11 @@ function MysteryGame() {
 
   const left = clues.length - found.length;
   const objective = !(counts.partner ?? 0) ? "Ask **Julian** about the altered ledger — tap the **ledger clue** below."
+    : !(counts.victim ?? 0) ? "Hear the **victim's last hour** — tap **Interview Alistair** to the right."
     : left > 0 ? `Search the **crime scene** — **${left} hidden clue${left > 1 ? "s" : ""}** left.`
     : questioned.length < 3 ? `Question **${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id].short).join(" and ")}** to catch a lie.`
     : "You have everything you need. **Solve the case.**";
-  const progress = Math.round(((found.length / clues.length) + (questioned.length / 3)) / 2 * 100);
+  const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts.victim ?? 0) > 0 ? 1 : 0)) / 3 * 100);
 
   const clueButtons = (compact: boolean) => found.map((id) => {
     const c = clueById(id); const guide = (guiding && id === "invoice") || !!tea?.pair.includes(id);
@@ -111,6 +112,7 @@ function MysteryGame() {
       <div className="flex items-center gap-3 border-b bg-accent/40 px-4 py-2 lg:px-6">
         <Target className="size-4 shrink-0 text-primary" />
         <p className="min-w-0 flex-1 text-xs sm:text-sm"><span className="font-semibold uppercase tracking-[.12em] text-primary">Goal: </span><Rich text={objective} /></p>
+        <button onClick={() => switchSuspect("victim")} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] ${suspectId === "victim" ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 text-primary hover:bg-accent"} ${!(counts.victim ?? 0) && (counts.partner ?? 0) ? "guide-ring" : ""}`}><Ghost className="size-3" /> Interview Alistair</button>
         {calmSince && <button onClick={toggleCalm} className="flex items-center gap-1 rounded-full border border-success/60 px-2 py-0.5 text-[10px] text-success"><Wind className="size-3" /> Taking a breath · timer paused</button>}
         <div className="hidden w-32 items-center gap-2 sm:flex"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px]">{progress}%</span></div>
       </div>
@@ -127,14 +129,14 @@ function MysteryGame() {
           </div>
           <div className="hidden space-y-4 px-4 pb-5 lg:block">
             <div><div className="mb-1.5 flex justify-between text-[10px] font-semibold uppercase tracking-[.16em]"><span>Stress</span><span className="text-primary">{stressOf(suspectId)}% · {stressLabel(stressOf(suspectId))}</span></div><StressBar value={stressOf(suspectId)} /></div>
-            <Info label="Who" text={`${suspect.age} · ${suspect.bio}`} /><Info label="Alibi" text={suspect.alibi} /><Info label="Possible motive" text={suspect.motive} />
+            <Info label="Who" text={`${suspect.age} · ${suspect.bio}`} /><Info label={suspectId === "victim" ? "Last seen" : "Alibi"} text={suspect.alibi} /><Info label={suspectId === "victim" ? "Unfinished business" : "Possible motive"} text={suspect.motive} />
           </div>
         </aside>
 
         {/* Center: interrogation */}
         <Interrogation key={suspectId} suspectId={suspectId} stress={stressOf(suspectId)} injected={injected} onMeta={updateMeta}
           onCount={(n) => setCounts((c) => (c[suspectId] === n ? c : { ...c, [suspectId]: n }))}
-          header={<div className="flex items-center justify-between border-b px-4 py-2.5"><p className="text-xs"><span className="font-semibold">Questioning {suspect.name}</span> <span className="text-muted-foreground lg:hidden">· stress {stressOf(suspectId)}%</span></p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording</p></div>}
+          header={<div className="flex items-center justify-between border-b px-4 py-2.5"><p className="text-xs"><span className="font-semibold">{suspectId === "victim" ? "Reconstructing" : "Questioning"} {suspect.name}</span> <span className="text-muted-foreground lg:hidden">· stress {stressOf(suspectId)}%</span></p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording</p></div>}
           clueStrip={<div className="mx-auto mb-2 flex max-w-2xl gap-2 overflow-x-auto pb-1 pt-4 lg:hidden">{clueButtons(true)}<button onClick={() => setOverlay("scene")} className="flex shrink-0 items-center gap-1.5 rounded-sm border border-dashed border-primary/60 p-2 text-[11px] text-primary"><Search className="size-4" /> Crime scene</button></div>}
         />
 
@@ -144,8 +146,8 @@ function MysteryGame() {
           <div className="space-y-3 p-4"><Eyebrow>Clues · tap to ask</Eyebrow>{clueButtons(false)}{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} more clue{left > 1 ? "s" : ""} hidden at the crime scene.</p>}</div>
           <div className="mt-auto space-y-3 border-t p-4">
             <Eyebrow>Case progress</Eyebrow>
-            <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} />
-            {SUSPECT_IDS.map((id) => <div key={id}><div className="mb-1 flex justify-between text-[11px]"><span>{suspects[id].short}</span><span className="font-mono text-muted-foreground">{stressOf(id)}%</span></div><StressBar value={stressOf(id)} thin /></div>)}
+            <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} /><Row label="Victim interviewed" value={(counts.victim ?? 0) > 0 ? "Yes" : "No"} />
+            {[...SUSPECT_IDS, "victim" as const].map((id) => <div key={id}><div className="mb-1 flex justify-between text-[11px]"><span>{people[id].short}</span><span className="font-mono text-muted-foreground">{stressOf(id)}%</span></div><StressBar value={stressOf(id)} thin /></div>)}
           </div>
         </aside>
       </div>
