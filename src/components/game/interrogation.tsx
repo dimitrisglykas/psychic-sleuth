@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Eye, Mic2, Sparkle, Target, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Mic2, Sparkle, Target, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
@@ -39,6 +39,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   const [input, setInput] = useState("");
   const [press, setPress] = useState(false);
   const [trapOpen, setTrapOpen] = useState(false);
+  const [tacticsOpen, setTacticsOpen] = useState(false);
   const [clueId, setClueId] = useState<ClueId | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
@@ -98,15 +99,15 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
       <div className="border-t bg-panel p-3 sm:p-4">
         {clueStrip}
         {clueId && <p className="mx-auto mb-2 flex max-w-2xl items-center gap-2 text-[10px] font-semibold uppercase tracking-[.14em] text-primary">Showing clue: {clueById(clueId).title}<button aria-label="Remove clue" onClick={() => setClueId(null)}><X className="size-3 text-muted-foreground" /></button></p>}
-        {trapOpen && <div className="mx-auto mb-2 grid max-w-2xl gap-1 sm:grid-cols-3 rounded-md border bg-popover p-1 shadow-xl">{(["bluff", "detail", "blink"] as Action[]).map((a) => <button key={a} type="button" onClick={() => submit(ACTIONS[a].line, a)} className="flex w-full items-start border bg-panel-raised gap-2 rounded-sm px-2.5 py-2 text-left text-xs hover:bg-accent"><Sparkle className="mt-0.5 size-3 shrink-0 text-primary" /><span><span className="block font-semibold">{ACTIONS[a].label}</span><span className="text-muted-foreground">"{ACTIONS[a].line}"</span></span></button>)}</div>}
+        {tacticsOpen && <div className="mx-auto mb-2 max-w-2xl rounded-md border bg-popover p-2 shadow-xl">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">Optional tactics</p>
+          <div className="grid gap-1 sm:grid-cols-3"><Button type="button" size="sm" variant={press ? "default" : "outline"} onClick={() => setPress(!press)} className="justify-start"><Mic2 /> {press ? "Pressing is on" : "Press harder"}</Button><Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => submit(ACTIONS.coldread.line, "coldread")} className="justify-start"><Eye /> Cold read</Button><Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setTrapOpen(!trapOpen)} className="justify-start"><Target /> Set a trap</Button></div>
+          {trapOpen && <div className="mt-2 grid gap-1 sm:grid-cols-3">{(["bluff", "detail", "blink"] as Action[]).map((a) => <button key={a} type="button" onClick={() => submit(ACTIONS[a].line, a)} className="flex w-full items-start gap-2 rounded-sm border bg-panel-raised px-2.5 py-2 text-left text-xs hover:bg-accent"><Sparkle className="mt-0.5 size-3 shrink-0 text-primary" /><span><span className="block font-semibold">{ACTIONS[a].label}</span><span className="text-muted-foreground">{ACTIONS[a].line}</span></span></button>)}</div>}
+        </div>}
         <PromptInput className="mx-auto max-w-2xl border-border bg-panel-raised shadow-xl" onSubmit={({ text }) => submit(text)}>
-          <PromptInputTextarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Ask ${suspect.short} a question…`} className="min-h-16 text-sm" />
+          <PromptInputTextarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder={`What do you want to ask ${suspect.short}?`} className="min-h-16 text-sm" />
           <PromptInputFooter>
-            <PromptInputTools className="relative flex-wrap gap-1">
-              <Button type="button" size="sm" variant={press ? "default" : "ghost"} onClick={() => setPress(!press)} className="h-8 px-2 text-[10px] uppercase tracking-[.1em]"><Mic2 /> Press</Button>
-              <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => submit(ACTIONS.coldread.line, "coldread")} className="h-8 px-2 text-[10px] uppercase tracking-[.1em] text-primary"><Eye /> Cold read</Button>
-              <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => setTrapOpen(!trapOpen)} aria-expanded={trapOpen} className="h-8 px-2 text-[10px] uppercase tracking-[.1em]"><Target /> Set a trap</Button>
-            </PromptInputTools>
+            <PromptInputTools><Button type="button" size="sm" variant="ghost" onClick={() => setTacticsOpen(!tacticsOpen)} aria-expanded={tacticsOpen} className="h-8 text-xs">More tactics {tacticsOpen ? <ChevronUp /> : <ChevronDown />}</Button></PromptInputTools>
             <PromptInputSubmit status={status} onStop={stop} disabled={!input.trim() && !busy} />
           </PromptInputFooter>
         </PromptInput>
