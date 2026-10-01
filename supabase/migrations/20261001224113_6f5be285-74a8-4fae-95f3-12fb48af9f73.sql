@@ -1,0 +1,1 @@
+ALTER TABLE public.case_files ADD COLUMN IF NOT EXISTS solution jsonb, ADD COLUMN IF NOT EXISTS ending_win text, ADD COLUMN IF NOT EXISTS ending_lines jsonb;

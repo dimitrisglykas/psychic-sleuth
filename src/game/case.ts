@@ -25,12 +25,11 @@ export type CaseData = {
   scene: { image: string; label: string; alt: string };
   hotspots: { id: string; label: string; clue: ClueId; x: number; y: number }[];
   motives: { id: MotiveId; label: string }[];
-  solution: { culprit: SuspectId; motive: MotiveId; clues: ClueId[] };
   connections: { a: ClueId; b: ClueId; text: string }[];
   timeline: { time: string; text: string; claimed?: boolean }[];
   briefing: { time: string; lines: string[]; aside: string };
   guide: { suspect: SuspectId; clue: ClueId; label: string };
-  ending: { win: string; lose: (short: string) => string; lines: string[] };
+  ending: { lose: (short: string) => string };
 };
 
 const mk = (c: Omit<CaseData, "people" | "clueById">) => ({ ...c, people: { ...c.suspects, victim: c.victim } }) as CaseData;
@@ -64,7 +63,6 @@ export const case001 = mk({
     { id: "glass", label: "Broken glass", clue: "glass", x: 12, y: 85 },
   ],
   motives: [{ id: "fraud", label: "Hide the £80,000 fraud" }, { id: "letters", label: "Get back private letters" }, { id: "name", label: "Protect the Blackwood name" }, { id: "money", label: "Inherit the estate" }],
-  solution: { culprit: "butler", motive: "name", clues: ["print", "clock", "glass"] },
   connections: [
     { a: "print", b: "glass", text: "The tray print and the tidy glass share a habit — someone who **serves** and someone who **cleans up**. Same person?" },
     { a: "watch", b: "clock", text: "Two broken clocks, two different times. A real death only needs **one**. Someone was **staging the time**." },
@@ -83,9 +81,7 @@ export const case001 = mk({
   briefing: { time: "11:42 PM", lines: ["Alistair Blackwood is dead in his study at Blackwood Manor. Local police are calling it a robbery gone wrong. I'm not buying it.", "Three people were in that house tonight. The case is yours — find me who did it, and why. And please, no stunts."], aside: "Jane sets down his tea. \"No stunts. Of course.\"" },
   guide: { suspect: "partner", clue: "invoice", label: "ledger" },
   ending: {
-    win: "\"Lovely. You saw past the polished silver. Arthur wasn't hiding a crime against the family — he committed one *for* it.\"",
     lose: (s) => `"Ah. You chased the loudest secret in the room. ${s} is guilty of plenty — just not murder."`,
-    lines: ["Alistair planned to publish **blue letters** exposing the family's old fraud. Arthur, loyal for 31 years, couldn't allow it. He struck after serving tea — his **fingerprint on the tray** proves he was in the study after 9:45.", "Then he staged the time: smashed the watch at **9:40** to point at Evelyn, **moved the clock** to 10:17, and — out of pure habit — **swept the glass into a neat pile**. Nobody tidies a murder scene except a butler."],
   },
 });
 
@@ -117,7 +113,6 @@ export const case002 = mk({
     { id: "radio", label: "Guard's radio", clue: "radio", x: 86, y: 86 },
   ],
   motives: [{ id: "debt", label: "Pay off dangerous debts" }, { id: "cover", label: "Hide that the diamond was fake" }, { id: "own", label: "Finally own the Lisbon Star" }, { id: "silence", label: "Silence a guard taking bribes" }],
-  solution: { culprit: "tech", motive: "debt", clues: ["badge", "radio", "tie"] },
   connections: [
     { a: "gap", b: "tie", text: "A loop needs **admin access** and a **hand in the junction box**. Only one person here had both." },
     { a: "badge", b: "radio", text: "The door opened at **10:13**, Marcus spoke at **10:14** — to someone he **expected to see near the cameras**." },
@@ -136,9 +131,7 @@ export const case002 = mk({
   briefing: { time: "11:58 PM", lines: ["Gala at the Aldridge Museum. The Lisbon Star is gone and the night guard, Marcus Hale, is dead by the vault.", "Three people had the access and the reasons. Find the thief — and the killer. Try not to insult any billionaires."], aside: "Jane straightens his waistcoat. \"I'll insult them politely.\"" },
   guide: { suspect: "collector", clue: "bribe", label: "envelope" },
   ending: {
-    win: "\"Beautiful. Everyone was watching the diamond. You watched the person who watches the cameras.\"",
     lose: (s) => `"Close — but ${s} only stole money, or truth, or time. Someone else stole a life."`,
-    lines: ["Nina Reyes owed money to very patient, very dangerous people. At **10:12** she looped the vault camera with her admin access, **snipping a cable tie** at the junction box, and at **10:13** opened the vault with her own card, **TECH-02**.", "Marcus walked in at 10:14 and saw a face he trusted: **\"Oh, it's you — thought you'd fixed it.\"** She struck him and ran with the stone. The cruel joke? Helena had sold the real Lisbon Star months ago. Nina killed a man for **glass**."],
   },
 });
 
