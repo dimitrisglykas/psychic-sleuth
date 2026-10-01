@@ -6,6 +6,7 @@ import { AccuseModal } from "@/components/game/accuse";
 import { CrimeScene } from "@/components/game/crime-scene";
 import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
+import { CaseLobby } from "@/components/game/lobby";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Overlay, Rich, StressBar, stressLabel } from "@/components/game/ui";
 import { CASES, CaseContext, clueOf, janeQuotes, useCase, type CaseData, type ClueId, type PersonId } from "@/game/case";
@@ -78,6 +79,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<PersonId, Meta>>; save(`${K}-meta`, next); return next; });
   const askClue = (id: ClueId) => setInjected({ id, n: Date.now() });
   const discover = (id: ClueId) => { setFound((f) => { const next = f.includes(id) ? f : [...f, id]; save(`${K}-found`, next); return next; }); setDiscovered(id); window.setTimeout(() => setDiscovered(null), 2600); };
+  const mergeSharedClues = (shared: string[]) => setFound((current) => { const valid = shared.filter((id): id is ClueId => clues.some((clue) => clue.id === id)); const next = [...new Set([...current, ...valid])]; if (next.length !== current.length) save(`${K}-found`, next); return next.length === current.length ? current : next; });
   const switchSuspect = (id: PersonId) => { setSuspectId(id); save(`${K}-active-person`, id); setInjected(null); };
   const jane = () => {
     const m = meta[suspectId];
@@ -142,6 +144,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · Case {C.code}</p><h1 className="truncate font-display text-lg sm:text-xl">{C.title}</h1></div>
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
+        <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={progress} onSharedClues={mergeSharedClues} />
         <Button variant="ghost" size="sm" onClick={() => setOverlay("desk")}><Armchair /> <span className="hidden sm:inline">My desk</span></Button>
         <Button variant="ghost" size="sm" onClick={() => setOverlay("cases")}><FolderOpen /> <span className="hidden sm:inline">Cases</span></Button>
       </header>
