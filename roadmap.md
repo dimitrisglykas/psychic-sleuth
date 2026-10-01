@@ -31,4 +31,4 @@
 - [x] High-quality visual crime scene with image hotspots
 - [x] Cinematic suspect portraits, stress reactions, and evidence cards
 - [x] Visual overlays for tea, My Desk, Intuition, and Cold Read
-- [ ] End-to-end Gala playthrough and two-player isolation check
+- [x] End-to-end Gala playthrough and two-player isolation check
