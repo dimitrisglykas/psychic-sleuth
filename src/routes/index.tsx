@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Armchair, Clock3, Coffee, FolderOpen, Wind, Gavel, Lightbulb, MessageSquareQuote, Search, Target, Ghost } from "lucide-react";
+import { Armchair, ChevronDown, ChevronUp, Clock3, Coffee, FolderOpen, Wind, Gavel, Lightbulb, MessageSquareQuote, Search, Target, Ghost } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AccuseModal } from "@/components/game/accuse";
@@ -52,6 +52,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const [calmSince, setCalmSince] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [tea, setTea] = useState<{ quote: string; text: string; pair: [ClueId, ClueId] } | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
 
   useEffect(() => {
     setMeta(load(`${K}-meta`, {})); setFound(load(`${K}-found`, START_CLUES)); setHints(load(`${K}-hints`, 3));
@@ -92,19 +93,33 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const restart = () => { Object.keys(localStorage).filter((k) => k.startsWith(`${K}-`) && k !== `${K}-intro`).forEach((k) => localStorage.removeItem(k)); window.location.reload(); };
 
   const left = clues.length - found.length;
-  const objective = !(counts[guide.suspect] ?? 0) ? `Ask **${suspects[guide.suspect]!.short}** about the ${guide.label} — tap the **${guide.label} clue** below.`
-    : !(counts["victim"] ?? 0) ? `Hear the **victim's last hour** — tap **Interview ${C.victim.short}** above.`
-    : left > 0 ? `Search the **crime scene** — **${left} hidden clue${left > 1 ? "s" : ""}** left.`
-    : questioned.length < 3 ? `Question **${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id]!.short).join(" and ")}** to catch a lie.`
-    : "You have everything you need. **Solve the case.**";
+  const nextStep = !(counts[guide.suspect] ?? 0) ? `Show ${suspects[guide.suspect]!.short} the ${guide.label}`
+    : !(counts["victim"] ?? 0) ? `Interview ${C.victim.short}`
+    : left > 0 ? `Search the crime scene (${left} clue${left > 1 ? "s" : ""} left)`
+    : questioned.length < 3 ? `Question ${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id]!.short).join(" and ")}`
+    : "Solve the case";
+  const nextHint = !(counts[guide.suspect] ?? 0) ? "Tap the highlighted clue. It will prepare the right question for you."
+    : !(counts["victim"] ?? 0) ? "Their last hour may expose a contradiction."
+    : left > 0 ? "Inspect the glowing points and collect what the room is hiding."
+    : questioned.length < 3 ? "Every suspect has a different story. Hear the missing one."
+    : "Name the culprit, their motive, and the two clues that prove it.";
   const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts["victim"] ?? 0) > 0 ? 1 : 0)) / 3 * 100);
+
+  const doNext = () => {
+    if (!(counts[guide.suspect] ?? 0)) { switchSuspect(guide.suspect); askClue(guide.clue); return; }
+    if (!(counts["victim"] ?? 0)) { switchSuspect("victim"); return; }
+    if (left > 0) { setOverlay("scene"); return; }
+    const unasked = SUSPECT_IDS.find((id) => !questioned.includes(id));
+    if (unasked) { switchSuspect(unasked); return; }
+    setOverlay("accuse");
+  };
 
   const clueButtons = (compact: boolean) => found.map((id) => {
     const c = clueById(id); const glow = (guiding && id === guide.clue) || !!tea?.pair.includes(id);
-    return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${glow ? "guide-ring border-primary" : ""}`}>
+    return <button key={id} onClick={() => askClue(id)} title={c.detail.replace(/\*\*/g, "")} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${glow ? "guide-ring border-primary" : ""}`}>
       <c.icon className="size-4 shrink-0 text-primary" />
-      {compact ? <span className="text-[11px] font-medium">{c.title}</span> : <span className="min-w-0"><span className="block text-xs font-semibold">{c.title}</span><span className="block text-[11px] leading-4 text-muted-foreground"><Rich text={c.detail} /></span></span>}
-      {guiding && id === guide.clue && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask {suspects[guide.suspect]!.short} about this</span>}
+      <span className="text-[11px] font-semibold">{c.title}</span>
+      {guiding && id === guide.clue && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Start here</span>}
     </button>;
   });
 
@@ -118,12 +133,13 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <Button variant="ghost" size="sm" onClick={() => setOverlay("cases")}><FolderOpen /> <span className="hidden sm:inline">Cases</span></Button>
       </header>
 
-      <div className="flex items-center gap-3 border-b bg-accent/40 px-4 py-2 lg:px-6">
-        <Target className="size-4 shrink-0 text-primary" />
-        <p className="min-w-0 flex-1 text-xs sm:text-sm"><span className="font-semibold uppercase tracking-[.12em] text-primary">Goal: </span><Rich text={objective} /></p>
-        <button onClick={() => switchSuspect("victim")} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] ${suspectId === "victim" ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 text-primary hover:bg-accent"} ${!(counts["victim"] ?? 0) && (counts[guide.suspect] ?? 0) ? "guide-ring" : ""}`}><Ghost className="size-3" /> Interview {C.victim.short}</button>
-        {calmSince && <button onClick={toggleCalm} className="flex items-center gap-1 rounded-full border border-success/60 px-2 py-0.5 text-[10px] text-success"><Wind className="size-3" /> Taking a breath · timer paused</button>}
-        <div className="hidden w-32 items-center gap-2 sm:flex"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px]">{progress}%</span></div>
+      <div className="border-b bg-accent/40 px-4 py-3 lg:px-6">
+        <div className="mx-auto flex max-w-5xl items-center gap-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><Target className="size-4" /></span>
+          <div className="min-w-0 flex-1"><p className="text-[9px] font-bold uppercase tracking-[.18em] text-primary">Do this next</p><p className="text-sm font-semibold">{nextStep}</p><p className="hidden text-[11px] text-muted-foreground sm:block">{nextHint}</p></div>
+          <Button size="sm" onClick={doNext}>Go</Button>
+        </div>
+        <div className="mx-auto mt-2 flex max-w-5xl items-center gap-2"><div className="h-1 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px] text-muted-foreground">Case {progress}%</span></div>
       </div>
 
       <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr] lg:grid-rows-1 lg:grid-cols-[280px_minmax(0,1fr)_300px]">
@@ -136,6 +152,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
               <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold">{suspects[id]!.short}</span><StressBar value={stressOf(id)} thin /></span>
             </button>)}
           </div>
+          <div className="flex items-center gap-3 border-t px-3 py-2 lg:hidden"><img src={suspect.image} alt="" className="size-10 rounded-full object-cover object-top" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{suspect.name}</p><p className="text-[10px] text-muted-foreground">{suspect.role}</p></div><div className="w-24"><p className="mb-1 text-right text-[10px] text-primary">Stress {stressOf(suspectId)}%</p><StressBar value={stressOf(suspectId)} thin /></div></div>
           <div className="hidden space-y-4 px-4 pb-5 lg:block">
             <div><div className="mb-1.5 flex justify-between text-[10px] font-semibold uppercase tracking-[.16em]"><span>Stress</span><span className="text-primary">{stressOf(suspectId)}% · {stressLabel(stressOf(suspectId))}</span></div><StressBar value={stressOf(suspectId)} /></div>
             <Info label="Who" text={`${suspect.age} · ${suspect.bio}`} /><Info label={suspectId === "victim" ? "Last seen" : "Alibi"} text={suspect.alibi} /><Info label={suspectId === "victim" ? "Unfinished business" : "Possible motive"} text={suspect.motive} />
@@ -152,11 +169,12 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         {/* Right: clues & actions */}
         <aside className="hidden min-h-0 flex-col overflow-y-auto border-l bg-panel lg:flex">
           <div className="border-b p-4"><Button className="h-11 w-full" onClick={() => setOverlay("scene")}><Search /> Inspect crime scene</Button></div>
-          <div className="space-y-3 p-4"><Eyebrow>Clues · tap to ask</Eyebrow>{clueButtons(false)}{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} more clue{left > 1 ? "s" : ""} hidden at the crime scene.</p>}</div>
-          <div className="mt-auto space-y-3 border-t p-4">
-            <Eyebrow>Case progress</Eyebrow>
-            <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} /><Row label="Victim interviewed" value={(counts["victim"] ?? 0) > 0 ? "Yes" : "No"} />
-            {[...SUSPECT_IDS, "victim" as const].map((id) => <div key={id}><div className="mb-1 flex justify-between text-[11px]"><span>{people[id]!.short}</span><span className="font-mono text-muted-foreground">{stressOf(id)}%</span></div><StressBar value={stressOf(id)} thin /></div>)}
+          <div className="space-y-3 p-4"><Eyebrow>Your clues · tap to use</Eyebrow>{clueButtons(false)}{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} clue{left > 1 ? "s" : ""} still hidden in the scene.</p>}</div>
+          <div className="mt-auto border-t p-4">
+            <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => setShowProgress(!showProgress)}>Investigation details {showProgress ? <ChevronUp /> : <ChevronDown />}</Button>
+            {showProgress && <div className="mt-3 space-y-3"><Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="People questioned" value={`${questioned.length + ((counts["victim"] ?? 0) > 0 ? 1 : 0)} / 4`} />
+              {[...SUSPECT_IDS, "victim" as const].map((id) => <div key={id}><div className="mb-1 flex justify-between text-[11px]"><span>{people[id]!.short}</span><span className="font-mono text-muted-foreground">{stressOf(id)}%</span></div><StressBar value={stressOf(id)} thin /></div>)}
+            </div>}
           </div>
         </aside>
       </div>

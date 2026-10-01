@@ -6,9 +6,9 @@ import { Eyebrow, Overlay } from "./ui";
 
 export function HowToPlay({ onClose }: { onClose: () => void }) {
   const steps = [
-    { icon: Eye, title: "Read the scene", text: "Check the clues and search the crime scene for hidden evidence." },
-    { icon: MessageSquareQuote, title: "Question suspects", text: "Ask questions and show clues. Watch their stress — lies crack under pressure." },
-    { icon: Gavel, title: "Accuse the killer", text: "Name the culprit, the motive and two clues that prove it." },
+    { icon: Eye, title: "Find clues", text: "Search the scene and tap anything suspicious." },
+    { icon: MessageSquareQuote, title: "Ask questions", text: "Tap a clue to prepare a question, then send it to a suspect." },
+    { icon: Gavel, title: "Solve it", text: "When the story fits, name the killer and prove it with two clues." },
   ];
   const C = useCase();
   const [briefed, setBriefed] = useState(false);
@@ -25,8 +25,8 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
   );
   return (
     <Overlay label="How to play" onClose={onClose}>
-      <Eyebrow>Case {C.code} · {C.title}</Eyebrow><h2 className="font-display text-2xl">How to play</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Three suspects had reasons to lie — and the victim's last hour still has something to say.</p>
+      <Eyebrow>Case {C.code} · {C.title}</Eyebrow><h2 className="font-display text-2xl">Three things to do</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Follow the highlighted next step. The game will always point you forward.</p>
       <ol className="mt-5 space-y-3">{steps.map((s, i) => <li key={s.title} className="flex gap-3 rounded-sm border bg-panel-raised p-3"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><s.icon className="size-4" /></span><div><p className="text-sm font-semibold">{i + 1}. {s.title}</p><p className="text-xs text-muted-foreground">{s.text}</p></div></li>)}</ol>
       <Button className="mt-5 h-11 w-full" onClick={onClose}><Play /> Start the investigation</Button>
     </Overlay>
