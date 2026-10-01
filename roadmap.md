@@ -1,0 +1,22 @@
+# Psychic Sleuth roadmap
+
+## Stage 1 — redesign + full game loop
+- [x] Single-screen layout (portrait left, chat center, clues/actions right), no sidebar
+- [x] Case Goal bar with live objective + progress
+- [x] Bottom action bar: Ask Question / Jane's Intuition / Solve Case
+- [x] How to Play intro + guided first move highlight
+- [x] Suspect switching: per-suspect dossier, stress, transcript (all 3 AI suspects)
+- [x] Crime scene overlay with hotspots that uncover clues + discovery animation
+- [x] Accuse modal (culprit, motive, 2 clues) + Jane-style resolution with score/rating
+- [x] Jane intuition overlay, hint shop (preview) when empty
+- [x] Cases overlay with locked Case 002 + Season Pass modal (preview pricing)
+- [x] Progress tracker (clues, suspects questioned, stress per suspect)
+
+## Stage 2 — content
+- [ ] Case 002: The Gala Heist (suspects, evidence, scene, solution)
+- [ ] Victim interview view
+
+## Stage 3 — Mentalist extras
+- [ ] Tea cup reflection + highlighted connection
+- [ ] My Desk overlay (folders, notepad, record player ambience, Take a Breath mode)
+- [ ] Cold Read button, Set a Trap menu, behavioral cue tags above replies
