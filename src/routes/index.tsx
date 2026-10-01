@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Armchair, ChevronDown, ChevronUp, Clock3, Coffee, FolderOpen, Wind, Gavel, Lightbulb, MessageSquareQuote, Search, Target, Ghost } from "lucide-react";
+import { Armchair, ChevronDown, ChevronUp, Clock3, Coffee, FolderOpen, Gavel, Lightbulb, MessageSquareQuote, Search, Target } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AccuseModal } from "@/components/game/accuse";
