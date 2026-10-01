@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import {
-  Archive, Brain, BriefcaseBusiness, ChevronRight, Clock3, Fingerprint,
-  FolderKanban, Gavel, Lightbulb, ListFilter, Menu, MessageSquareQuote,
+  Archive, ChevronRight, Clock3, Fingerprint,
+  FolderKanban, Gavel, Lightbulb, Menu, MessageSquareQuote,
   Mic2, Paperclip, Search, ShieldCheck, UserRoundSearch, UsersRound, X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -48,10 +48,6 @@ const nav = [
   { icon: Archive, label: "Evidence Board" }, { icon: UsersRound, label: "Suspect List" }, { icon: UserRoundSearch, label: "Profile" },
 ];
 
-function textOf(message: UIMessage) {
-  return message.parts.filter((part) => part.type === "text").map((part) => part.text).join("");
-}
-
 function MysteryGame() {
   const [suspectId, setSuspectId] = useState<SuspectId>("partner");
   const [evidenceOpen, setEvidenceOpen] = useState(false);
@@ -82,7 +78,7 @@ function MysteryGame() {
         <div className="grid min-h-0 flex-1 lg:grid-cols-[286px_minmax(400px,1fr)_300px]">
           <Dossier suspectId={suspectId} onSelect={setSuspectId} />
           <Interrogation key={suspectId} suspectId={suspectId} onEvidence={() => setEvidenceOpen(true)} />
-          <EvidenceDrawer className="hidden lg:flex" onUse={() => {}} />
+          <EvidenceDrawer className="hidden lg:flex" onUse={(prompt) => window.dispatchEvent(new CustomEvent("use-evidence", { detail: prompt }))} />
         </div>
       </section>
 
@@ -126,7 +122,7 @@ function Interrogation({ suspectId, onEvidence }: { suspectId: SuspectId; onEvid
   const visible = messages.length ? messages : [{ id: "opening", role: "assistant", parts: [{ type: "text", text: suspect.opener }] } as UIMessage];
   return <section className="flex min-h-[calc(100dvh-106px)] min-w-0 flex-col bg-background lg:min-h-0">
     <div className="flex items-center justify-between border-b px-4 py-3"><div className="flex items-center gap-3"><img src={suspect.image} alt="" className="size-9 rounded-full object-cover object-top ring-1 ring-primary/50" width={768} height={1024} loading="lazy" /><div><p className="text-xs font-semibold">Interrogating {suspect.name}</p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording active</p></div></div><Button variant="ghost" size="icon" className="lg:hidden" onClick={onEvidence} aria-label="Open evidence"><Paperclip /></Button></div>
-    <Conversation className="min-h-0"><ConversationContent className="mx-auto w-full max-w-2xl gap-6 px-4 py-7 sm:px-8">{visible.map((message) => <Message from={message.role} key={message.id} className={message.role === "assistant" ? "before:mb-1 before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-primary before:content-['SUSPECT']" : "before:mb-1 before:text-right before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-muted-foreground before:content-['YOU']"}><MessageContent className={message.role === "user" ? "border border-primary/25 bg-accent text-accent-foreground" : "font-display text-[17px] leading-7"}>{message.parts.map((part, i) => part.type === "text" ? <MessageResponse key={i}>{part.text.replace(/^\[PRESSING\]\s*/, "")}</MessageResponse> : null)}</MessageContent></Message>)}{status === "submitted" && <div className="text-xs"><Shimmer>{suspect.name} weighs the question…</Shimmer></div>}{error && <p className="rounded-sm border border-destructive/50 bg-destructive/10 p-3 text-xs text-destructive">{error.message}</p>}</ConversationContent><ConversationScrollButton /></Conversation>
+    <Conversation className="min-h-0"><ConversationContent className="mx-auto w-full max-w-2xl gap-6 px-4 py-7 sm:px-8">{visible.map((message) => <Message from={message.role} key={message.id} className={message.role === "assistant" ? "before:mb-1 before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-primary before:content-['SUSPECT']" : "before:mb-1 before:text-right before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-muted-foreground before:content-['YOU']"}><MessageContent className={message.role === "user" ? "border border-primary/25 bg-accent text-accent-foreground" : "font-display text-[17px] leading-7"}>{message.parts.map((part, i) => part.type === "text" ? <MessageResponse key={i}>{part.text.replace(/^\[PRESSING\]\s*/, "")}</MessageResponse> : null)}</MessageContent></Message>)}{status === "submitted" && <div className="text-xs"><Shimmer>{`${suspect.name} weighs the question…`}</Shimmer></div>}{error && <p className="rounded-sm border border-destructive/50 bg-destructive/10 p-3 text-xs text-destructive">{error.message}</p>}</ConversationContent><ConversationScrollButton /></Conversation>
     <div className="border-t bg-panel p-3 sm:p-4"><PromptInput className="mx-auto max-w-2xl border-border bg-panel-raised shadow-xl" onSubmit={({text}) => submit(text)}><PromptInputTextarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Question ${suspect.name.split(" ")[0]}…`} className="min-h-20 text-sm" /><PromptInputFooter><PromptInputTools><Button type="button" size="sm" variant={press ? "default" : "ghost"} onClick={() => setPress(!press)} className="h-8 text-[10px] uppercase tracking-[.12em]"><Mic2 /> Press suspect</Button><span className="hidden text-[10px] text-muted-foreground sm:inline">Responses may reveal contradictions</span></PromptInputTools><PromptInputSubmit status={status} onStop={stop} disabled={!input.trim() && !busy} /></PromptInputFooter></PromptInput></div>
   </section>;
 }
