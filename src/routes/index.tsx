@@ -93,11 +93,11 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
 
   const left = clues.length - found.length;
   const objective = !(counts[guide.suspect] ?? 0) ? `Ask **${suspects[guide.suspect]!.short}** about the ${guide.label} — tap the **${guide.label} clue** below.`
-    : !(counts.victim ?? 0) ? `Hear the **victim's last hour** — tap **Interview ${C.victim.short}** above.`
+    : !(counts["victim"] ?? 0) ? `Hear the **victim's last hour** — tap **Interview ${C.victim.short}** above.`
     : left > 0 ? `Search the **crime scene** — **${left} hidden clue${left > 1 ? "s" : ""}** left.`
     : questioned.length < 3 ? `Question **${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id]!.short).join(" and ")}** to catch a lie.`
     : "You have everything you need. **Solve the case.**";
-  const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts.victim ?? 0) > 0 ? 1 : 0)) / 3 * 100);
+  const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts["victim"] ?? 0) > 0 ? 1 : 0)) / 3 * 100);
 
   const clueButtons = (compact: boolean) => found.map((id) => {
     const c = clueById(id); const guide = (guiding && id === guide.clue) || !!tea?.pair.includes(id);
@@ -121,7 +121,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       <div className="flex items-center gap-3 border-b bg-accent/40 px-4 py-2 lg:px-6">
         <Target className="size-4 shrink-0 text-primary" />
         <p className="min-w-0 flex-1 text-xs sm:text-sm"><span className="font-semibold uppercase tracking-[.12em] text-primary">Goal: </span><Rich text={objective} /></p>
-        <button onClick={() => switchSuspect("victim")} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] ${suspectId === "victim" ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 text-primary hover:bg-accent"} ${!(counts.victim ?? 0) && (counts[guide.suspect] ?? 0) ? "guide-ring" : ""}`}><Ghost className="size-3" /> Interview {C.victim.short}</button>
+        <button onClick={() => switchSuspect("victim")} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] ${suspectId === "victim" ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 text-primary hover:bg-accent"} ${!(counts["victim"] ?? 0) && (counts[guide.suspect] ?? 0) ? "guide-ring" : ""}`}><Ghost className="size-3" /> Interview {C.victim.short}</button>
         {calmSince && <button onClick={toggleCalm} className="flex items-center gap-1 rounded-full border border-success/60 px-2 py-0.5 text-[10px] text-success"><Wind className="size-3" /> Taking a breath · timer paused</button>}
         <div className="hidden w-32 items-center gap-2 sm:flex"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px]">{progress}%</span></div>
       </div>
@@ -155,7 +155,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
           <div className="space-y-3 p-4"><Eyebrow>Clues · tap to ask</Eyebrow>{clueButtons(false)}{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} more clue{left > 1 ? "s" : ""} hidden at the crime scene.</p>}</div>
           <div className="mt-auto space-y-3 border-t p-4">
             <Eyebrow>Case progress</Eyebrow>
-            <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} /><Row label="Victim interviewed" value={(counts.victim ?? 0) > 0 ? "Yes" : "No"} />
+            <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} /><Row label="Victim interviewed" value={(counts["victim"] ?? 0) > 0 ? "Yes" : "No"} />
             {[...SUSPECT_IDS, "victim" as const].map((id) => <div key={id}><div className="mb-1 flex justify-between text-[11px]"><span>{people[id]!.short}</span><span className="font-mono text-muted-foreground">{stressOf(id)}%</span></div><StressBar value={stressOf(id)} thin /></div>)}
           </div>
         </aside>
