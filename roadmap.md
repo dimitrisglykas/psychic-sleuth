@@ -26,3 +26,9 @@
 
 ## Waiting on user
 - [ ] Real Stripe checkout for Season Pass — user chose to keep preview for now (needs sign-in)
+
+## Cinematic Gala Heist
+- [ ] High-quality visual crime scene with image hotspots
+- [ ] Cinematic suspect portraits, stress reactions, and evidence cards
+- [ ] Visual overlays for tea, My Desk, Intuition, and Cold Read
+- [ ] End-to-end Gala playthrough and two-player isolation check
