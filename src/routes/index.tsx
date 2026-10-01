@@ -6,7 +6,6 @@ import { AccuseModal } from "@/components/game/accuse";
 import { CrimeScene } from "@/components/game/crime-scene";
 import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
-import { startAmbience, stopAmbience } from "@/game/ambience";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Rich, StressBar, stressLabel } from "@/components/game/ui";
 import { clueById, clues, connections, janeQuotes, people, START_CLUES, SUSPECT_IDS, suspects, type ClueId, type PersonId } from "@/game/case";
@@ -42,7 +41,6 @@ function MysteryGame() {
   const [calmSince, setCalmSince] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [tea, setTea] = useState<{ quote: string; text: string; pair: [ClueId, ClueId] } | null>(null);
-  useEffect(() => () => stopAmbience(), []);
 
   useEffect(() => {
     setMeta(load("blackwood-meta", {})); setFound(load("blackwood-found", START_CLUES)); setHints(load("blackwood-hints", 3));
@@ -69,7 +67,7 @@ function MysteryGame() {
     const next = hints - 1; setHints(next); save("blackwood-hints", next);
     setIntuition(`${m.observation ? `"${m.observation}." ` : ""}${m.tell}`);
   };
-  const togglePlay = () => { if (playing) stopAmbience(); else startAmbience(); setPlaying(!playing); };
+  const togglePlay = () => setPlaying(!playing);
   const toggleCalm = () => {
     if (calmSince) { const s2 = (startedAt ?? Date.now()) + (Date.now() - calmSince); setStartedAt(s2); save("blackwood-started", s2); setCalmSince(null); }
     else setCalmSince(Date.now());
@@ -162,7 +160,7 @@ function MysteryGame() {
 
       {discovered && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,360px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}
       {tea && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,400px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl" style={{ animationDuration: "9s" }}><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><Coffee className="size-4" /> Tea break</p><p className="mt-2 font-display text-[15px] italic leading-6">{tea.quote}</p><p className="mt-2 border-t pt-2 text-xs"><span className="font-semibold text-primary">Overlooked connection: </span><Rich text={tea.text} /></p><p className="mt-1 text-[10px] text-muted-foreground">Highlighted in your clues: {clueById(tea.pair[0]).title} + {clueById(tea.pair[1]).title}</p></div>}
-      {overlay === "desk" && <Desk playing={playing} onTogglePlay={togglePlay} calm={!!calmSince} onToggleCalm={toggleCalm} onOpenCases={() => setOverlay("cases")} onClose={() => setOverlay(null)} />}
+      {overlay === "desk" && <Desk playing={playing} onTogglePlay={togglePlay} calm={!!calmSince} onToggleCalm={toggleCalm} onOpenCases={() => setOverlay("cases")} onClose={() => { setPlaying(false); setOverlay(null); }} />}
       {overlay === "intro" && <HowToPlay onClose={() => { save("blackwood-intro", true); setOverlay(null); }} />}
       {overlay === "cases" && <Cases onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
       {overlay === "pass" && <SeasonPass onClose={() => setOverlay(null)} />}

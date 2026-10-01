@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Disc3, FolderClosed, FolderOpen, Lock, Pause, Play, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lockedCases, SUSPECT_IDS, suspects, timeline } from "@/game/case";
+import recordAsset from "@/assets/ragtime-oriole.ogg.asset.json";
 import { Eyebrow, Overlay, Rich } from "./ui";
 
 export function Desk({ playing, onTogglePlay, calm, onToggleCalm, onOpenCases, onClose }: {
@@ -11,6 +12,15 @@ export function Desk({ playing, onTogglePlay, calm, onToggleCalm, onOpenCases, o
   useEffect(() => { setNotes(localStorage.getItem("blackwood-notes") ?? ""); }, []);
   const saveNotes = (v: string) => { setNotes(v); localStorage.setItem("blackwood-notes", v); };
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el) return;
+    el.volume = 0.5;
+    if (playing) void el.play().catch(() => {});
+    else el.pause();
+  }, [playing]);
+
   return (
     <Overlay label="My desk" onClose={onClose} className="max-w-4xl border-wood bg-gradient-to-b from-leather/40 to-panel p-0">
       <div className="border-b border-wood/60 p-5"><Eyebrow>CBI · Jane's corner</Eyebrow><h2 className="font-display text-2xl">My desk</h2><p className="text-sm text-muted-foreground">Leather couch, cold tea, quiet thoughts. Nothing here can hurt your case.</p></div>
@@ -19,7 +29,8 @@ export function Desk({ playing, onTogglePlay, calm, onToggleCalm, onOpenCases, o
           <div className="flex items-center gap-4 rounded-md border border-wood bg-wood/40 p-4">
             <div className={`grid size-20 shrink-0 place-items-center rounded-full border-4 border-background bg-background ${playing ? "record-spin" : ""}`}><Disc3 className="size-16 text-primary/80" /></div>
             <div className="min-w-0 flex-1"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Record player</p><p className="font-display text-lg">Midnight at the CBI</p><p className="text-xs text-muted-foreground">Soft noir jazz</p>
-              <Button size="sm" variant="outline" className="mt-2" onClick={onTogglePlay}>{playing ? <><Pause /> Stop</> : <><Play /> Play</>}</Button></div>
+<Button size="sm" variant="outline" className="mt-2" onClick={onTogglePlay}>{playing ? <><Pause /> Stop</> : <><Play /> Play</>}</Button>
+              <audio ref={audioRef} src={recordAsset.url} loop preload="auto" /></div>
           </div>
           <div className="rounded-md border border-wood bg-wood/30 p-4">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-primary">Case folders</p>
