@@ -8,7 +8,7 @@ import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Overlay, Rich, StressBar, stressLabel } from "@/components/game/ui";
-import { CASES, CaseContext, clueOf, janeQuotes, type CaseData, type ClueId, type PersonId } from "@/game/case";
+import { CASES, CaseContext, clueOf, janeQuotes, useCase, type CaseData, type ClueId, type PersonId } from "@/game/case";
 
 
 export const Route = createFileRoute("/")({
