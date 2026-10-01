@@ -1,4 +1,6 @@
-import { Crown, Eye, Gavel, Lightbulb, Lock, MessageSquareQuote, Play } from "lucide-react";
+import { Briefcase, Crown, Eye, Gavel, Lightbulb, Lock, MessageSquareQuote, Play } from "lucide-react";
+import { useState } from "react";
+import sceneImage from "@/assets/crime-scene-study.jpg";
 import { Button } from "@/components/ui/button";
 import { lockedCases } from "@/game/case";
 import { Eyebrow, Overlay } from "./ui";

@@ -15,7 +15,7 @@
 ## Stage 2 — content
 - [ ] Case 002: The Gala Heist (suspects, evidence, scene, solution)
 - [x] Victim interview view
-- [ ] Case briefing that assigns the player before play starts
+- [x] Case briefing that assigns the player before play starts
 
 ## Stage 3 — Mentalist extras
 - [x] Tea cup reflection + highlighted connection
