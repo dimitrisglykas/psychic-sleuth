@@ -13,7 +13,8 @@
 - [x] Progress tracker (clues, suspects questioned, stress per suspect)
 
 ## Stage 2 — content
-- [ ] Case 002: The Gala Heist (suspects, evidence, scene, solution)
+- [x] Case 002: The Gala Heist (suspects, evidence, scene, solution)
+- [x] Suspect secrets stored in Lovable Cloud, read only by the game server
 - [x] Victim interview view
 - [x] Case briefing that assigns the player before play starts
 

@@ -8,7 +8,7 @@ import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Rich, StressBar, stressLabel } from "@/components/game/ui";
-import { clueById, clues, connections, janeQuotes, people, START_CLUES, SUSPECT_IDS, suspects, type ClueId, type PersonId } from "@/game/case";
+import { CASES, CaseContext, clueOf, janeQuotes, type CaseData, type ClueId, type PersonId } from "@/game/case";
 
 
 export const Route = createFileRoute("/")({
@@ -28,7 +28,18 @@ const load = <T,>(k: string, fb: T): T => { try { const v = localStorage.getItem
 const save = (k: string, v: unknown) => localStorage.setItem(k, JSON.stringify(v));
 
 function MysteryGame() {
-  const [suspectId, setSuspectId] = useState<PersonId>("partner");
+  const [code, setCode] = useState("001");
+  useEffect(() => { const c = localStorage.getItem("psychic-case"); if (c && CASES[c]) setCode(c); }, []);
+  const pick = (c: string) => { localStorage.setItem("psychic-case", c); setCode(c); };
+  const C = CASES[code]!;
+  return <CaseContext.Provider value={C}><Game key={code} C={C} onPickCase={pick} /></CaseContext.Provider>;
+}
+
+function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => void }) {
+  const { suspectIds: SUSPECT_IDS, suspects, people, clues, connections, storageKey: K, guide } = C;
+  const START_CLUES = C.startClues;
+  const clueById = (id: ClueId) => clueOf(C, id);
+  const [suspectId, setSuspectId] = useState<PersonId>(guide.suspect);
   const [meta, setMeta] = useState<Partial<Record<PersonId, Meta>>>({});
   const [counts, setCounts] = useState<Partial<Record<PersonId, number>>>({});
   const [found, setFound] = useState<ClueId[]>(START_CLUES);
@@ -43,64 +54,64 @@ function MysteryGame() {
   const [tea, setTea] = useState<{ quote: string; text: string; pair: [ClueId, ClueId] } | null>(null);
 
   useEffect(() => {
-    setMeta(load("blackwood-meta", {})); setFound(load("blackwood-found", START_CLUES)); setHints(load("blackwood-hints", 3));
+    setMeta(load(`${K}-meta`, {})); setFound(load(`${K}-found`, START_CLUES)); setHints(load(`${K}-hints`, 3));
     const c: Partial<Record<PersonId, number>> = {};
-    for (const id of [...SUSPECT_IDS, "victim" as const]) c[id] = load<{ role: string }[]>(`blackwood-chat-${id}`, []).filter((m) => m.role === "user").length;
+    for (const id of [...SUSPECT_IDS, "victim" as const]) c[id] = load<{ role: string }[]>(`${K}-chat-${id}`, []).filter((m) => m.role === "user").length;
     setCounts(c);
-    const s = load<number | null>("blackwood-started", null) ?? Date.now(); save("blackwood-started", s); setStartedAt(s);
-    if (!load("blackwood-intro", false)) setOverlay("intro");
+    const s = load<number | null>(`${K}-started`, null) ?? Date.now(); save(`${K}-started`, s); setStartedAt(s);
+    if (!load(`${K}-intro`, false)) setOverlay("intro");
   }, []);
 
-  const suspect = people[suspectId];
-  const stressOf = (id: PersonId) => meta[id]?.stress ?? people[id].stress;
+  const suspect = people[suspectId]!;
+  const stressOf = (id: PersonId) => meta[id]?.stress ?? people[id]!.stress;
   const questioned = SUSPECT_IDS.filter((id) => (counts[id] ?? 0) > 0);
-  const guiding = !(counts.partner ?? 0) && suspectId === "partner";
+  const guiding = !(counts[guide.suspect] ?? 0) && suspectId === guide.suspect;
 
-  const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<PersonId, Meta>>; save("blackwood-meta", next); return next; });
+  const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<PersonId, Meta>>; save(`${K}-meta`, next); return next; });
   const askClue = (id: ClueId) => setInjected({ id, n: Date.now() });
-  const discover = (id: ClueId) => { setFound((f) => { const next = f.includes(id) ? f : [...f, id]; save("blackwood-found", next); return next; }); setDiscovered(id); window.setTimeout(() => setDiscovered(null), 2600); };
+  const discover = (id: ClueId) => { setFound((f) => { const next = f.includes(id) ? f : [...f, id]; save(`${K}-found`, next); return next; }); setDiscovered(id); window.setTimeout(() => setDiscovered(null), 2600); };
   const switchSuspect = (id: PersonId) => { setSuspectId(id); setInjected(null); };
   const jane = () => {
     const m = meta[suspectId];
     if (hints <= 0) { setOverlay("shop"); return; }
     if (!m?.tell) { setIntuition(`Ask ${suspect.short} something first — even Jane needs a reaction to read.`); return; }
-    const next = hints - 1; setHints(next); save("blackwood-hints", next);
+    const next = hints - 1; setHints(next); save(`${K}-hints`, next);
     setIntuition(`${m.observation ? `"${m.observation}." ` : ""}${m.tell}`);
   };
   const togglePlay = () => setPlaying(!playing);
   const toggleCalm = () => {
-    if (calmSince) { const s2 = (startedAt ?? Date.now()) + (Date.now() - calmSince); setStartedAt(s2); save("blackwood-started", s2); setCalmSince(null); }
+    if (calmSince) { const s2 = (startedAt ?? Date.now()) + (Date.now() - calmSince); setStartedAt(s2); save(`${K}-started`, s2); setCalmSince(null); }
     else setCalmSince(Date.now());
   };
   const sipTea = () => {
     const options = connections.filter((c) => found.includes(c.a) && found.includes(c.b));
-    const c = options[Math.floor(Math.random() * options.length)] ?? connections[3]!;
+    const c = options[Math.floor(Math.random() * options.length)] ?? connections[connections.length - 1]!;
     setTea({ quote: janeQuotes[Math.floor(Math.random() * janeQuotes.length)]!, text: c.text, pair: [c.a, c.b] });
     window.setTimeout(() => setTea(null), 9000);
   };
-  const restart = () => { Object.keys(localStorage).filter((k) => k.startsWith("blackwood-") && k !== "blackwood-intro").forEach((k) => localStorage.removeItem(k)); window.location.reload(); };
+  const restart = () => { Object.keys(localStorage).filter((k) => k.startsWith(`${K}-`) && k !== `${K}-intro`).forEach((k) => localStorage.removeItem(k)); window.location.reload(); };
 
   const left = clues.length - found.length;
-  const objective = !(counts.partner ?? 0) ? "Ask **Julian** about the altered ledger — tap the **ledger clue** below."
-    : !(counts.victim ?? 0) ? "Hear the **victim's last hour** — tap **Interview Alistair** to the right."
+  const objective = !(counts[guide.suspect] ?? 0) ? `Ask **${suspects[guide.suspect]!.short}** about the ${guide.label} — tap the **${guide.label} clue** below.`
+    : !(counts["victim"] ?? 0) ? `Hear the **victim's last hour** — tap **Interview ${C.victim.short}** above.`
     : left > 0 ? `Search the **crime scene** — **${left} hidden clue${left > 1 ? "s" : ""}** left.`
-    : questioned.length < 3 ? `Question **${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id].short).join(" and ")}** to catch a lie.`
+    : questioned.length < 3 ? `Question **${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id]!.short).join(" and ")}** to catch a lie.`
     : "You have everything you need. **Solve the case.**";
-  const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts.victim ?? 0) > 0 ? 1 : 0)) / 3 * 100);
+  const progress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts["victim"] ?? 0) > 0 ? 1 : 0)) / 3 * 100);
 
   const clueButtons = (compact: boolean) => found.map((id) => {
-    const c = clueById(id); const guide = (guiding && id === "invoice") || !!tea?.pair.includes(id);
-    return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${guide ? "guide-ring border-primary" : ""}`}>
+    const c = clueById(id); const glow = (guiding && id === guide.clue) || !!tea?.pair.includes(id);
+    return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${glow ? "guide-ring border-primary" : ""}`}>
       <c.icon className="size-4 shrink-0 text-primary" />
       {compact ? <span className="text-[11px] font-medium">{c.title}</span> : <span className="min-w-0"><span className="block text-xs font-semibold">{c.title}</span><span className="block text-[11px] leading-4 text-muted-foreground"><Rich text={c.detail} /></span></span>}
-      {guiding && id === "invoice" && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask Julian about this</span>}
+      {guiding && id === guide.clue && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask {suspects[guide.suspect]!.short} about this</span>}
     </button>;
   });
 
   return (
     <main className="flex min-h-dvh flex-col bg-background text-foreground lg:h-dvh lg:overflow-hidden">
       <header className="flex min-h-14 items-center gap-3 border-b bg-panel px-4 lg:px-6">
-        <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · Case 001</p><h1 className="truncate font-display text-lg sm:text-xl">The Enigma at Blackwood Manor</h1></div>
+        <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · Case {C.code}</p><h1 className="truncate font-display text-lg sm:text-xl">{C.title}</h1></div>
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
         <Button variant="ghost" size="sm" onClick={() => setOverlay("desk")}><Armchair /> <span className="hidden sm:inline">My desk</span></Button>
@@ -110,7 +121,7 @@ function MysteryGame() {
       <div className="flex items-center gap-3 border-b bg-accent/40 px-4 py-2 lg:px-6">
         <Target className="size-4 shrink-0 text-primary" />
         <p className="min-w-0 flex-1 text-xs sm:text-sm"><span className="font-semibold uppercase tracking-[.12em] text-primary">Goal: </span><Rich text={objective} /></p>
-        <button onClick={() => switchSuspect("victim")} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] ${suspectId === "victim" ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 text-primary hover:bg-accent"} ${!(counts.victim ?? 0) && (counts.partner ?? 0) ? "guide-ring" : ""}`}><Ghost className="size-3" /> Interview Alistair</button>
+        <button onClick={() => switchSuspect("victim")} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.1em] ${suspectId === "victim" ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 text-primary hover:bg-accent"} ${!(counts["victim"] ?? 0) && (counts[guide.suspect] ?? 0) ? "guide-ring" : ""}`}><Ghost className="size-3" /> Interview {C.victim.short}</button>
         {calmSince && <button onClick={toggleCalm} className="flex items-center gap-1 rounded-full border border-success/60 px-2 py-0.5 text-[10px] text-success"><Wind className="size-3" /> Taking a breath · timer paused</button>}
         <div className="hidden w-32 items-center gap-2 sm:flex"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px]">{progress}%</span></div>
       </div>
@@ -121,8 +132,8 @@ function MysteryGame() {
           <div className="relative hidden aspect-[4/3] overflow-hidden lg:block"><img src={suspect.image} alt={suspect.name} className="h-full w-full object-cover object-[center_28%]" width={768} height={1024} /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-panel to-transparent p-4 pt-16"><p className="font-display text-2xl">{suspect.name}</p><p className="text-[10px] uppercase tracking-[.18em] text-primary">{suspect.role}</p></div></div>
           <div className="flex gap-2 overflow-x-auto p-3 lg:grid lg:grid-cols-3 lg:overflow-visible">
             {SUSPECT_IDS.map((id) => <button key={id} onClick={() => switchSuspect(id)} className={`flex min-w-[112px] items-center gap-2 rounded-sm border p-1.5 text-left lg:min-w-0 lg:flex-col lg:items-stretch ${id === suspectId ? "border-primary bg-accent" : "opacity-70 hover:opacity-100"}`}>
-              <img src={suspects[id].image} alt="" className="size-9 rounded-full object-cover object-top lg:aspect-square lg:size-auto lg:w-full lg:rounded-sm" width={768} height={1024} loading="lazy" />
-              <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold">{suspects[id].short}</span><StressBar value={stressOf(id)} thin /></span>
+              <img src={suspects[id]!.image} alt="" className="size-9 rounded-full object-cover object-top lg:aspect-square lg:size-auto lg:w-full lg:rounded-sm" width={768} height={1024} loading="lazy" />
+              <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold">{suspects[id]!.short}</span><StressBar value={stressOf(id)} thin /></span>
             </button>)}
           </div>
           <div className="hidden space-y-4 px-4 pb-5 lg:block">
@@ -144,8 +155,8 @@ function MysteryGame() {
           <div className="space-y-3 p-4"><Eyebrow>Clues · tap to ask</Eyebrow>{clueButtons(false)}{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} more clue{left > 1 ? "s" : ""} hidden at the crime scene.</p>}</div>
           <div className="mt-auto space-y-3 border-t p-4">
             <Eyebrow>Case progress</Eyebrow>
-            <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} /><Row label="Victim interviewed" value={(counts.victim ?? 0) > 0 ? "Yes" : "No"} />
-            {[...SUSPECT_IDS, "victim" as const].map((id) => <div key={id}><div className="mb-1 flex justify-between text-[11px]"><span>{people[id].short}</span><span className="font-mono text-muted-foreground">{stressOf(id)}%</span></div><StressBar value={stressOf(id)} thin /></div>)}
+            <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} /><Row label="Victim interviewed" value={(counts["victim"] ?? 0) > 0 ? "Yes" : "No"} />
+            {[...SUSPECT_IDS, "victim" as const].map((id) => <div key={id}><div className="mb-1 flex justify-between text-[11px]"><span>{people[id]!.short}</span><span className="font-mono text-muted-foreground">{stressOf(id)}%</span></div><StressBar value={stressOf(id)} thin /></div>)}
           </div>
         </aside>
       </div>
@@ -160,13 +171,13 @@ function MysteryGame() {
 
       {discovered && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,360px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}
       {tea && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,400px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl" style={{ animationDuration: "9s" }}><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><Coffee className="size-4" /> Tea break</p><p className="mt-2 font-display text-[15px] italic leading-6">{tea.quote}</p><p className="mt-2 border-t pt-2 text-xs"><span className="font-semibold text-primary">Overlooked connection: </span><Rich text={tea.text} /></p><p className="mt-1 text-[10px] text-muted-foreground">Highlighted in your clues: {clueById(tea.pair[0]).title} + {clueById(tea.pair[1]).title}</p></div>}
-      {overlay === "desk" && <Desk playing={playing} onTogglePlay={togglePlay} calm={!!calmSince} onToggleCalm={toggleCalm} onOpenCases={() => setOverlay("cases")} onClose={() => { setPlaying(false); setOverlay(null); }} />}
-      {overlay === "intro" && <HowToPlay onClose={() => { save("blackwood-intro", true); setOverlay(null); }} />}
-      {overlay === "cases" && <Cases onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
+      {overlay === "desk" && <Desk playing={playing} onTogglePlay={togglePlay} calm={!!calmSince} onToggleCalm={toggleCalm} onOpenCases={() => setOverlay("cases")} onPick={(c) => { setPlaying(false); setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => { setPlaying(false); setOverlay(null); }} />}
+      {overlay === "intro" && <HowToPlay onClose={() => { save(`${K}-intro`, true); setOverlay(null); }} />}
+      {overlay === "cases" && <Cases onPick={(c) => { setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
       {overlay === "pass" && <SeasonPass onClose={() => setOverlay(null)} />}
       {overlay === "scene" && <CrimeScene found={found} onDiscover={discover} onClose={() => setOverlay(null)} />}
       {overlay === "accuse" && <AccuseModal found={found} onClose={() => setOverlay(null)} onRestart={restart} />}
-      {overlay === "shop" && <HintShop onClose={() => setOverlay(null)} onRefill={() => { setHints(3); save("blackwood-hints", 3); setOverlay(null); }} />}
+      {overlay === "shop" && <HintShop onClose={() => setOverlay(null)} onRefill={() => { setHints(3); save(`${K}-hints`, 3); setOverlay(null); }} />}
       {intuition && <Intuition text={intuition} onClose={() => setIntuition(null)} />}
     </main>
   );

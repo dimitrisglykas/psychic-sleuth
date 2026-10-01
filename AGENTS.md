@@ -14,3 +14,6 @@
 
 - Case content (suspects, clues, hotspots, motives, solution) lives in `src/game/case.ts`; game UI pieces live in `src/components/game/`. Keeps puzzles data-driven so new cases can be added without touching UI.
 - AI suspect replies end with a `<<META {...}>>` line (stress, observation, tell) parsed client-side; this streams dialogue while still returning structured game state.
+- Each case is a `CaseData` entry in `src/game/case.ts` (registry `CASES`), provided via `CaseContext`/`useCase()`; components never import case constants directly. Keeps adding cases data-only.
+- Suspect personas/secrets live in Lovable Cloud tables `case_people`/`case_files` (RLS on, no policies, service_role only) and are read by `/api/chat` via the admin client; never ship them in client code.
+- Browser storage keys are prefixed per case with `CaseData.storageKey`; the active case code is stored under `psychic-case`.

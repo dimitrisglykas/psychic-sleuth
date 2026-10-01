@@ -7,7 +7,7 @@ import { Conversation, ConversationContent, ConversationScrollButton } from "@/c
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea, PromptInputTools } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { clueById, people, type ClueId, type PersonId } from "@/game/case";
+import { clueOf, useCase, type ClueId, type PersonId } from "@/game/case";
 
 export type Meta = { stress: number; observation: string; tell: string; jane?: string | undefined };
 export type Action = "coldread" | "bluff" | "detail" | "blink";
@@ -33,7 +33,8 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   suspectId: PersonId; stress: number; injected: { id: ClueId; n: number } | null;
   onMeta: (m: Meta) => void; onCount: (n: number) => void; header?: ReactNode; clueStrip?: ReactNode;
 }) {
-  const suspect = people[suspectId];
+  const C = useCase(); const K = C.storageKey; const clueById = (id: ClueId) => clueOf(C, id);
+  const suspect = C.people[suspectId]!;
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
   const [press, setPress] = useState(false);
@@ -41,12 +42,12 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   const [clueId, setClueId] = useState<ClueId | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
-  const { messages, sendMessage, status, stop, error, setMessages } = useChat({ id: `blackwood-${suspectId}`, transport, onFinish: () => inputRef.current?.focus() });
+  const { messages, sendMessage, status, stop, error, setMessages } = useChat({ id: `${K}-${suspectId}`, transport, onFinish: () => inputRef.current?.focus() });
   const busy = status === "submitted" || status === "streaming";
   const cb = useRef({ onMeta, onCount }); cb.current = { onMeta, onCount };
 
-  useEffect(() => { const saved = localStorage.getItem(`blackwood-chat-${suspectId}`); if (saved) { try { setMessages(JSON.parse(saved) as UIMessage[]); } catch { localStorage.removeItem(`blackwood-chat-${suspectId}`); } } setStorageReady(true); }, [setMessages, suspectId]);
-  useEffect(() => { if (storageReady && !busy) localStorage.setItem(`blackwood-chat-${suspectId}`, JSON.stringify(messages)); }, [messages, busy, storageReady, suspectId]);
+  useEffect(() => { const saved = localStorage.getItem(`${K}-chat-${suspectId}`); if (saved) { try { setMessages(JSON.parse(saved) as UIMessage[]); } catch { localStorage.removeItem(`${K}-chat-${suspectId}`); } } setStorageReady(true); }, [setMessages, suspectId]);
+  useEffect(() => { if (storageReady && !busy) localStorage.setItem(`${K}-chat-${suspectId}`, JSON.stringify(messages)); }, [messages, busy, storageReady, suspectId]);
   useEffect(() => { if (storageReady) cb.current.onCount(messages.filter((m) => m.role === "user").length); }, [messages, storageReady]);
   useEffect(() => {
     if (busy) return;
@@ -62,7 +63,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
     if (!text.trim() || busy) return;
     const c = clueId ? clueById(clueId) : null;
     const tag = action ? `[${ACTIONS[action].tag}] ` : press ? "[PRESSING] " : "";
-    void sendMessage({ text: `${tag}${text.trim()}` }, { body: { suspectId, press, stress, action: action ?? null, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null } });
+    void sendMessage({ text: `${tag}${text.trim()}` }, { body: { caseCode: C.code, suspectId, press, stress, action: action ?? null, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null } });
     if (!action) { setInput(""); setClueId(null); }
     setTrapOpen(false); inputRef.current?.focus();
   };
