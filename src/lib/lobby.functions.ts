@@ -93,10 +93,11 @@ export const updateLobby = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const supabaseAdmin = await roomForMember(data.roomId, data.memberToken);
     const { data: room } = await supabaseAdmin.from("case_rooms").select("case_code, shared_clues").eq("id", data.roomId).single();
+    if (!room) throw new Error("This room is no longer available.");
     const allowed = CASE_CLUES[room.case_code] ?? [];
     const previous = Array.isArray(room.shared_clues) ? room.shared_clues.filter((v): v is string => typeof v === "string") : [];
     const clues = [...new Set([...previous, ...data.clues])].filter((clue) => allowed.includes(clue));
-    const update: Record<string, unknown> = { shared_clues: clues, progress: Math.max(data.progress, Math.round(clues.length / allowed.length * 100)) };
+    const update: { shared_clues: string[]; progress: number; last_event?: { text: string; at: string } } = { shared_clues: clues, progress: Math.max(data.progress, Math.round(clues.length / allowed.length * 100)) };
     if (data.event) update.last_event = { text: data.event, at: new Date().toISOString() };
     await supabaseAdmin.from("case_rooms").update(update).eq("id", data.roomId);
     return stateFor(supabaseAdmin, data.roomId);
