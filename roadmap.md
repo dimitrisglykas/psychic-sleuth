@@ -48,4 +48,4 @@
 - [x] Add Blackwood Manor and shared-universe lore throughout the case research experience
 - [x] Add no-account invite-code lobbies with live shared clues and case progress
 - [x] Keep interviews, notes, and suspect stress private to each player
-- [ ] Verify room joining, live synchronization, reload recovery, and secret isolation
+- [x] Verify room joining, live synchronization, reload recovery, and secret isolation
