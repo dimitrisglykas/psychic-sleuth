@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      case_files: {
+        Row: {
+          case_code: string
+          facts: string
+          setting: string
+          trap_detail: string
+        }
+        Insert: {
+          case_code: string
+          facts: string
+          setting: string
+          trap_detail: string
+        }
+        Update: {
+          case_code?: string
+          facts?: string
+          setting?: string
+          trap_detail?: string
+        }
+        Relationships: []
+      }
+      case_people: {
+        Row: {
+          case_code: string
+          name: string
+          person_id: string
+          persona: string
+          profile: string
+        }
+        Insert: {
+          case_code: string
+          name: string
+          person_id: string
+          persona: string
+          profile: string
+        }
+        Update: {
+          case_code?: string
+          name?: string
+          person_id?: string
+          persona?: string
+          profile?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
