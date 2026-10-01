@@ -1,37 +1,43 @@
 import { useState } from "react";
 import { Gavel, RotateCcw, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { clueOf, useCase, type CaseData, type ClueId, type MotiveId, type SuspectId } from "@/game/case";
+import { useServerFn } from "@tanstack/react-start";
+import { checkAccusation } from "@/lib/accuse.functions";
+import { clueOf, useCase, type ClueId, type MotiveId, type SuspectId } from "@/game/case";
 import { Eyebrow, Overlay, Rich } from "./ui";
 
-function score(solution: CaseData["solution"], culprit: SuspectId, motive: MotiveId, picked: ClueId[]) {
-  let s = culprit === solution.culprit ? 50 : 0;
-  if (motive === solution.motive) s += 25;
-  s += picked.filter((c) => solution.clues.includes(c)).length * 12.5;
-  return Math.round(s);
-}
 const rating = (s: number) => s === 100 ? "Master Mentalist" : s >= 75 ? "Sharp Consultant" : s >= 50 ? "Promising Rookie" : "Back to the Couch";
 
 export function AccuseModal({ found, onClose, onRestart }: { found: ClueId[]; onClose: () => void; onRestart: () => void }) {
-  const C = useCase(); const { motives, solution, suspectIds: SUSPECT_IDS, suspects } = C; const clueById = (id: ClueId) => clueOf(C, id);
+  const C = useCase(); const { motives, suspectIds: SUSPECT_IDS, suspects } = C; const clueById = (id: ClueId) => clueOf(C, id);
   const [culprit, setCulprit] = useState<SuspectId | null>(null);
   const [motive, setMotive] = useState<MotiveId | null>(null);
   const [picked, setPicked] = useState<ClueId[]>([]);
   const [done, setDone] = useState(false);
+  const [result, setResult] = useState<Awaited<ReturnType<typeof checkAccusation>> | null>(null);
+  const [busy, setBusy] = useState(false); const [err, setErr] = useState("");
+  const check = useServerFn(checkAccusation);
+  const submit = async () => {
+    if (!culprit || !motive) return;
+    setBusy(true); setErr("");
+    try { setResult(await check({ data: { caseCode: C.code, culprit, motive, clues: picked } })); setDone(true); }
+    catch { setErr("Jane couldn't reach the case file. Try again in a moment."); }
+    finally { setBusy(false); }
+  };
   const toggle = (id: ClueId) => setPicked((p) => p.includes(id) ? p.filter((x) => x !== id) : p.length < 2 ? [...p, id] : p);
   const ready = culprit && motive && picked.length === 2;
 
-  if (done && culprit && motive) {
-    const s = score(solution, culprit, motive, picked); const won = culprit === solution.culprit;
+  if (done && culprit && motive && result) {
+    const s = result.score; const won = result.won;
     return (
       <Overlay label="Case outcome" onClose={onClose} className="max-w-xl">
         <div className="text-center"><div className={`mx-auto mb-3 grid size-14 place-items-center rounded-full ${won ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"}`}><Trophy className="size-6" /></div>
           <Eyebrow>{won ? "Case closed" : "Case unsolved"}</Eyebrow><h2 className="font-display text-3xl">{rating(s)}</h2><p className="mt-1 font-mono text-sm text-muted-foreground">Score {s} / 100</p></div>
         <div className="mt-5 space-y-3 border-l-2 border-primary bg-accent/50 p-4 font-display text-[15px] leading-6">
           <p className="text-[10px] font-sans font-bold uppercase tracking-[.2em] text-primary">Jane explains</p>
-          <p><Rich text={won ? C.ending.win : C.ending.lose(suspects[culprit]!.short)} /></p>
-          {C.ending.lines.map((l) => <p key={l}><Rich text={l} /></p>)}
-          <p className="text-sm text-muted-foreground">Your motive: {motives.find((m) => m.id === motive)?.label} {motive === solution.motive ? "✓" : "✗"} · Your clues: {picked.map((c) => `${clueById(c).title} ${solution.clues.includes(c) ? "✓" : "✗"}`).join(", ")}</p>
+          <p><Rich text={won ? result.win : C.ending.lose(suspects[culprit]!.short)} /></p>
+          {result.lines.map((l) => <p key={l}><Rich text={l} /></p>)}
+          <p className="text-sm text-muted-foreground">Your motive: {motives.find((m) => m.id === motive)?.label} {result.motiveOk ? "✓" : "✗"} · Your clues: {picked.map((c, i) => `${clueById(c).title} ${result.clueOk[i] ? "✓" : "✗"}`).join(", ")}</p>
         </div>
         <div className="mt-5 grid gap-2 sm:grid-cols-2"><Button variant="outline" onClick={() => setDone(false)}>Review my choices</Button><Button onClick={onRestart}><RotateCcw /> Play again</Button></div>
       </Overlay>
