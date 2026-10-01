@@ -36,4 +36,4 @@
 ## Cinematic case system
 - [x] Apply cinematic crime scenes, portraits, evidence cards, and overlays to every playable case
 - [x] Drive scene imagery, evidence sheets, crop slots, timestamps, and hotspot coordinates from case data
-- [ ] Verify every hotspot reveals and displays its matching evidence card in both cases
+- [x] Verify every hotspot reveals and displays its matching evidence card in both cases
