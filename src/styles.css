@@ -90,3 +90,15 @@
 @utility cold-read-scan { animation: scan-face 2.2s ease-in-out forwards; box-shadow: 0 0 14px var(--color-primary); }
 @keyframes focus-cue { 0%,100% { transform: scale(.9); opacity: .55 } 50% { transform: scale(1.1); opacity: 1 } }
 @utility intuition-focus { animation: focus-cue 1.8s ease-in-out infinite; box-shadow: 0 0 24px color-mix(in oklch, var(--color-primary) 55%, transparent); }
+@keyframes tea-ripple { 0%,100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-primary) 35%, transparent) } 50% { box-shadow: 0 0 0 18px transparent } }
+@utility tea-ripple { animation: tea-ripple 2.8s ease-out infinite; }
+
+.evidence-sheet { position:absolute; height:220%; width:330%; object-fit:cover; }
+.evidence-sheet-large { height:205%; width:305%; }
+.evidence-gap .evidence-sheet { left:0; top:0; }
+.evidence-bribe .evidence-sheet { left:-106%; top:0; }
+.evidence-tie .evidence-sheet { right:0; top:0; }
+.evidence-claim .evidence-sheet { left:0; bottom:0; }
+.evidence-paste .evidence-sheet { left:-92%; bottom:0; }
+.evidence-badge .evidence-sheet { left:-182%; bottom:0; }
+.evidence-radio .evidence-sheet { right:0; bottom:0; }

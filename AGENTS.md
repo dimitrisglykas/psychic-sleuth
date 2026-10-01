@@ -19,3 +19,4 @@
 - Browser storage keys are prefixed per case with `CaseData.storageKey`; the active case code is stored under `psychic-case`.
 
 - Case solutions and final explanations live in Lovable Cloud `case_files` and are checked by the `checkAccusation` server function; never put answers in `src/game/case.ts`. Keeps answers out of the browser.
+- Cinematic case visuals remain data-driven through `CaseContext`; case-specific presentation may enhance imagery but must not duplicate clues or answers. Keeps rich visuals compatible with future cases.
