@@ -28,7 +28,7 @@ export function AccuseModal({ found, onClose, onRestart, onOutcome }: { found: C
   const submit = async () => {
     if (!culprit || !motive) return;
     setBusy(true); setErr("");
-    try { const checked = await check({ data: { caseCode: C.code, culprit, motive, clues: picked } }); setResult(checked); setDone(true); localStorage.setItem(`${C.storageKey}-outcome`, JSON.stringify({ culprit, motive, picked, result: checked })); onOutcome?.(); }
+    try { const checked = await check({ data: { caseCode: C.code, culprit, motive, clues: picked } }); setResult(checked); setDone(true); localStorage.setItem(`${C.storageKey}-outcome`, JSON.stringify({ culprit, motive, picked, result: checked })); window.dispatchEvent(new CustomEvent("case-outcome", { detail: { won: checked.won, score: checked.score, rating: rating(checked.score) } })); onOutcome?.(); }
     catch { setErr("Jane couldn't reach the case file. Try again in a moment."); }
     finally { setBusy(false); }
   };

@@ -1,7 +1,7 @@
-import { ArrowLeft, Briefcase, Crown, Eye, FileSearch, Gavel, Lightbulb, Lock, MessageSquareQuote, Play, ShieldAlert } from "lucide-react";
+import { ArrowLeft, BookOpen, Briefcase, Crown, Eye, FileSearch, Gavel, Lightbulb, Lock, MessageSquareQuote, Play, ShieldAlert, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CASES, lockedCases, useCase, type CaseData } from "@/game/case";
+import { CASES, JANE_PROFILE, WORLD_LORE, lockedCases, useCase, type CaseData } from "@/game/case";
 import { Eyebrow, Overlay, Rich } from "./ui";
 
 export function HowToPlay({ onClose }: { onClose: () => void }) {
@@ -74,6 +74,7 @@ export function Cases({ onClose, onPick, onPremium }: { onClose: () => void; onP
 }
 
 function CharacterGallery({ caseData: C, onBack, onPlay }: { caseData: CaseData; onBack: () => void; onPlay: () => void }) {
+  const [section, setSection] = useState<"people" | "jane" | "world">("people");
   return (
     <Overlay label={`${C.title} character gallery`} onClose={onBack} className="max-w-5xl overflow-hidden p-0">
       <div className="relative min-h-40 overflow-hidden border-b sm:min-h-52">
@@ -81,15 +82,22 @@ function CharacterGallery({ caseData: C, onBack, onPlay }: { caseData: CaseData;
         <div className="absolute inset-0 bg-gradient-to-t from-panel via-background/30 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7"><Eyebrow>Case {C.code} · Before you investigate</Eyebrow><h2 className="font-display text-3xl sm:text-4xl">People of interest</h2><p className="mt-1 max-w-xl text-sm text-foreground/75">Study their public histories. Everyone has something to hide; only the evidence tells you what matters.</p></div>
       </div>
-      <div className="grid gap-px bg-border sm:grid-cols-3">
+      <div className="grid grid-cols-3 border-b bg-panel p-2"><Button size="sm" variant={section === "people" ? "secondary" : "ghost"} onClick={() => setSection("people")}><FileSearch /> People</Button><Button size="sm" variant={section === "jane" ? "secondary" : "ghost"} onClick={() => setSection("jane")}><Sparkles /> Jane</Button><Button size="sm" variant={section === "world" ? "secondary" : "ghost"} onClick={() => setSection("world")}><BookOpen /> World</Button></div>
+      {section === "people" && <div className="grid gap-px bg-border sm:grid-cols-3">
         {C.suspectIds.map((id) => { const person = C.suspects[id]; if (!person) return null; return <article key={id} className="bg-panel">
           <div className="relative aspect-[5/4] overflow-hidden"><img src={person.image} alt={`${person.name}, ${person.role}`} className="h-full w-full object-cover object-[center_24%] transition-transform duration-700 hover:scale-[1.03]" width={768} height={1024} /><div className="absolute inset-0 bg-gradient-to-t from-panel via-transparent to-transparent" /><div className="absolute inset-x-0 bottom-0 p-4"><p className="font-display text-2xl">{person.name}</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-primary">{person.role} · age {person.age}</p></div></div>
           <div className="space-y-3 p-4 text-xs leading-5"><div><p className="mb-1 text-[9px] font-bold uppercase tracking-[.16em] text-muted-foreground">Background</p><p><Rich text={person.bio} /></p></div><div><p className="mb-1 text-[9px] font-bold uppercase tracking-[.16em] text-muted-foreground">Statement</p><p><Rich text={person.alibi} /></p></div><div className="rounded-sm border border-primary/35 bg-accent/50 p-3"><p className="mb-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[.16em] text-primary"><ShieldAlert className="size-3" /> Known secret</p><p><Rich text={person.knownSecret ?? person.motive} /></p></div></div>
         </article>; })}
-      </div>
+      </div>}
+      {section === "jane" && <div className="grid bg-panel lg:grid-cols-[.9fr_1.1fr]"><div className="relative min-h-80 overflow-hidden border-b lg:border-b-0 lg:border-r"><img src={JANE_PROFILE.image} alt="Patrick Jane, independent consultant" className="absolute inset-0 h-full w-full object-cover object-top" width={1024} height={1024} /><div className="absolute inset-0 bg-gradient-to-t from-panel via-transparent to-transparent" /><div className="absolute inset-x-0 bottom-0 p-5"><p className="font-display text-3xl">{JANE_PROFILE.name}</p><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">{JANE_PROFILE.role}</p></div></div><div className="space-y-5 p-5 sm:p-7"><div><Eyebrow>The consultant</Eyebrow><p className="mt-2 text-sm leading-6 text-foreground/85">{JANE_PROFILE.backstory}</p></div><div className="grid gap-3 sm:grid-cols-2"><InfoBlock title="Lisbon" text={JANE_PROFILE.lisbon} /><InfoBlock title="Habits" text={JANE_PROFILE.habits} /></div><div><p className="mb-2 text-xs font-semibold uppercase tracking-[.16em] text-primary">How intuition works</p><div className="grid gap-2 sm:grid-cols-2">{JANE_PROFILE.method.map((step, index) => <div key={step.title} className="rounded-sm border bg-panel-raised p-3"><p className="font-display text-lg"><span className="mr-2 text-primary">0{index + 1}</span>{step.title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{step.text}</p></div>)}</div><p className="mt-3 text-xs italic text-muted-foreground">Not psychic. Just attentive — and occasionally theatrical.</p></div></div></div>}
+      {section === "world" && <div className="bg-panel p-5 sm:p-7"><Eyebrow>Case archive</Eyebrow><h3 className="font-display text-3xl">{C.lore.title}</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{C.lore.summary}</p><div className="mt-5 grid gap-3 sm:grid-cols-2">{C.lore.entries.map((entry) => <InfoBlock key={entry.title} title={entry.title} text={entry.text} />)}{WORLD_LORE.map((entry) => <InfoBlock key={entry.title} title={entry.title} text={entry.text} />)}</div></div>}
       <div className="flex items-center justify-between gap-3 border-t bg-panel-raised p-4"><Button variant="ghost" onClick={onBack}><ArrowLeft /> Case files</Button><Button onClick={onPlay}><Briefcase /> Investigate this case</Button></div>
     </Overlay>
   );
+}
+
+function InfoBlock({ title, text }: { title: string; text: string }) {
+  return <article className="rounded-sm border bg-panel-raised p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">{title}</p><p className="mt-1.5 text-xs leading-5 text-foreground/80">{text}</p></article>;
 }
 
 export function Intuition({ text, image, name, stress, onClose }: { text: string; image: string; name: string; stress: number; onClose: () => void }) {

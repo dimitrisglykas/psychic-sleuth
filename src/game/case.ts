@@ -12,6 +12,7 @@ import marcusImage from "@/assets/marcus-hale.jpg";
 import galaCinematicImage from "@/assets/gala-crime-scene-cinematic.jpg";
 import galaEvidenceImage from "@/assets/gala-evidence-collection.jpg";
 import blackwoodEvidenceImage from "@/assets/blackwood-evidence-collection.jpg";
+import janeImage from "@/assets/jane-consultant.jpg";
 
 export type SuspectId = string;
 export type PersonId = string;
@@ -32,7 +33,27 @@ export type CaseData = {
   briefing: { time: string; lines: string[]; aside: string };
   guide: { suspect: SuspectId; clue: ClueId; label: string };
   ending: { lose: (short: string) => string };
+  lore: { title: string; summary: string; entries: { title: string; text: string }[] };
 };
+
+export const JANE_PROFILE = {
+  name: "Patrick Jane", role: "Independent Consultant", image: janeImage,
+  backstory: "A former stage mentalist who once sold comforting illusions. A devastating personal loss ended the act and left him determined to use the same skills in service of the truth.",
+  lisbon: "Lisbon is his anchor and his equal: she gives his instincts a legal path, while he forces her team to notice the human story hiding behind procedure.",
+  habits: "Tea before conclusions. Bare feet on expensive furniture. A disarming smile when everyone else reaches for authority.",
+  method: [
+    { title: "Observe", text: "Notice where the eyes go, what the hands protect, and which detail changes the breath." },
+    { title: "Set a baseline", text: "Learn how someone behaves when calm before treating a nervous gesture as evidence." },
+    { title: "Find contradiction", text: "Compare the performance to the timeline. Lies usually fail at the smallest detail." },
+    { title: "Connect", text: "Put two ordinary clues together until they tell a story neither could tell alone." },
+  ],
+};
+
+export const WORLD_LORE = [
+  { title: "The Serious Crimes Unit", text: "Lisbon's small investigative unit handles cases where motive matters as much as method. Jane consults; Lisbon decides what can stand in a courtroom." },
+  { title: "Jane's corner", text: "A battered couch, a tea service, and case folders nobody else can decipher. It is where interviews become patterns." },
+  { title: "The Lisbon Star", text: "The museum diamond took its name from the city where it resurfaced after decades in private collections. One former owner did business with Blackwood & Voss." },
+];
 
 const mk = (c: Omit<CaseData, "people" | "clueById">) => ({ ...c, people: { ...c.suspects, victim: c.victim } }) as CaseData;
 
@@ -85,6 +106,12 @@ export const case001 = mk({
   ending: {
     lose: (s) => `"Ah. You chased the loudest secret in the room. ${s} is guilty of plenty — just not murder."`,
   },
+  lore: { title: "The House That Kept Its Secrets", summary: "Blackwood Manor has sheltered a powerful family for four generations. Tonight, the walls have finally begun to talk.", entries: [
+    { title: "The Blackwood dynasty", text: "The family fortune began in rail and shipping, then became Blackwood & Voss, a discreet firm trusted by people who prefer their wealth unexamined." },
+    { title: "The manor", text: "Built in 1887 around an older hunting lodge, the house contains sealed passages, servants' stairs, and a study where every Blackwood heir kept the private family archive." },
+    { title: "The blue-paper scandal", text: "For years, rumors have followed a set of blue letters linking the family name to falsified charitable accounts. No complete letter has ever reached the press." },
+    { title: "A wider thread", text: "Blackwood & Voss once handled the disputed transfer of the Lisbon Star. The file vanished before the Aldridge Museum acquired the gem." },
+  ] },
 });
 
 export const case002 = mk({
@@ -135,6 +162,12 @@ export const case002 = mk({
   ending: {
     lose: (s) => `"Close — but ${s} only stole money, or truth, or time. Someone else stole a life."`,
   },
+  lore: { title: "The Aldridge After Dark", summary: "The museum survives on reputation, private money, and objects whose histories are less clean than their display cases.", entries: [
+    { title: "The Aldridge Museum", text: "Founded by industrialist Edwin Aldridge, the museum grew through private gifts. Its grand galleries conceal years of deferred repairs and fragile finances." },
+    { title: "The Lisbon Star", text: "The blue diamond resurfaced after decades moving between private collectors. Its ownership trail includes a missing transfer file from Blackwood & Voss." },
+    { title: "The gala circuit", text: "Curators, collectors, insurers, and security contractors meet at events like this. Every smile is public; every favor is private." },
+    { title: "A recurring shadow", text: "Lisbon notices the Blackwood name in the provenance records. Jane calls it a coincidence, which is how Lisbon knows he does not believe that." },
+  ] },
 });
 
 export const CASES: Record<string, CaseData> = { "001": case001, "002": case002 };
