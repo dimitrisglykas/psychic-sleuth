@@ -9,7 +9,7 @@ import helenaImage from "@/assets/helena-marsh.jpg";
 import victorImage from "@/assets/victor-crane.jpg";
 import ninaImage from "@/assets/nina-reyes.jpg";
 import marcusImage from "@/assets/marcus-hale.jpg";
-import vaultImage from "@/assets/gala-vault.jpg";
+import galaCinematicImage from "@/assets/gala-crime-scene-cinematic.jpg";
 
 export type SuspectId = string;
 export type PersonId = string;
@@ -104,7 +104,7 @@ export const case002 = mk({
     { id: "claim", icon: ScrollText, title: "Insurance Draft", detail: "A claim for **£12 million**, typed on Helena's computer **at 10:40 PM** — before police arrived.", prompt: "You drafted a £12 million insurance claim before the police even arrived. Why so fast?" },
   ],
   startClues: ["gap", "bribe"],
-  scene: { image: vaultImage, label: "The vault gallery", alt: "The Aldridge Museum vault gallery after the gala" },
+  scene: { image: galaCinematicImage, label: "The vault gallery", alt: "The Aldridge Museum vault gallery after the gala" },
   hotspots: [
     { id: "junction", label: "Junction box", clue: "tie", x: 20, y: 8 },
     { id: "office", label: "Curator's office", clue: "claim", x: 8, y: 44 },

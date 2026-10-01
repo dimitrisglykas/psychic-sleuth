@@ -3,6 +3,7 @@ import { Disc3, FolderClosed, FolderOpen, Lock, Pause, Play, Wind } from "lucide
 import { Button } from "@/components/ui/button";
 import { CASES, lockedCases, useCase } from "@/game/case";
 import recordAsset from "@/assets/st-louis-blues.mp3.asset.json";
+import galaEvidence from "@/assets/gala-evidence-collection.jpg";
 import { Eyebrow, Overlay, Rich } from "./ui";
 
 export function Desk({ playing, onTogglePlay, calm, onToggleCalm, onOpenCases, onPick, onClose }: {
@@ -23,7 +24,8 @@ export function Desk({ playing, onTogglePlay, calm, onToggleCalm, onOpenCases, o
   }, [playing]);
 
   return (
-    <Overlay label="My desk" onClose={onClose} className="max-w-4xl border-wood bg-gradient-to-b from-leather/40 to-panel p-0">
+    <Overlay label="My desk" onClose={onClose} className="max-w-5xl overflow-hidden border-wood bg-gradient-to-b from-leather/40 to-panel p-0">
+      {C.code === "002" && <div className="pointer-events-none absolute inset-x-0 top-0 h-64 overflow-hidden opacity-20"><img src={galaEvidence} alt="" className="h-full w-full object-cover" width={1600} height={1008} /><div className="absolute inset-0 bg-gradient-to-b from-transparent to-panel" /></div>}
       <div className="border-b border-wood/60 p-5"><Eyebrow>CBI · Jane's corner</Eyebrow><h2 className="font-display text-2xl">My desk</h2><p className="text-sm text-muted-foreground">Leather couch, cold tea, quiet thoughts. Nothing here can hurt your case.</p></div>
       <div className="grid gap-4 p-5 md:grid-cols-[1fr_1.2fr]">
         <div className="space-y-4">
