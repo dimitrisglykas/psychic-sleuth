@@ -68,6 +68,86 @@ export type Database = {
         }
         Relationships: []
       }
+      case_room_members: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          last_seen_at: string
+          member_hash: string
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          last_seen_at?: string
+          member_hash: string
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          last_seen_at?: string
+          member_hash?: string
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_room_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "case_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_rooms: {
+        Row: {
+          case_code: string
+          created_at: string
+          expires_at: string
+          id: string
+          invite_hash: string
+          last_event: Json | null
+          outcome: Json | null
+          progress: number
+          shared_clues: Json
+          started_at: string
+          updated_at: string
+        }
+        Insert: {
+          case_code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_hash: string
+          last_event?: Json | null
+          outcome?: Json | null
+          progress?: number
+          shared_clues?: Json
+          started_at?: string
+          updated_at?: string
+        }
+        Update: {
+          case_code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_hash?: string
+          last_event?: Json | null
+          outcome?: Json | null
+          progress?: number
+          shared_clues?: Json
+          started_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
