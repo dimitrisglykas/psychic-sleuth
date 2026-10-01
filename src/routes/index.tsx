@@ -77,7 +77,7 @@ function MysteryGame() {
     return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${guide ? "guide-ring border-primary" : ""}`}>
       <c.icon className="size-4 shrink-0 text-primary" />
       {compact ? <span className="text-[11px] font-medium">{c.title}</span> : <span className="min-w-0"><span className="block text-xs font-semibold">{c.title}</span><span className="block text-[11px] leading-4 text-muted-foreground"><Rich text={c.detail} /></span></span>}
-      {guide && <span className="absolute -top-7 left-0 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask Julian about this</span>}
+      {guide && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask Julian about this</span>}
     </button>;
   });
 
@@ -95,7 +95,7 @@ function MysteryGame() {
         <div className="hidden w-32 items-center gap-2 sm:flex"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px]">{progress}%</span></div>
       </div>
 
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[280px_minmax(0,1fr)_300px]">
+      <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr] lg:grid-rows-1 lg:grid-cols-[280px_minmax(0,1fr)_300px]">
         {/* Left: suspect */}
         <aside className="min-h-0 border-b bg-panel lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <div className="relative hidden aspect-[4/3] overflow-hidden lg:block"><img src={suspect.image} alt={suspect.name} className="h-full w-full object-cover object-[center_28%]" width={768} height={1024} /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-panel to-transparent p-4 pt-16"><p className="font-display text-2xl">{suspect.name}</p><p className="text-[10px] uppercase tracking-[.18em] text-primary">{suspect.role}</p></div></div>
@@ -115,13 +115,13 @@ function MysteryGame() {
         <Interrogation key={suspectId} suspectId={suspectId} stress={stressOf(suspectId)} injected={injected} onMeta={updateMeta}
           onCount={(n) => setCounts((c) => (c[suspectId] === n ? c : { ...c, [suspectId]: n }))}
           header={<div className="flex items-center justify-between border-b px-4 py-2.5"><p className="text-xs"><span className="font-semibold">Questioning {suspect.name}</span> <span className="text-muted-foreground lg:hidden">· stress {stressOf(suspectId)}%</span></p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording</p></div>}
-          clueStrip={<div className="mx-auto mb-2 flex max-w-2xl gap-2 overflow-x-auto pb-1 pt-7 lg:hidden">{clueButtons(true)}<button onClick={() => setOverlay("scene")} className="flex shrink-0 items-center gap-1.5 rounded-sm border border-dashed border-primary/60 p-2 text-[11px] text-primary"><Search className="size-4" /> Crime scene</button></div>}
+          clueStrip={<div className="mx-auto mb-2 flex max-w-2xl gap-2 overflow-x-auto pb-1 pt-4 lg:hidden">{clueButtons(true)}<button onClick={() => setOverlay("scene")} className="flex shrink-0 items-center gap-1.5 rounded-sm border border-dashed border-primary/60 p-2 text-[11px] text-primary"><Search className="size-4" /> Crime scene</button></div>}
         />
 
         {/* Right: clues & actions */}
         <aside className="hidden min-h-0 flex-col overflow-y-auto border-l bg-panel lg:flex">
           <div className="border-b p-4"><Button className="h-11 w-full" onClick={() => setOverlay("scene")}><Search /> Inspect crime scene</Button></div>
-          <div className="space-y-2 p-4 pt-9"><Eyebrow>Clues · tap to ask</Eyebrow>{clueButtons(false)}{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} more clue{left > 1 ? "s" : ""} hidden at the crime scene.</p>}</div>
+          <div className="space-y-3 p-4"><Eyebrow>Clues · tap to ask</Eyebrow>{clueButtons(false)}{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} more clue{left > 1 ? "s" : ""} hidden at the crime scene.</p>}</div>
           <div className="mt-auto space-y-3 border-t p-4">
             <Eyebrow>Case progress</Eyebrow>
             <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} />
