@@ -55,7 +55,7 @@ function parseReply(text: string): { speech: string; meta?: Meta } {
   if (i < 0) return { speech: text };
   const m = text.slice(i).match(/<<META\s*(\{[\s\S]*\})\s*>>/);
   let meta: Meta | undefined;
-  if (m) { try { const p = JSON.parse(m[1]); meta = { stress: Math.max(0, Math.min(100, Math.round(Number(p.stress) || 0))), observation: String(p.observation ?? ""), tell: String(p.tell ?? "") }; } catch { /* partial */ } }
+  if (m) { try { const p = JSON.parse(m[1] ?? ""); meta = { stress: Math.max(0, Math.min(100, Math.round(Number(p.stress) || 0))), observation: String(p.observation ?? ""), tell: String(p.tell ?? "") }; } catch { /* partial */ } }
   return { speech: text.slice(0, i).trim(), meta };
 }
 
@@ -101,7 +101,7 @@ function MysteryGame() {
 
         <div className="grid min-h-0 flex-1 lg:grid-cols-[286px_minmax(400px,1fr)_300px]">
           <Dossier suspectId={suspectId} stress={stress} onSelect={(id) => { setSuspectId(id); setIntuition(null); }} />
-          <Interrogation key={suspectId} suspectId={suspectId} stress={stress} onMeta={(m) => setMeta((prev) => ({ ...prev, [suspectId]: m }))} onEvidence={() => setEvidenceOpen(true)} />
+          <Interrogation key={suspectId} suspectId={suspectId} stress={stress} onMeta={(m) => setMeta((prev) => ({ ...prev, [suspectId]: m }) as Partial<Record<SuspectId, Meta>>)} onEvidence={() => setEvidenceOpen(true)} />
           <EvidenceDrawer className="hidden lg:flex" onUse={(prompt) => window.dispatchEvent(new CustomEvent("use-evidence", { detail: prompt }))} />
         </div>
       </section>
@@ -147,7 +147,7 @@ function Interrogation({ suspectId, stress, onMeta, onEvidence }: { suspectId: S
   useEffect(() => {
     if (busy) return;
     for (let i = messages.length - 1; i >= 0; i--) {
-      const m = messages[i]; if (m.role !== "assistant") continue;
+      const m = messages[i]; if (!m || m.role !== "assistant") continue;
       const text = m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
       const { meta } = parseReply(text); if (meta) { onMetaRef.current(meta); return; }
     }
