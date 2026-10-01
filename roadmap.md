@@ -37,3 +37,8 @@
 - [x] Apply cinematic crime scenes, portraits, evidence cards, and overlays to every playable case
 - [x] Drive scene imagery, evidence sheets, crop slots, timestamps, and hotspot coordinates from case data
 - [x] Verify every hotspot reveals and displays its matching evidence card in both cases
+
+## Character research and full verification
+- [x] Add a pre-case portrait gallery with public backgrounds, statements, and known secrets
+- [ ] Play both cases from briefing to the correct win screen and verify every hotspot-to-evidence match
+- [ ] Confirm two independent players retain separate clues, stress, transcripts, and results after reload

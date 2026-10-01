@@ -1,8 +1,8 @@
-import { Briefcase, Crown, Eye, Gavel, Lightbulb, Lock, MessageSquareQuote, Play } from "lucide-react";
+import { ArrowLeft, Briefcase, Crown, Eye, FileSearch, Gavel, Lightbulb, Lock, MessageSquareQuote, Play, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CASES, lockedCases, useCase } from "@/game/case";
-import { Eyebrow, Overlay } from "./ui";
+import { CASES, lockedCases, useCase, type CaseData } from "@/game/case";
+import { Eyebrow, Overlay, Rich } from "./ui";
 
 export function HowToPlay({ onClose }: { onClose: () => void }) {
   const steps = [
@@ -60,13 +60,34 @@ export function SeasonPass({ onClose }: { onClose: () => void }) {
 
 export function Cases({ onClose, onPick, onPremium }: { onClose: () => void; onPick: (code: string) => void; onPremium: () => void }) {
   const C = useCase();
+  const [researching, setResearching] = useState<CaseData | null>(null);
+  if (researching) return <CharacterGallery caseData={researching} onBack={() => setResearching(null)} onPlay={() => onPick(researching.code)} />;
   return (
     <Overlay label="Cases" onClose={onClose} className="max-w-2xl">
       <Eyebrow>Your cases</Eyebrow><h2 className="mb-4 font-display text-2xl">Case files</h2>
       <div className="space-y-2">
-        {Object.values(CASES).map((k) => { const on = k.code === C.code; return <button key={k.code} onClick={() => onPick(k.code)} className={`w-full rounded-sm border p-4 text-left ${on ? "border-primary bg-accent" : "bg-panel-raised hover:border-primary/60"}`}><div className="flex items-center justify-between"><p className="font-mono text-[10px] text-primary">CASE {k.code} · {on ? "ACTIVE" : "OPEN"} · FREE</p><span className="text-[10px] font-bold uppercase text-success">{on ? "Continue" : "Play"}</span></div><p className="mt-1 font-display text-xl">{k.title}</p><p className="text-xs text-muted-foreground">{k.tagline}</p></button>; })}
+        {Object.values(CASES).map((k) => { const on = k.code === C.code; return <article key={k.code} className={`overflow-hidden rounded-sm border ${on ? "border-primary bg-accent" : "bg-panel-raised"}`}><div className="grid grid-cols-[92px_1fr] sm:grid-cols-[150px_1fr]"><img src={k.scene.image} alt="" className="h-full min-h-32 w-full object-cover" width={1280} height={720} /><div className="min-w-0 p-4"><p className="font-mono text-[10px] text-primary">CASE {k.code} · {on ? "ACTIVE" : "OPEN"} · FREE</p><p className="mt-1 font-display text-xl">{k.title}</p><p className="mt-1 text-xs text-muted-foreground">{k.tagline}</p><div className="mt-4 flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => setResearching(k)}><FileSearch /> Research people</Button><Button size="sm" onClick={() => onPick(k.code)}><Play /> {on ? "Continue" : "Start case"}</Button></div></div></div></article>; })}
         {lockedCases.map((c) => <div key={c.code} className="flex items-center gap-3 rounded-sm border bg-panel-raised p-4 opacity-90"><Lock className="size-5 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="font-mono text-[10px] text-muted-foreground">CASE {c.code} · LOCKED</p><p className="font-display text-lg">{c.title}</p><p className="text-xs text-muted-foreground">{c.teaser}</p></div><Button size="sm" onClick={onPremium}><Crown /> Unlock</Button></div>)}
       </div>
+    </Overlay>
+  );
+}
+
+function CharacterGallery({ caseData: C, onBack, onPlay }: { caseData: CaseData; onBack: () => void; onPlay: () => void }) {
+  return (
+    <Overlay label={`${C.title} character gallery`} onClose={onBack} className="max-w-5xl overflow-hidden p-0">
+      <div className="relative min-h-40 overflow-hidden border-b sm:min-h-52">
+        <img src={C.scene.image} alt={C.scene.alt} className="absolute inset-0 h-full w-full object-cover" width={1280} height={720} />
+        <div className="absolute inset-0 bg-gradient-to-t from-panel via-background/30 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7"><Eyebrow>Case {C.code} · Before you investigate</Eyebrow><h2 className="font-display text-3xl sm:text-4xl">People of interest</h2><p className="mt-1 max-w-xl text-sm text-foreground/75">Study their public histories. Everyone has something to hide; only the evidence tells you what matters.</p></div>
+      </div>
+      <div className="grid gap-px bg-border sm:grid-cols-3">
+        {C.suspectIds.map((id) => { const person = C.suspects[id]; if (!person) return null; return <article key={id} className="bg-panel">
+          <div className="relative aspect-[5/4] overflow-hidden"><img src={person.image} alt={`${person.name}, ${person.role}`} className="h-full w-full object-cover object-[center_24%] transition-transform duration-700 hover:scale-[1.03]" width={768} height={1024} /><div className="absolute inset-0 bg-gradient-to-t from-panel via-transparent to-transparent" /><div className="absolute inset-x-0 bottom-0 p-4"><p className="font-display text-2xl">{person.name}</p><p className="text-[9px] font-bold uppercase tracking-[.18em] text-primary">{person.role} · age {person.age}</p></div></div>
+          <div className="space-y-3 p-4 text-xs leading-5"><div><p className="mb-1 text-[9px] font-bold uppercase tracking-[.16em] text-muted-foreground">Background</p><p><Rich text={person.bio} /></p></div><div><p className="mb-1 text-[9px] font-bold uppercase tracking-[.16em] text-muted-foreground">Statement</p><p><Rich text={person.alibi} /></p></div><div className="rounded-sm border border-primary/35 bg-accent/50 p-3"><p className="mb-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[.16em] text-primary"><ShieldAlert className="size-3" /> Known secret</p><p><Rich text={person.knownSecret ?? person.motive} /></p></div></div>
+        </article>; })}
+      </div>
+      <div className="flex items-center justify-between gap-3 border-t bg-panel-raised p-4"><Button variant="ghost" onClick={onBack}><ArrowLeft /> Case files</Button><Button onClick={onPlay}><Briefcase /> Investigate this case</Button></div>
     </Overlay>
   );
 }
