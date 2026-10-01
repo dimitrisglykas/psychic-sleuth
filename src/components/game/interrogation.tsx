@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ChevronDown, ChevronUp, Eye, Mic2, Sparkle, Target, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Mic2, ScanEye, Sparkle, Target, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
@@ -40,6 +40,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   const [press, setPress] = useState(false);
   const [trapOpen, setTrapOpen] = useState(false);
   const [tacticsOpen, setTacticsOpen] = useState(false);
+  const [coldReadVisual, setColdReadVisual] = useState(false);
   const [clueId, setClueId] = useState<ClueId | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
@@ -65,6 +66,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
     const c = clueId ? clueById(clueId) : null;
     const tag = action ? `[${ACTIONS[action].tag}] ` : press ? "[PRESSING] " : "";
     void sendMessage({ text: `${tag}${text.trim()}` }, { body: { caseCode: C.code, suspectId, press, stress, action: action ?? null, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null } });
+    if (action === "coldread") { setColdReadVisual(true); window.setTimeout(() => setColdReadVisual(false), 2400); }
     if (!action) { setInput(""); setClueId(null); }
     setTrapOpen(false); inputRef.current?.focus();
   };
@@ -112,6 +114,14 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
           </PromptInputFooter>
         </PromptInput>
       </div>
+      {coldReadVisual && <div className="pointer-events-none fixed inset-0 z-[75] grid place-items-center bg-background/80 p-5 backdrop-blur-sm animate-in fade-in">
+        <div className="cold-read-frame relative w-full max-w-md overflow-hidden rounded-md border border-primary bg-panel shadow-2xl">
+          <img src={suspect.image} alt="" className="aspect-[4/3] w-full object-cover object-top opacity-80" width={768} height={1024} />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-5"><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><ScanEye className="size-4" /> Cold read</p><p className="mt-2 font-display text-xl italic">Don’t listen to the answer. Watch the moment before it.</p></div>
+          <span className="cold-read-scan absolute inset-x-0 h-px bg-primary" />
+        </div>
+      </div>}
     </section>
   );
 }

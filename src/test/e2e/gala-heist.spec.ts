@@ -83,10 +83,10 @@ test.describe('Gala Heist Cinematic Flow', () => {
     await expect(page.getByRole('dialog', { name: 'Solve the case' })).toBeVisible();
     
     // Step 1: Culprit
-    await page.getByRole('button', { name: 'Dr. Helena Marsh' }).click();
+    await page.getByRole('button', { name: 'Nina Reyes' }).click();
     
     // Step 2: Motive
-    await page.getByRole('button', { name: 'Pay off dangerous debts' }).click();
+    await page.getByRole('button', { name: 'Silence a guard taking bribes' }).click();
     
     // Step 3: Two key clues
     // Using clues found during the crime scene search

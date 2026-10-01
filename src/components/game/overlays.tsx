@@ -71,11 +71,13 @@ export function Cases({ onClose, onPick, onPremium }: { onClose: () => void; onP
   );
 }
 
-export function Intuition({ text, onClose }: { text: string; onClose: () => void }) {
+export function Intuition({ text, image, name, stress, onClose }: { text: string; image: string; name: string; stress: number; onClose: () => void }) {
   return (
-    <Overlay label="Jane's intuition" onClose={onClose} className="border-primary/60">
-      <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><Lightbulb className="size-4" /> Jane's intuition</p>
-      <p className="mt-3 font-display text-lg italic leading-7">{text}</p>
+    <Overlay label="Jane's intuition" onClose={onClose} className="max-w-2xl overflow-hidden border-primary/60 p-0">
+      <div className="grid sm:grid-cols-[.85fr_1.15fr]">
+        <div className="intuition-portrait relative min-h-72 overflow-hidden border-b sm:border-b-0 sm:border-r"><img src={image} alt={name} className="absolute inset-0 h-full w-full object-cover object-top" width={768} height={1024} /><div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-primary/10" /><span className="intuition-focus absolute left-[56%] top-[31%] size-12 rounded-full border border-primary" /><span className="absolute left-[calc(56%+3rem)] top-[31%] whitespace-nowrap rounded-sm border bg-background/85 px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] text-primary">Eyes shift</span><span className="absolute bottom-4 left-4 rounded-sm border bg-background/80 px-2 py-1 text-[10px]">Stress {stress}%</span></div>
+        <div className="p-5 sm:p-7"><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><Lightbulb className="size-4" /> Jane's intuition</p><h2 className="mt-2 font-display text-2xl">Watch {name}, not the words.</h2><p className="mt-4 font-display text-lg italic leading-7">{text}</p><p className="mt-5 border-t pt-3 text-[10px] uppercase tracking-[.16em] text-muted-foreground">Non-verbal read · private observation</p></div>
+      </div>
     </Overlay>
   );
 }
