@@ -54,7 +54,8 @@ export function AccuseModal({ found, onClose, onRestart }: { found: ClueId[]; on
       <Step n={3} title={`Two key clues (${picked.length}/2)`} />
       <div className="grid gap-2 sm:grid-cols-2">{found.map((id) => { const c = clueById(id); const on = picked.includes(id); return <button key={id} onClick={() => toggle(id)} className={`flex items-center gap-2 rounded-sm border px-3 py-2 text-left text-xs ${on ? "border-primary bg-accent" : "bg-panel-raised hover:border-primary/50"}`}><c.icon className="size-4 shrink-0 text-primary" />{c.title}</button>; })}</div>
       {found.length < C.clues.length && <p className="mt-2 text-[11px] text-muted-foreground">Tip: there are more clues hidden at the crime scene.</p>}
-      <Button disabled={!ready} onClick={() => setDone(true)} className="mt-5 h-11 w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"><Gavel /> Make the accusation</Button>
+      {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
+      <Button disabled={!ready || busy} onClick={submit} className="mt-5 h-11 w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"><Gavel /> {busy ? "Checking the file…" : "Make the accusation"}</Button>
     </Overlay>
   );
 }
