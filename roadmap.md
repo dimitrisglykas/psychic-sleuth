@@ -17,6 +17,9 @@
 - [ ] Victim interview view
 
 ## Stage 3 — Mentalist extras
-- [ ] Tea cup reflection + highlighted connection
-- [ ] My Desk overlay (folders, notepad, record player ambience, Take a Breath mode)
-- [ ] Cold Read button, Set a Trap menu, behavioral cue tags above replies
+- [x] Tea cup reflection + highlighted connection
+- [x] My Desk overlay (folders, notepad, record player ambience, Take a Breath mode)
+- [x] Cold Read button, Set a Trap menu, behavioral cue tags above replies
+
+## Waiting on user
+- [ ] Real Stripe checkout for Season Pass — user chose to keep preview for now (needs sign-in)
