@@ -50,7 +50,7 @@ const nav = [
 
 type Meta = { stress: number; observation: string; tell: string };
 
-function parseReply(text: string): { speech: string; meta?: Meta } {
+function parseReply(text: string): { speech: string; meta?: Meta | undefined } {
   const i = text.indexOf("<<META");
   if (i < 0) return { speech: text };
   const m = text.slice(i).match(/<<META\s*(\{[\s\S]*\})\s*>>/);
