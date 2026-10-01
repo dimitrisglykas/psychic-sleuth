@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Disc3, FolderClosed, FolderOpen, Lock, Pause, Play, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CASES, lockedCases, useCase } from "@/game/case";
-import recordAsset from "@/assets/ragtime-oriole.ogg.asset.json";
+import recordAsset from "@/assets/st-louis-blues.mp3.asset.json";
 import { Eyebrow, Overlay, Rich } from "./ui";
 
 export function Desk({ playing, onTogglePlay, calm, onToggleCalm, onOpenCases, onPick, onClose }: {
