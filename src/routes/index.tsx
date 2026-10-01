@@ -1,178 +1,162 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
-import {
-  Archive, ChevronRight, Clock3, Fingerprint,
-  FolderKanban, Gavel, Lightbulb, Menu, MessageSquareQuote,
-  Mic2, Paperclip, Search, ShieldCheck, UserRoundSearch, UsersRound, X,
-} from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-
-import julianImage from "@/assets/julian-voss.jpg";
-import evelynImage from "@/assets/evelyn-blackwood.jpg";
-import arthurImage from "@/assets/arthur-bell.jpg";
+import { Clock3, FolderOpen, Gavel, Lightbulb, MessageSquareQuote, Search, Target } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
-import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea, PromptInputTools } from "@/components/ai-elements/prompt-input";
-import { Shimmer } from "@/components/ai-elements/shimmer";
+import { AccuseModal } from "@/components/game/accuse";
+import { CrimeScene } from "@/components/game/crime-scene";
+import { Interrogation, type Meta } from "@/components/game/interrogation";
+import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
+import { Eyebrow, Rich, StressBar, stressLabel } from "@/components/game/ui";
+import { clueById, clues, START_CLUES, SUSPECT_IDS, suspects, type ClueId, type SuspectId } from "@/game/case";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
-    { title: "The Enigma at Blackwood Manor — Blackwood Casefiles" },
-    { name: "description", content: "Interrogate three suspects and solve the mystery at Blackwood Manor." },
-    { property: "og:title", content: "The Enigma at Blackwood Manor" },
-    { property: "og:description", content: "Question every alibi. Connect every clue. Name the killer." },
+    { title: "The Enigma at Blackwood Manor — Psychic Sleuth" },
+    { name: "description", content: "Question three AI suspects, search the crime scene and solve the murder at Blackwood Manor." },
+    { property: "og:title", content: "The Enigma at Blackwood Manor — Psychic Sleuth" },
+    { property: "og:description", content: "Question every alibi. Read every tell. Name the killer." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: MysteryGame,
 });
 
-type SuspectId = "partner" | "spouse" | "butler";
-const suspects = {
-  partner: { name: "Julian Voss", role: "The Business Partner", age: 48, image: julianImage, stress: 64, bio: "Co-founded Blackwood & Voss. Charming in public, exacting behind closed doors.", alibi: "Claims he left the manor at 9:15 PM after a heated accounts meeting.", relation: "Business partner of 18 years", opener: "You wished to speak with me, detective? I’ve already given your constable my statement." },
-  spouse: { name: "Evelyn Blackwood", role: "The Ex-Spouse", age: 42, image: evelynImage, stress: 38, bio: "A poised art patron whose divorce from Alistair became society-page ammunition.", alibi: "Says she was alone in the east drawing room from 9:40 PM until the alarm.", relation: "Divorced two years ago", opener: "If this is about Alistair, ask plainly. I have no appetite for theatrics tonight." },
-  butler: { name: "Arthur Bell", role: "The Butler", age: 63, image: arthurImage, stress: 27, bio: "Served the Blackwood family for thirty-one years. Knows every lock and passage.", alibi: "States he was inventorying the wine cellar between 9:45 and 10:20 PM.", relation: "Family servant and confidant", opener: "I am at your service. The household deserves clarity, however unpleasant it may be." },
-} as const;
-
-const evidence = [
-  { id: "watch", title: "The Broken Watch", detail: "Stopped at 9:40 PM", prompt: "Your watch stopped at 9:40 PM. Explain why that time matters." },
-  { id: "invoice", title: "Altered Invoice", detail: "Voss ledger · £80,000", prompt: "I found the altered £80,000 invoice in the Voss ledger. What were you hiding?" },
-  { id: "ash", title: "Fireplace Ash", detail: "Traces of blue stationery", prompt: "The fireplace ash contains blue stationery. What was burned in the study?" },
-  { id: "print", title: "Partial Fingerprint", detail: "On the silver tea tray", prompt: "We recovered a partial fingerprint from the silver tea tray. How did it get there?" },
-];
-
-const nav = [
-  { icon: FolderKanban, label: "Cases" }, { icon: MessageSquareQuote, label: "Active Case", active: true },
-  { icon: Archive, label: "Evidence Board" }, { icon: UsersRound, label: "Suspect List" }, { icon: UserRoundSearch, label: "Profile" },
-];
-
-type Meta = { stress: number; observation: string; tell: string };
-
-function parseReply(text: string): { speech: string; meta?: Meta | undefined } {
-  const i = text.indexOf("<<META");
-  if (i < 0) return { speech: text };
-  const m = text.slice(i).match(/<<META\s*(\{[\s\S]*\})\s*>>/);
-  let meta: Meta | undefined;
-  if (m) { try { const p = JSON.parse(m[1] ?? ""); meta = { stress: Math.max(0, Math.min(100, Math.round(Number(p.stress) || 0))), observation: String(p.observation ?? ""), tell: String(p.tell ?? "") }; } catch { /* partial */ } }
-  return { speech: text.slice(0, i).trim(), meta };
-}
+type OverlayKind = null | "intro" | "cases" | "scene" | "accuse" | "shop" | "pass";
+const load = <T,>(k: string, fb: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } };
+const save = (k: string, v: unknown) => localStorage.setItem(k, JSON.stringify(v));
 
 function MysteryGame() {
   const [suspectId, setSuspectId] = useState<SuspectId>("partner");
-  const [evidenceOpen, setEvidenceOpen] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
-  const [accusing, setAccusing] = useState(false);
   const [meta, setMeta] = useState<Partial<Record<SuspectId, Meta>>>({});
+  const [counts, setCounts] = useState<Partial<Record<SuspectId, number>>>({});
+  const [found, setFound] = useState<ClueId[]>(START_CLUES);
   const [hints, setHints] = useState(3);
+  const [overlay, setOverlay] = useState<OverlayKind>(null);
   const [intuition, setIntuition] = useState<string | null>(null);
-  useEffect(() => { const h = localStorage.getItem("blackwood-hints"); if (h !== null) setHints(Number(h)); }, []);
+  const [injected, setInjected] = useState<{ id: ClueId; n: number } | null>(null);
+  const [discovered, setDiscovered] = useState<ClueId | null>(null);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    setMeta(load("blackwood-meta", {})); setFound(load("blackwood-found", START_CLUES)); setHints(load("blackwood-hints", 3));
+    const c: Partial<Record<SuspectId, number>> = {};
+    for (const id of SUSPECT_IDS) c[id] = load<{ role: string }[]>(`blackwood-chat-${id}`, []).filter((m) => m.role === "user").length;
+    setCounts(c);
+    const s = load<number | null>("blackwood-started", null) ?? Date.now(); save("blackwood-started", s); setStartedAt(s);
+    if (!load("blackwood-intro", false)) setOverlay("intro");
+  }, []);
+
   const suspect = suspects[suspectId];
-  const stress = meta[suspectId]?.stress ?? suspect.stress;
-  const useJane = () => {
+  const stressOf = (id: SuspectId) => meta[id]?.stress ?? suspects[id].stress;
+  const questioned = SUSPECT_IDS.filter((id) => (counts[id] ?? 0) > 0);
+  const guiding = !(counts.partner ?? 0) && suspectId === "partner";
+
+  const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<SuspectId, Meta>>; save("blackwood-meta", next); return next; });
+  const askClue = (id: ClueId) => setInjected({ id, n: Date.now() });
+  const discover = (id: ClueId) => { setFound((f) => { const next = f.includes(id) ? f : [...f, id]; save("blackwood-found", next); return next; }); setDiscovered(id); window.setTimeout(() => setDiscovered(null), 2600); };
+  const switchSuspect = (id: SuspectId) => { setSuspectId(id); setInjected(null); };
+  const jane = () => {
     const m = meta[suspectId];
-    if (!m?.tell) { setIntuition("Ask a question first — even Jane needs something to read."); return; }
-    if (hints <= 0) { setIntuition("No intuition left. You'll have to read them yourself."); return; }
-    const next = hints - 1; setHints(next); localStorage.setItem("blackwood-hints", String(next));
-    setIntuition(`${m.observation ? `“${m.observation}.” ` : ""}${m.tell}`);
+    if (hints <= 0) { setOverlay("shop"); return; }
+    if (!m?.tell) { setIntuition(`Ask ${suspect.short} something first — even Jane needs a reaction to read.`); return; }
+    const next = hints - 1; setHints(next); save("blackwood-hints", next);
+    setIntuition(`${m.observation ? `"${m.observation}." ` : ""}${m.tell}`);
   };
+  const restart = () => { Object.keys(localStorage).filter((k) => k.startsWith("blackwood-") && k !== "blackwood-intro").forEach((k) => localStorage.removeItem(k)); window.location.reload(); };
+
+  const left = clues.length - found.length;
+  const objective = !(counts.partner ?? 0) ? "Ask **Julian** about the altered ledger — tap the **ledger clue** below."
+    : left > 0 ? `Search the **crime scene** — **${left} hidden clue${left > 1 ? "s" : ""}** left.`
+    : questioned.length < 3 ? `Question **${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id].short).join(" and ")}** to catch a lie.`
+    : "You have everything you need. **Solve the case.**";
+  const progress = Math.round(((found.length / clues.length) + (questioned.length / 3)) / 2 * 100);
+
+  const clueButtons = (compact: boolean) => found.map((id) => {
+    const c = clueById(id); const guide = guiding && id === "invoice";
+    return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${guide ? "guide-ring border-primary" : ""}`}>
+      <c.icon className="size-4 shrink-0 text-primary" />
+      {compact ? <span className="text-[11px] font-medium">{c.title}</span> : <span className="min-w-0"><span className="block text-xs font-semibold">{c.title}</span><span className="block text-[11px] leading-4 text-muted-foreground"><Rich text={c.detail} /></span></span>}
+      {guide && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask Julian about this</span>}
+    </button>;
+  });
+
   return (
-    <main className="min-h-dvh bg-background text-foreground lg:grid lg:h-dvh lg:grid-cols-[76px_minmax(0,1fr)] lg:overflow-hidden">
-      <aside className="hidden w-[76px] flex-col border-r bg-panel lg:flex">
-        <div className="flex h-20 items-center justify-center border-b"><div className="grid size-10 place-items-center border border-primary/45 bg-accent text-primary"><Fingerprint className="size-5" /></div></div>
-        <nav className="flex flex-1 flex-col items-center gap-3 py-5">{nav.map(({icon: Icon,label,active}) => <button key={label} title={label} aria-label={label} className={`grid size-11 place-items-center border-l-2 transition-colors ${active ? "border-primary bg-accent text-primary" : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"}`}><Icon className="size-[18px]" /></button>)}</nav>
-        <div className="mb-5 flex justify-center"><div className="grid size-9 place-items-center rounded-full bg-primary font-semibold text-primary-foreground">J</div></div>
-      </aside>
+    <main className="flex min-h-dvh flex-col bg-background text-foreground lg:h-dvh lg:overflow-hidden">
+      <header className="flex min-h-14 items-center gap-3 border-b bg-panel px-4 lg:px-6">
+        <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · Case 001</p><h1 className="truncate font-display text-lg sm:text-xl">The Enigma at Blackwood Manor</h1></div>
+        <Timer startedAt={startedAt} />
+        <Button variant="ghost" size="sm" onClick={() => setOverlay("cases")}><FolderOpen /> <span className="hidden sm:inline">Cases</span></Button>
+      </header>
 
-      <section className="flex min-h-dvh min-w-0 flex-col lg:h-dvh">
-        <header className="flex min-h-16 items-center gap-3 border-b bg-panel px-4 lg:px-6">
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setNavOpen(true)} aria-label="Open navigation"><Menu /></Button>
-          <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Case 0017 · Active investigation</p><h1 className="truncate font-display text-lg text-foreground sm:text-xl">The Enigma at Blackwood Manor</h1></div>
-          <div className="hidden items-center gap-5 md:flex"><Stat icon={Clock3} label="Case Time" value="01:42:18" /></div>
-          <button onClick={useJane} className="flex items-center gap-2 rounded-sm border border-primary/40 px-2 py-1.5 hover:bg-accent" aria-label="Use Jane Intuition"><Lightbulb className="size-4 text-primary" /><div className="text-left"><p className="hidden text-[9px] uppercase tracking-[.16em] text-muted-foreground sm:block">Jane Intuition</p><p className="font-mono text-xs font-semibold">{hints} <span className="hidden sm:inline">hints</span></p></div></button>
-          <Button className="h-10 bg-destructive px-3 text-xs font-bold uppercase tracking-[.12em] text-destructive-foreground hover:bg-destructive/90 sm:px-5" onClick={() => setAccusing(true)}><Gavel className="size-4" /> <span className="hidden sm:inline">Accuse Suspect</span><span className="sm:hidden">Accuse</span></Button>
-        </header>
+      <div className="flex items-center gap-3 border-b bg-accent/40 px-4 py-2 lg:px-6">
+        <Target className="size-4 shrink-0 text-primary" />
+        <p className="min-w-0 flex-1 text-xs sm:text-sm"><span className="font-semibold uppercase tracking-[.12em] text-primary">Goal: </span><Rich text={objective} /></p>
+        <div className="hidden w-32 items-center gap-2 sm:flex"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px]">{progress}%</span></div>
+      </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto border-b bg-panel px-4 py-2 lg:hidden">
-          {(Object.keys(suspects) as SuspectId[]).map((id) => <Button key={id} size="sm" variant={id === suspectId ? "default" : "ghost"} onClick={() => setSuspectId(id)}>{suspects[id].name.split(" ")[0]}</Button>)}
-          <Button size="sm" variant="outline" onClick={() => setEvidenceOpen(true)}><Search /> Evidence</Button>
+      <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr] lg:grid-rows-1 lg:grid-cols-[280px_minmax(0,1fr)_300px]">
+        {/* Left: suspect */}
+        <aside className="min-h-0 border-b bg-panel lg:overflow-y-auto lg:border-b-0 lg:border-r">
+          <div className="relative hidden aspect-[4/3] overflow-hidden lg:block"><img src={suspect.image} alt={suspect.name} className="h-full w-full object-cover object-[center_28%]" width={768} height={1024} /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-panel to-transparent p-4 pt-16"><p className="font-display text-2xl">{suspect.name}</p><p className="text-[10px] uppercase tracking-[.18em] text-primary">{suspect.role}</p></div></div>
+          <div className="flex gap-2 overflow-x-auto p-3 lg:grid lg:grid-cols-3 lg:overflow-visible">
+            {SUSPECT_IDS.map((id) => <button key={id} onClick={() => switchSuspect(id)} className={`flex min-w-[112px] items-center gap-2 rounded-sm border p-1.5 text-left lg:min-w-0 lg:flex-col lg:items-stretch ${id === suspectId ? "border-primary bg-accent" : "opacity-70 hover:opacity-100"}`}>
+              <img src={suspects[id].image} alt="" className="size-9 rounded-full object-cover object-top lg:aspect-square lg:size-auto lg:w-full lg:rounded-sm" width={768} height={1024} loading="lazy" />
+              <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold">{suspects[id].short}</span><StressBar value={stressOf(id)} thin /></span>
+            </button>)}
+          </div>
+          <div className="hidden space-y-4 px-4 pb-5 lg:block">
+            <div><div className="mb-1.5 flex justify-between text-[10px] font-semibold uppercase tracking-[.16em]"><span>Stress</span><span className="text-primary">{stressOf(suspectId)}% · {stressLabel(stressOf(suspectId))}</span></div><StressBar value={stressOf(suspectId)} /></div>
+            <Info label="Who" text={`${suspect.age} · ${suspect.bio}`} /><Info label="Alibi" text={suspect.alibi} /><Info label="Possible motive" text={suspect.motive} />
+          </div>
+        </aside>
+
+        {/* Center: interrogation */}
+        <Interrogation key={suspectId} suspectId={suspectId} stress={stressOf(suspectId)} injected={injected} onMeta={updateMeta}
+          onCount={(n) => setCounts((c) => (c[suspectId] === n ? c : { ...c, [suspectId]: n }))}
+          header={<div className="flex items-center justify-between border-b px-4 py-2.5"><p className="text-xs"><span className="font-semibold">Questioning {suspect.name}</span> <span className="text-muted-foreground lg:hidden">· stress {stressOf(suspectId)}%</span></p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording</p></div>}
+          clueStrip={<div className="mx-auto mb-2 flex max-w-2xl gap-2 overflow-x-auto pb-1 pt-4 lg:hidden">{clueButtons(true)}<button onClick={() => setOverlay("scene")} className="flex shrink-0 items-center gap-1.5 rounded-sm border border-dashed border-primary/60 p-2 text-[11px] text-primary"><Search className="size-4" /> Crime scene</button></div>}
+        />
+
+        {/* Right: clues & actions */}
+        <aside className="hidden min-h-0 flex-col overflow-y-auto border-l bg-panel lg:flex">
+          <div className="border-b p-4"><Button className="h-11 w-full" onClick={() => setOverlay("scene")}><Search /> Inspect crime scene</Button></div>
+          <div className="space-y-3 p-4"><Eyebrow>Clues · tap to ask</Eyebrow>{clueButtons(false)}{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} more clue{left > 1 ? "s" : ""} hidden at the crime scene.</p>}</div>
+          <div className="mt-auto space-y-3 border-t p-4">
+            <Eyebrow>Case progress</Eyebrow>
+            <Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="Suspects questioned" value={`${questioned.length} / 3`} />
+            {SUSPECT_IDS.map((id) => <div key={id}><div className="mb-1 flex justify-between text-[11px]"><span>{suspects[id].short}</span><span className="font-mono text-muted-foreground">{stressOf(id)}%</span></div><StressBar value={stressOf(id)} thin /></div>)}
+          </div>
+        </aside>
+      </div>
+
+      <footer className="sticky bottom-0 z-30 border-t bg-panel/95 p-2 backdrop-blur sm:p-3">
+        <div className="mx-auto grid max-w-2xl grid-cols-3 gap-2">
+          <Button variant="outline" className="h-12 flex-col gap-0.5 text-[11px] sm:flex-row sm:text-sm" onClick={() => window.dispatchEvent(new Event("focus-question"))}><MessageSquareQuote /> Ask question</Button>
+          <Button variant="outline" className="h-12 flex-col gap-0.5 border-primary/60 text-[11px] text-primary sm:flex-row sm:text-sm" onClick={jane}><Lightbulb /> Intuition ({hints})</Button>
+          <Button className="h-12 flex-col gap-0.5 bg-destructive text-[11px] text-destructive-foreground hover:bg-destructive/90 sm:flex-row sm:text-sm" onClick={() => setOverlay("accuse")}><Gavel /> Solve case</Button>
         </div>
+      </footer>
 
-        <div className="grid min-h-0 flex-1 lg:grid-cols-[286px_minmax(400px,1fr)_300px]">
-          <Dossier suspectId={suspectId} stress={stress} onSelect={(id) => { setSuspectId(id); setIntuition(null); }} />
-          <Interrogation key={suspectId} suspectId={suspectId} stress={stress} onMeta={(m) => setMeta((prev) => ({ ...prev, [suspectId]: m }) as Partial<Record<SuspectId, Meta>>)} onEvidence={() => setEvidenceOpen(true)} />
-          <EvidenceDrawer className="hidden lg:flex" onUse={(prompt) => window.dispatchEvent(new CustomEvent("use-evidence", { detail: prompt }))} />
-        </div>
-      </section>
-
-      {evidenceOpen && <div className="fixed inset-0 z-50 flex justify-end bg-background/75 backdrop-blur-sm lg:hidden" onClick={() => setEvidenceOpen(false)}><EvidenceDrawer className="w-[88%] max-w-sm" onClose={() => setEvidenceOpen(false)} onUse={(prompt) => { window.dispatchEvent(new CustomEvent("use-evidence", { detail: prompt })); setEvidenceOpen(false); }} /></div>}
-      {navOpen && <div className="fixed inset-0 z-50 bg-background/85 lg:hidden" onClick={() => setNavOpen(false)}><aside className="h-full w-72 border-r bg-panel p-5" onClick={(e) => e.stopPropagation()}><div className="mb-8 flex items-center justify-between"><p className="font-display text-xl">Blackwood Casefiles</p><Button variant="ghost" size="icon" onClick={() => setNavOpen(false)}><X /></Button></div>{nav.map(({icon:Icon,label,active}) => <button key={label} className={`mb-2 flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm ${active ? "bg-accent text-primary" : "text-muted-foreground"}`}><Icon className="size-4" />{label}</button>)}</aside></div>}
-      {accusing && <AccuseDialog current={suspectId} onClose={() => setAccusing(false)} />}
-      {intuition && <div className="fixed inset-x-3 bottom-28 z-40 mx-auto max-w-md rounded-md border border-primary/60 bg-panel-raised p-4 shadow-2xl"><div className="mb-2 flex items-center justify-between"><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><Lightbulb className="size-4" /> Jane's observation</p><Button variant="ghost" size="icon" className="size-7" onClick={() => setIntuition(null)} aria-label="Close"><X /></Button></div><p className="font-display text-[15px] italic leading-6">{intuition}</p></div>}
+      {discovered && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,360px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}
+      {overlay === "intro" && <HowToPlay onClose={() => { save("blackwood-intro", true); setOverlay(null); }} />}
+      {overlay === "cases" && <Cases onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
+      {overlay === "pass" && <SeasonPass onClose={() => setOverlay(null)} />}
+      {overlay === "scene" && <CrimeScene found={found} onDiscover={discover} onClose={() => setOverlay(null)} />}
+      {overlay === "accuse" && <AccuseModal found={found} onClose={() => setOverlay(null)} onRestart={restart} />}
+      {overlay === "shop" && <HintShop onClose={() => setOverlay(null)} onRefill={() => { setHints(3); save("blackwood-hints", 3); setOverlay(null); }} />}
+      {intuition && <Intuition text={intuition} onClose={() => setIntuition(null)} />}
     </main>
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Clock3; label: string; value: string }) {
-  return <div className="flex items-center gap-2"><Icon className="size-4 text-primary" /><div><p className="text-[9px] uppercase tracking-[.16em] text-muted-foreground">{label}</p><p className="font-mono text-xs font-semibold">{value}</p></div></div>;
+function Timer({ startedAt }: { startedAt: number | null }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(t); }, []);
+  const s = startedAt ? Math.max(0, Math.floor((now - startedAt) / 1000)) : 0;
+  const f = (n: number) => String(n).padStart(2, "0");
+  return <div className="flex items-center gap-1.5"><Clock3 className="size-4 text-primary" /><span className="font-mono text-xs font-semibold">{f(Math.floor(s / 3600))}:{f(Math.floor(s / 60) % 60)}:{f(s % 60)}</span></div>;
 }
 
-function Dossier({ suspectId, stress, onSelect }: { suspectId: SuspectId; stress: number; onSelect: (id: SuspectId) => void }) {
-  const suspect = { ...suspects[suspectId], stress };
-  return <aside className="hidden min-h-0 flex-col overflow-y-auto border-r bg-panel lg:flex">
-    <div className="relative aspect-[4/3] overflow-hidden border-b"><img src={suspect.image} alt={suspect.name} className="h-full w-full object-cover object-[center_28%] grayscale-[18%]" width={768} height={1024} /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-panel to-transparent p-4 pt-16"><p className="font-display text-2xl">{suspect.name}</p><p className="text-[10px] uppercase tracking-[.18em] text-primary">{suspect.role}</p></div></div>
-    <div className="space-y-5 p-4"><div className="grid grid-cols-3 gap-2">{(Object.keys(suspects) as SuspectId[]).map(id => <button key={id} onClick={() => onSelect(id)} className={`overflow-hidden rounded-sm border ${id === suspectId ? "border-primary" : "border-border opacity-60 hover:opacity-100"}`}><img src={suspects[id].image} alt={suspects[id].name} className="aspect-square w-full object-cover object-top" width={768} height={1024} loading="lazy" /></button>)}</div>
-      <Info label="Profile" text={`${suspect.age} years old · ${suspect.bio}`} /><Info label="Alibi" text={suspect.alibi} /><Info label="Relationship" text={suspect.relation} />
-      <div><div className="mb-2 flex justify-between text-[10px] font-semibold uppercase tracking-[.16em]"><span>Stress level</span><span className="text-primary">{suspect.stress}% · {suspect.stress >= 75 ? "Breaking" : suspect.stress >= 50 ? "Elevated" : "Composed"}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className={`stress-pulse h-full transition-all duration-700 ${suspect.stress >= 75 ? "bg-destructive" : "bg-primary"}`} style={{ width: `${suspect.stress}%` }} /></div></div>
-    </div>
-  </aside>;
-}
-
-function Info({ label, text }: { label: string; text: string }) { return <div><p className="mb-1 text-[9px] font-bold uppercase tracking-[.2em] text-muted-foreground">{label}</p><p className="text-xs leading-5 text-foreground/85">{text}</p></div>; }
-
-function Interrogation({ suspectId, stress, onMeta, onEvidence }: { suspectId: SuspectId; stress: number; onMeta: (m: Meta) => void; onEvidence: () => void }) {
-  const suspect = suspects[suspectId];
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [input, setInput] = useState("");
-  const [press, setPress] = useState(false);
-  const [clueId, setClueId] = useState<string | null>(null);
-  const [storageReady, setStorageReady] = useState(false);
-  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
-  const { messages, sendMessage, status, stop, error, setMessages } = useChat({ id: `blackwood-${suspectId}`, transport, onFinish: () => inputRef.current?.focus() });
-  const busy = status === "submitted" || status === "streaming";
-  useEffect(() => { const saved = localStorage.getItem(`blackwood-chat-${suspectId}`); if (saved) { try { setMessages(JSON.parse(saved) as UIMessage[]); } catch { localStorage.removeItem(`blackwood-chat-${suspectId}`); } } setStorageReady(true); inputRef.current?.focus(); }, [setMessages, suspectId]);
-  useEffect(() => { if (storageReady && !busy) localStorage.setItem(`blackwood-chat-${suspectId}`, JSON.stringify(messages)); }, [messages, busy, storageReady, suspectId]);
-  const onMetaRef = useRef(onMeta); onMetaRef.current = onMeta;
-  useEffect(() => {
-    if (busy) return;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m = messages[i]; if (!m || m.role !== "assistant") continue;
-      const text = m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
-      const { meta } = parseReply(text); if (meta) { onMetaRef.current(meta); return; }
-    }
-  }, [messages, busy]);
-  useEffect(() => { const handle = (event: Event) => { const id = (event as CustomEvent<string>).detail; const clue = evidence.find((c) => c.id === id); if (!clue) return; setInput(clue.prompt); setClueId(clue.id); inputRef.current?.focus(); }; window.addEventListener("use-evidence", handle); return () => window.removeEventListener("use-evidence", handle); }, []);
-  const submit = (text: string) => {
-    if (!text.trim() || busy) return;
-    const clue = evidence.find((c) => c.id === clueId);
-    void sendMessage({ text: `${press ? "[PRESSING] " : ""}${text.trim()}` }, { body: { suspectId, press, stress, evidence: clue ? { title: clue.title, detail: clue.detail } : null } });
-    setInput(""); setClueId(null); inputRef.current?.focus();
-  };
-  const visible = messages.length ? messages : [{ id: "opening", role: "assistant", parts: [{ type: "text", text: suspect.opener }] } as UIMessage];
-  return <section className="flex min-h-[calc(100dvh-106px)] min-w-0 flex-col bg-background lg:min-h-0">
-    <div className="flex items-center justify-between border-b px-4 py-3"><div className="flex items-center gap-3"><img src={suspect.image} alt="" className="size-9 rounded-full object-cover object-top ring-1 ring-primary/50" width={768} height={1024} loading="lazy" /><div><p className="text-xs font-semibold">Interrogating {suspect.name}</p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording active · Stress {stress}%</p></div></div><Button variant="ghost" size="icon" className="lg:hidden" onClick={onEvidence} aria-label="Open evidence"><Paperclip /></Button></div>
-    <Conversation className="min-h-0"><ConversationContent className="mx-auto w-full max-w-2xl gap-6 px-4 py-7 sm:px-8">{visible.map((message) => { const raw = message.parts.map((p) => (p.type === "text" ? p.text : "")).join(""); const { speech, meta } = message.role === "assistant" ? parseReply(raw) : { speech: raw.replace(/^\[PRESSING\]\s*/, ""), meta: undefined }; return <Message from={message.role} key={message.id} className={message.role === "assistant" ? "before:mb-1 before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-primary before:content-['SUSPECT']" : "before:mb-1 before:text-right before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-muted-foreground before:content-['YOU']"}><MessageContent className={message.role === "user" ? "border border-primary/25 bg-accent text-accent-foreground" : "font-display text-[17px] leading-7"}>{speech && <MessageResponse>{speech}</MessageResponse>}{meta?.observation && <p className="mt-2 border-l-2 border-primary/50 pl-3 font-sans text-xs italic text-muted-foreground">{meta.observation}</p>}</MessageContent></Message>; })}{status === "submitted" && <div className="text-xs"><Shimmer>{`${suspect.name} weighs the question…`}</Shimmer></div>}{error && <p className="rounded-sm border border-destructive/50 bg-destructive/10 p-3 text-xs text-destructive">{error.message}</p>}</ConversationContent><ConversationScrollButton /></Conversation>
-    {clueId && <p className="border-t bg-panel px-4 pt-2 text-[10px] uppercase tracking-[.14em] text-primary">Presenting: {evidence.find((c) => c.id === clueId)?.title} <button className="ml-2 text-muted-foreground underline" onClick={() => setClueId(null)}>remove</button></p>}
-    <div className="border-t bg-panel p-3 sm:p-4"><PromptInput className="mx-auto max-w-2xl border-border bg-panel-raised shadow-xl" onSubmit={({text}) => submit(text)}><PromptInputTextarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Question ${suspect.name.split(" ")[0]}…`} className="min-h-20 text-sm" /><PromptInputFooter><PromptInputTools><Button type="button" size="sm" variant={press ? "default" : "ghost"} onClick={() => setPress(!press)} className="h-8 text-[10px] uppercase tracking-[.12em]"><Mic2 /> Press suspect</Button><span className="hidden text-[10px] text-muted-foreground sm:inline">Responses may reveal contradictions</span></PromptInputTools><PromptInputSubmit status={status} onStop={stop} disabled={!input.trim() && !busy} /></PromptInputFooter></PromptInput></div>
-  </section>;
-}
-
-function EvidenceDrawer({ className, onClose, onUse }: { className?: string; onClose?: () => void; onUse: (prompt: string) => void }) {
-  return <aside className={`min-h-0 flex-col border-l bg-panel ${className ?? ""}`} onClick={(e) => e.stopPropagation()}><div className="flex items-center justify-between border-b px-4 py-4"><div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-primary">Evidence drawer</p><h2 className="font-display text-lg">Discovered clues</h2></div>{onClose && <Button variant="ghost" size="icon" onClick={onClose}><X /></Button>}</div><div className="flex-1 space-y-2 overflow-y-auto p-3">{evidence.map((clue, index) => <button key={clue.id} onClick={() => { if (onUse) onUse(clue.prompt); else window.dispatchEvent(new CustomEvent("use-evidence", { detail: clue.prompt })); }} className="group w-full rounded-sm border bg-panel-raised p-3 text-left transition-colors hover:border-primary/60 hover:bg-accent"><div className="flex gap-3"><div className="grid size-8 shrink-0 place-items-center rounded-sm bg-muted font-mono text-[10px] text-primary">0{index + 1}</div><div className="min-w-0 flex-1"><p className="text-xs font-semibold">{clue.title}</p><p className="mt-1 text-[10px] text-muted-foreground">{clue.detail}</p></div><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" /></div></button>)}</div><div className="border-t p-4"><div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[.14em]"><span className="text-muted-foreground">Evidence found</span><span>4 / 8</span></div><div className="h-1 bg-muted"><div className="h-full w-1/2 bg-primary" /></div></div></aside>;
-}
-
-function AccuseDialog({ current, onClose }: { current: SuspectId; onClose: () => void }) {
-  const [chosen, setChosen] = useState<SuspectId>(current); const [result, setResult] = useState("");
-  return <div className="fixed inset-0 z-[60] grid place-items-center bg-background/85 p-4 backdrop-blur-md" onClick={onClose}><div className="w-full max-w-lg rounded-md border bg-panel p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}><div className="mb-5 flex justify-between"><div><p className="text-[10px] uppercase tracking-[.2em] text-primary">Final judgment</p><h2 className="font-display text-2xl">Name your suspect</h2></div><Button variant="ghost" size="icon" onClick={onClose}><X /></Button></div><div className="grid gap-2 sm:grid-cols-3">{(Object.keys(suspects) as SuspectId[]).map(id => <button key={id} onClick={() => { setChosen(id); setResult(""); }} className={`rounded-sm border p-2 text-left ${chosen === id ? "border-primary bg-accent" : "bg-panel-raised"}`}><img src={suspects[id].image} alt="" className="mb-2 aspect-[4/3] w-full object-cover object-top" width={768} height={1024} loading="lazy" /><p className="text-xs font-semibold">{suspects[id].name}</p></button>)}</div>{result && <p className="mt-4 border-l-2 border-primary bg-accent p-3 text-sm">{result}</p>}<Button className="mt-5 w-full" onClick={() => setResult(chosen === "butler" ? "A precise deduction. Arthur moved the clock to protect the family—but his own timeline exposed him." : "The evidence does not hold. Revisit the stopped watch and the silver tea tray.")}><ShieldCheck /> Submit accusation</Button></div></div>;
-}
+function Info({ label, text }: { label: string; text: string }) { return <div><p className="mb-1 text-[9px] font-bold uppercase tracking-[.2em] text-muted-foreground">{label}</p><p className="text-xs leading-5 text-foreground/85"><Rich text={text} /></p></div>; }
+function Row({ label, value }: { label: string; value: string }) { return <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-mono font-semibold">{value}</span></div>; }
