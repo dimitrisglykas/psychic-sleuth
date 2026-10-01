@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Activity, Armchair, ChevronDown, ChevronUp, Clock3, Coffee, FolderOpen, Gavel, Lightbulb, MessageSquareQuote, Search, Target, ZoomIn } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AccuseModal } from "@/components/game/accuse";
 import { CrimeScene } from "@/components/game/crime-scene";
@@ -80,7 +80,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<PersonId, Meta>>; save(`${K}-meta`, next); return next; });
   const askClue = (id: ClueId) => setInjected({ id, n: Date.now() });
   const discover = (id: ClueId) => { setFound((f) => { const next = f.includes(id) ? f : [...f, id]; save(`${K}-found`, next); return next; }); setDiscovered(id); window.setTimeout(() => setDiscovered(null), 2600); };
-  const mergeSharedClues = (shared: string[]) => setFound((current) => { const valid = shared.filter((id): id is ClueId => clues.some((clue) => clue.id === id)); const next = [...new Set([...current, ...valid])]; if (next.length !== current.length) save(`${K}-found`, next); return next.length === current.length ? current : next; });
+  const mergeSharedClues = useCallback((shared: string[]) => setFound((current) => { const valid = shared.filter((id): id is ClueId => clues.some((clue) => clue.id === id)); const next = [...new Set([...current, ...valid])]; if (next.length !== current.length) save(`${K}-found`, next); return next.length === current.length ? current : next; }), [K, clues]);
   const switchSuspect = (id: PersonId) => { setSuspectId(id); save(`${K}-active-person`, id); setInjected(null); };
   const jane = () => {
     const m = meta[suspectId];

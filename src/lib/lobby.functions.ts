@@ -72,10 +72,10 @@ export const createLobby = createServerFn({ method: "POST" })
   });
 
 export const joinLobby = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ inviteCode: Code, displayName: Name }).parse(input))
+  .inputValidator((input) => z.object({ inviteCode: Code, displayName: Name, caseCode: z.enum(["001", "002"]) }).parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: room } = await supabaseAdmin.from("case_rooms").select("id").eq("invite_hash", await digest(data.inviteCode)).gt("expires_at", new Date().toISOString()).maybeSingle();
+    const { data: room } = await supabaseAdmin.from("case_rooms").select("id").eq("invite_hash", await digest(data.inviteCode)).eq("case_code", data.caseCode).gt("expires_at", new Date().toISOString()).maybeSingle();
     if (!room) throw new Error("That invite code is invalid or expired.");
     const memberToken = randomHex(24);
     const { error } = await supabaseAdmin.from("case_room_members").insert({ room_id: room.id, member_hash: await digest(memberToken), display_name: data.displayName });
