@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, Armchair, ChevronDown, ChevronUp, Clock3, Coffee, Eye, FolderOpen, Gavel, Lightbulb, MessageSquareQuote, ScanEye, Search, Target, ZoomIn } from "lucide-react";
+import { Activity, Armchair, ChevronDown, ChevronUp, Clock3, Coffee, FolderOpen, Gavel, Lightbulb, MessageSquareQuote, Search, Target, ZoomIn } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AccuseModal } from "@/components/game/accuse";
@@ -119,9 +119,10 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
 
   const clueButtons = (compact: boolean) => found.map((id) => {
     const c = clueById(id); const glow = (guiding && id === guide.clue) || !!tea?.pair.includes(id);
-    if (C.code === "002" && !compact) return <div key={id} className={`group overflow-hidden rounded-sm border bg-panel-raised transition-colors hover:border-primary/60 ${glow ? "guide-ring border-primary" : ""}`}>
-      <div className="relative h-24 overflow-hidden bg-muted"><EvidenceCrop id={id} /><div className="absolute inset-0 bg-gradient-to-t from-background/75 to-transparent" /><div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-2"><p className="text-xs font-semibold">{c.title}</p><Button size="icon" variant="secondary" className="size-7 shrink-0" onClick={() => setInspected(id)} aria-label={`Inspect ${c.title}`} title={`Inspect ${c.title}`}><ZoomIn className="size-3.5" /></Button></div></div>
-      <Button variant="ghost" size="sm" onClick={() => askClue(id)} aria-label={`Ask about ${c.title}`} className="w-full justify-start rounded-none text-[10px] text-primary"><MessageSquareQuote className="size-3.5" /> Use in interview</Button>
+    if (C.code === "002") return <div key={id} className={`group relative shrink-0 overflow-hidden rounded-sm border bg-panel-raised transition-colors hover:border-primary/60 ${compact ? "w-36" : ""} ${glow ? "guide-ring border-primary" : ""}`}>
+      <div className={`relative overflow-hidden bg-muted ${compact ? "h-16" : "h-24"}`}><EvidenceCrop id={id} /><div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" /><div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-2"><p className={`${compact ? "text-[10px]" : "text-xs"} font-semibold`}>{c.title}</p><Button size="icon" variant="secondary" className="size-7 shrink-0" onClick={() => setInspected(id)} aria-label={`Inspect ${c.title}`} title={`Inspect ${c.title}`}><ZoomIn className="size-3.5" /></Button></div></div>
+      {!compact && <Button variant="ghost" size="sm" onClick={() => askClue(id)} aria-label={`Ask about ${c.title}`} className="w-full justify-start rounded-none text-[10px] text-primary"><MessageSquareQuote className="size-3.5" /> Use in interview</Button>}
+      {compact && <Button variant="ghost" size="sm" onClick={() => askClue(id)} aria-label={`Ask about ${c.title}`} className="h-7 w-full justify-start rounded-none px-2 text-[9px] text-primary"><MessageSquareQuote className="size-3" /> Ask with clue</Button>}
       {guiding && id === guide.clue && <span className="absolute whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Start here</span>}
     </div>;
     return <Button key={id} variant="ghost" onClick={() => askClue(id)} title={c.detail.replace(/\*\*/g, "")} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center justify-start gap-2 rounded-sm border bg-panel-raised text-left hover:border-primary/60 hover:bg-accent ${compact ? "h-auto p-2" : "h-auto w-full p-2.5"} ${glow ? "guide-ring border-primary" : ""}`}><c.icon className="size-4 shrink-0 text-primary" /><span className="text-[11px] font-semibold">{c.title}</span>{guiding && id === guide.clue && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Start here</span>}</Button>;

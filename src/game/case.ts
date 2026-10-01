@@ -9,7 +9,6 @@ import helenaImage from "@/assets/helena-marsh.jpg";
 import victorImage from "@/assets/victor-crane.jpg";
 import ninaImage from "@/assets/nina-reyes.jpg";
 import marcusImage from "@/assets/marcus-hale.jpg";
-import vaultImage from "@/assets/gala-vault.jpg";
 import galaCinematicImage from "@/assets/gala-crime-scene-cinematic.jpg";
 
 export type SuspectId = string;
