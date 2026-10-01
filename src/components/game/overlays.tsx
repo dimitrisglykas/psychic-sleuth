@@ -1,4 +1,6 @@
-import { Crown, Eye, Gavel, Lightbulb, Lock, MessageSquareQuote, Play } from "lucide-react";
+import { Briefcase, Crown, Eye, Gavel, Lightbulb, Lock, MessageSquareQuote, Play } from "lucide-react";
+import { useState } from "react";
+import sceneImage from "@/assets/crime-scene-study.jpg";
 import { Button } from "@/components/ui/button";
 import { lockedCases } from "@/game/case";
 import { Eyebrow, Overlay } from "./ui";
@@ -9,10 +11,23 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
     { icon: MessageSquareQuote, title: "Question suspects", text: "Ask questions and show clues. Watch their stress — lies crack under pressure." },
     { icon: Gavel, title: "Accuse the killer", text: "Name the culprit, the motive and two clues that prove it." },
   ];
+  const [briefed, setBriefed] = useState(false);
+  if (!briefed) return (
+    <Overlay label="Case briefing" onClose={() => setBriefed(true)}>
+      <img src={sceneImage} alt="Alistair Blackwood's study" className="-mx-1 mb-4 aspect-[16/7] w-[calc(100%+0.5rem)] rounded-sm object-cover" width={1280} height={720} />
+      <Eyebrow>Incoming call · 11:42 PM</Eyebrow><h2 className="font-display text-2xl">You're on the case</h2>
+      <div className="mt-3 space-y-2 rounded-sm border-l-2 border-primary bg-accent/50 p-3 text-sm leading-6">
+        <p><span className="font-semibold text-primary">Lisbon:</span> "Alistair Blackwood is dead in his study at Blackwood Manor. Local police are calling it a robbery gone wrong. I'm not buying it."</p>
+        <p><span className="font-semibold text-primary">Lisbon:</span> "Three people were in that house tonight. The case is yours — find me who did it, and why. And please, no stunts."</p>
+      </div>
+      <p className="mt-3 text-xs italic text-muted-foreground">Jane sets down his tea. "No stunts. Of course."</p>
+      <Button className="mt-5 h-11 w-full" onClick={() => setBriefed(true)}><Briefcase /> Accept the case</Button>
+    </Overlay>
+  );
   return (
     <Overlay label="How to play" onClose={onClose}>
       <Eyebrow>Case 001 · Blackwood Manor</Eyebrow><h2 className="font-display text-2xl">How to play</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Alistair Blackwood was found dead in his study. Three people had reasons to lie.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Three suspects had reasons to lie — and the victim's last hour still has something to say.</p>
       <ol className="mt-5 space-y-3">{steps.map((s, i) => <li key={s.title} className="flex gap-3 rounded-sm border bg-panel-raised p-3"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><s.icon className="size-4" /></span><div><p className="text-sm font-semibold">{i + 1}. {s.title}</p><p className="text-xs text-muted-foreground">{s.text}</p></div></li>)}</ol>
       <Button className="mt-5 h-11 w-full" onClick={onClose}><Play /> Start the investigation</Button>
     </Overlay>

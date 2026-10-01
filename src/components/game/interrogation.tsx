@@ -7,7 +7,7 @@ import { Conversation, ConversationContent, ConversationScrollButton } from "@/c
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea, PromptInputTools } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { clueById, suspects, type ClueId, type SuspectId } from "@/game/case";
+import { clueById, people, type ClueId, type PersonId } from "@/game/case";
 
 export type Meta = { stress: number; observation: string; tell: string; jane?: string | undefined };
 export type Action = "coldread" | "bluff" | "detail" | "blink";
@@ -30,10 +30,10 @@ export function parseReply(text: string): { speech: string; meta?: Meta | undefi
 const textOf = (m: UIMessage) => m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
 
 export function Interrogation({ suspectId, stress, injected, onMeta, onCount, header, clueStrip }: {
-  suspectId: SuspectId; stress: number; injected: { id: ClueId; n: number } | null;
+  suspectId: PersonId; stress: number; injected: { id: ClueId; n: number } | null;
   onMeta: (m: Meta) => void; onCount: (n: number) => void; header?: ReactNode; clueStrip?: ReactNode;
 }) {
-  const suspect = suspects[suspectId];
+  const suspect = people[suspectId];
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
   const [press, setPress] = useState(false);

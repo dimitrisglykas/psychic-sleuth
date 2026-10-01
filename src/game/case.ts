@@ -2,6 +2,7 @@ import { Clock, FileText, Fingerprint, Flame, GlassWater, LockKeyhole, Watch, ty
 import julianImage from "@/assets/julian-voss.jpg";
 import evelynImage from "@/assets/evelyn-blackwood.jpg";
 import arthurImage from "@/assets/arthur-bell.jpg";
+import alistairImage from "@/assets/alistair-blackwood.jpg";
 
 export type SuspectId = "partner" | "spouse" | "butler";
 export const SUSPECT_IDS: SuspectId[] = ["partner", "spouse", "butler"];
@@ -32,6 +33,16 @@ export const suspects: Record<SuspectId, {
     opener: "I am at your service. The household deserves clarity, however unpleasant it may be.",
   },
 };
+
+export type PersonId = SuspectId | "victim";
+export const victim: (typeof suspects)[SuspectId] = {
+  name: "Alistair Blackwood", short: "Alistair", role: "The Victim · Reconstruction", age: 58, image: alistairImage, stress: 20,
+  bio: "Head of the Blackwood firm. Jane **reconstructs his last hour** from what the room remembers.",
+  alibi: "Found dead in his study. **Last seen alive around 9:50 PM.**",
+  motive: "Planned to **make something public** the night he died.",
+  opener: "(Jane closes his eyes.) …Tea. I'd rung for tea. Ask me about tonight, detective — my memory is all I have left.",
+};
+export const people: Record<PersonId, typeof victim> = { ...suspects, victim };
 
 export type ClueId = "watch" | "invoice" | "ash" | "print" | "clock" | "safe" | "glass";
 export type Clue = { id: ClueId; title: string; detail: string; prompt: string; icon: LucideIcon };
