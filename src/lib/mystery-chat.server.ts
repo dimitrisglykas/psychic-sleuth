@@ -34,7 +34,7 @@ export async function handleMysteryChat(request: Request) {
   const actions = {
     coldread: `This turn is a COLD READ by Patrick Jane: he makes one sharp, specific observation about ${s.name}'s attire, posture or word choice that hits close to the hidden truth. Include it in the META as "jane" (one sentence, Jane's voice, addressed to the suspect). The suspect's dialogue must react to being read so precisely — caught off guard. Stress jumps +10 to +20.`,
     bluff: "This turn the detective is BLUFFING about evidence (a witness). If the bluff touches the suspect's real secret they overreact or over-explain (+8 to +18); if irrelevant to them they see through it calmly (-3 to +3).",
-    detail: "This turn the detective mentions a detail only the killer would know (${file.trap_detail}). If you are the killer, betray recognition you shouldn't have — a slip, a pause, or an over-precise answer (+15 to +25). If innocent, react with genuine confusion (0 to +4).",
+    detail: `This turn the detective mentions a detail only the killer would know (${file.trap_detail}). If you are the killer, betray recognition you shouldn't have — a slip, a pause, or an over-precise answer (+15 to +25). If innocent, react with genuine confusion (0 to +4).`,
     blink: "This turn the detective silently watches the suspect's eye blink rate while asking. Make the observation focus on blinking (rapid blinking if lying about where they were, steady if truthful). Stress +3 to +12 if lying.",
   } as const;
   const actionText = payload.action && payload.action in actions ? actions[payload.action] : "";
