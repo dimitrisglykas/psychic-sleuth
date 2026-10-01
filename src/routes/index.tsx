@@ -41,7 +41,6 @@ function MysteryGame() {
   const [calmSince, setCalmSince] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [tea, setTea] = useState<{ quote: string; text: string; pair: [ClueId, ClueId] } | null>(null);
-  useEffect(() => () => stopAmbience(), []);
 
   useEffect(() => {
     setMeta(load("blackwood-meta", {})); setFound(load("blackwood-found", START_CLUES)); setHints(load("blackwood-hints", 3));
