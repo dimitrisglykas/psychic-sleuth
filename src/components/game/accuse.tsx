@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Gavel, RotateCcw, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
@@ -17,10 +17,18 @@ export function AccuseModal({ found, onClose, onRestart }: { found: ClueId[]; on
   const [result, setResult] = useState<Awaited<ReturnType<typeof checkAccusation>> | null>(null);
   const [busy, setBusy] = useState(false); const [err, setErr] = useState("");
   const check = useServerFn(checkAccusation);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`${C.storageKey}-outcome`);
+      if (!saved) return;
+      const parsed = JSON.parse(saved) as { culprit: SuspectId; motive: MotiveId; picked: ClueId[]; result: Awaited<ReturnType<typeof checkAccusation>> };
+      setCulprit(parsed.culprit); setMotive(parsed.motive); setPicked(parsed.picked); setResult(parsed.result); setDone(true);
+    } catch { localStorage.removeItem(`${C.storageKey}-outcome`); }
+  }, [C.storageKey]);
   const submit = async () => {
     if (!culprit || !motive) return;
     setBusy(true); setErr("");
-    try { setResult(await check({ data: { caseCode: C.code, culprit, motive, clues: picked } })); setDone(true); }
+    try { const checked = await check({ data: { caseCode: C.code, culprit, motive, clues: picked } }); setResult(checked); setDone(true); localStorage.setItem(`${C.storageKey}-outcome`, JSON.stringify({ culprit, motive, picked, result: checked })); }
     catch { setErr("Jane couldn't reach the case file. Try again in a moment."); }
     finally { setBusy(false); }
   };

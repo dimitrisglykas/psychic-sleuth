@@ -14,8 +14,8 @@ export function CrimeScene({ found, onDiscover, onClose }: { found: ClueId[]; on
   return (
     <Overlay label="Crime scene" onClose={onClose} className="max-w-6xl overflow-hidden p-0">
       <div className="flex items-end justify-between gap-4 p-5 pb-3"><div><Eyebrow>Crime scene · {C.scene.label}</Eyebrow><h2 className="font-display text-2xl sm:text-3xl">Search the room</h2><p className="text-sm text-muted-foreground">Tap a glowing point to collect what the room is hiding.</p></div><div className="shrink-0 rounded-sm border bg-panel-raised px-3 py-2 text-right"><p className="text-[9px] font-bold uppercase tracking-[.18em] text-muted-foreground">Unsearched</p><p className="font-display text-2xl text-primary">{left}</p></div></div>
-      <div className="cinematic-scene relative overflow-hidden border-y">
-        <img src={sceneImage} alt={C.scene.alt} width={1920} height={1280} className="aspect-[3/2] w-full object-cover" />
+      <div className="relative overflow-hidden border-y">
+        <img src={sceneImage} alt={C.scene.alt} width={1920} height={1280} className="cinematic-scene aspect-[3/2] w-full object-cover" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/20" />
         {cinematicGala && <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-sm border bg-background/75 px-2.5 py-1.5 text-[10px] font-semibold backdrop-blur"><Sparkles className="size-3.5 text-primary" /> Aldridge Museum · 11:58 PM</div>}
         {hotspots.map((h) => {
