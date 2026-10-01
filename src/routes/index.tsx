@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Clock3, FolderOpen, Gavel, Lightbulb, MessageSquareQuote, Search, Target } from "lucide-react";
+import { Armchair, Clock3, Coffee, FolderOpen, Wind, Gavel, Lightbulb, MessageSquareQuote, Search, Target } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AccuseModal } from "@/components/game/accuse";
 import { CrimeScene } from "@/components/game/crime-scene";
 import { Interrogation, type Meta } from "@/components/game/interrogation";
+import { Desk } from "@/components/game/desk";
+import { startAmbience, stopAmbience } from "@/game/ambience";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Rich, StressBar, stressLabel } from "@/components/game/ui";
-import { clueById, clues, START_CLUES, SUSPECT_IDS, suspects, type ClueId, type SuspectId } from "@/game/case";
+import { clueById, clues, connections, janeQuotes, START_CLUES, SUSPECT_IDS, suspects, type ClueId, type SuspectId } from "@/game/case";
 
 
 export const Route = createFileRoute("/")({
@@ -22,7 +24,7 @@ export const Route = createFileRoute("/")({
   component: MysteryGame,
 });
 
-type OverlayKind = null | "intro" | "cases" | "scene" | "accuse" | "shop" | "pass";
+type OverlayKind = null | "desk" | "intro" | "cases" | "scene" | "accuse" | "shop" | "pass";
 const load = <T,>(k: string, fb: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } };
 const save = (k: string, v: unknown) => localStorage.setItem(k, JSON.stringify(v));
 
@@ -37,6 +39,10 @@ function MysteryGame() {
   const [injected, setInjected] = useState<{ id: ClueId; n: number } | null>(null);
   const [discovered, setDiscovered] = useState<ClueId | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [calmSince, setCalmSince] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [tea, setTea] = useState<{ quote: string; text: string; pair: [ClueId, ClueId] } | null>(null);
+  useEffect(() => () => stopAmbience(), []);
 
   useEffect(() => {
     setMeta(load("blackwood-meta", {})); setFound(load("blackwood-found", START_CLUES)); setHints(load("blackwood-hints", 3));
@@ -63,6 +69,17 @@ function MysteryGame() {
     const next = hints - 1; setHints(next); save("blackwood-hints", next);
     setIntuition(`${m.observation ? `"${m.observation}." ` : ""}${m.tell}`);
   };
+  const togglePlay = () => { if (playing) stopAmbience(); else startAmbience(); setPlaying(!playing); };
+  const toggleCalm = () => {
+    if (calmSince) { const s2 = (startedAt ?? Date.now()) + (Date.now() - calmSince); setStartedAt(s2); save("blackwood-started", s2); setCalmSince(null); }
+    else setCalmSince(Date.now());
+  };
+  const sipTea = () => {
+    const options = connections.filter((c) => found.includes(c.a) && found.includes(c.b));
+    const c = options[Math.floor(Math.random() * options.length)] ?? connections[3]!;
+    setTea({ quote: janeQuotes[Math.floor(Math.random() * janeQuotes.length)]!, text: c.text, pair: [c.a, c.b] });
+    window.setTimeout(() => setTea(null), 9000);
+  };
   const restart = () => { Object.keys(localStorage).filter((k) => k.startsWith("blackwood-") && k !== "blackwood-intro").forEach((k) => localStorage.removeItem(k)); window.location.reload(); };
 
   const left = clues.length - found.length;
@@ -73,11 +90,11 @@ function MysteryGame() {
   const progress = Math.round(((found.length / clues.length) + (questioned.length / 3)) / 2 * 100);
 
   const clueButtons = (compact: boolean) => found.map((id) => {
-    const c = clueById(id); const guide = guiding && id === "invoice";
+    const c = clueById(id); const guide = (guiding && id === "invoice") || !!tea?.pair.includes(id);
     return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${guide ? "guide-ring border-primary" : ""}`}>
       <c.icon className="size-4 shrink-0 text-primary" />
       {compact ? <span className="text-[11px] font-medium">{c.title}</span> : <span className="min-w-0"><span className="block text-xs font-semibold">{c.title}</span><span className="block text-[11px] leading-4 text-muted-foreground"><Rich text={c.detail} /></span></span>}
-      {guide && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask Julian about this</span>}
+      {guiding && id === "invoice" && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask Julian about this</span>}
     </button>;
   });
 
@@ -85,13 +102,16 @@ function MysteryGame() {
     <main className="flex min-h-dvh flex-col bg-background text-foreground lg:h-dvh lg:overflow-hidden">
       <header className="flex min-h-14 items-center gap-3 border-b bg-panel px-4 lg:px-6">
         <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · Case 001</p><h1 className="truncate font-display text-lg sm:text-xl">The Enigma at Blackwood Manor</h1></div>
-        <Timer startedAt={startedAt} />
+        <Timer startedAt={startedAt} pausedAt={calmSince} />
+        <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
+        <Button variant="ghost" size="sm" onClick={() => setOverlay("desk")}><Armchair /> <span className="hidden sm:inline">My desk</span></Button>
         <Button variant="ghost" size="sm" onClick={() => setOverlay("cases")}><FolderOpen /> <span className="hidden sm:inline">Cases</span></Button>
       </header>
 
       <div className="flex items-center gap-3 border-b bg-accent/40 px-4 py-2 lg:px-6">
         <Target className="size-4 shrink-0 text-primary" />
         <p className="min-w-0 flex-1 text-xs sm:text-sm"><span className="font-semibold uppercase tracking-[.12em] text-primary">Goal: </span><Rich text={objective} /></p>
+        {calmSince && <button onClick={toggleCalm} className="flex items-center gap-1 rounded-full border border-success/60 px-2 py-0.5 text-[10px] text-success"><Wind className="size-3" /> Taking a breath · timer paused</button>}
         <div className="hidden w-32 items-center gap-2 sm:flex"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px]">{progress}%</span></div>
       </div>
 
@@ -139,6 +159,8 @@ function MysteryGame() {
       </footer>
 
       {discovered && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,360px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}
+      {tea && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,400px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl" style={{ animationDuration: "9s" }}><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><Coffee className="size-4" /> Tea break</p><p className="mt-2 font-display text-[15px] italic leading-6">{tea.quote}</p><p className="mt-2 border-t pt-2 text-xs"><span className="font-semibold text-primary">Overlooked connection: </span><Rich text={tea.text} /></p><p className="mt-1 text-[10px] text-muted-foreground">Highlighted in your clues: {clueById(tea.pair[0]).title} + {clueById(tea.pair[1]).title}</p></div>}
+      {overlay === "desk" && <Desk playing={playing} onTogglePlay={togglePlay} calm={!!calmSince} onToggleCalm={toggleCalm} onOpenCases={() => setOverlay("cases")} onClose={() => setOverlay(null)} />}
       {overlay === "intro" && <HowToPlay onClose={() => { save("blackwood-intro", true); setOverlay(null); }} />}
       {overlay === "cases" && <Cases onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
       {overlay === "pass" && <SeasonPass onClose={() => setOverlay(null)} />}
@@ -150,10 +172,10 @@ function MysteryGame() {
   );
 }
 
-function Timer({ startedAt }: { startedAt: number | null }) {
+function Timer({ startedAt, pausedAt }: { startedAt: number | null; pausedAt: number | null }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(t); }, []);
-  const s = startedAt ? Math.max(0, Math.floor((now - startedAt) / 1000)) : 0;
+  const s = startedAt ? Math.max(0, Math.floor(((pausedAt ?? now) - startedAt) / 1000)) : 0;
   const f = (n: number) => String(n).padStart(2, "0");
   return <div className="flex items-center gap-1.5"><Clock3 className="size-4 text-primary" /><span className="font-mono text-xs font-semibold">{f(Math.floor(s / 3600))}:{f(Math.floor(s / 60) % 60)}:{f(s % 60)}</span></div>;
 }

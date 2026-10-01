@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Mic2, X } from "lucide-react";
+import { Eye, Mic2, Sparkle, Target, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
@@ -9,14 +9,21 @@ import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea,
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { clueById, suspects, type ClueId, type SuspectId } from "@/game/case";
 
-export type Meta = { stress: number; observation: string; tell: string };
+export type Meta = { stress: number; observation: string; tell: string; jane?: string | undefined };
+export type Action = "coldread" | "bluff" | "detail" | "blink";
+const ACTIONS: Record<Action, { tag: string; label: string; line: string }> = {
+  coldread: { tag: "COLD READ", label: "Cold read", line: "Jane studies them closely before speaking." },
+  bluff: { tag: "TRAP: BLUFF", label: "Bluff about evidence", line: "We have a witness who saw you near the study just before ten." },
+  detail: { tag: "TRAP: KILLER'S DETAIL", label: "Mention a detail only the killer knows", line: "Funny thing — whoever did this swept the broken glass into a neat little pile." },
+  blink: { tag: "TRAP: BLINK RATE", label: "Observe eye blink rate", line: "(You quietly watch their eyes.) Tell me again where you were at ten to ten." },
+};
 
 export function parseReply(text: string): { speech: string; meta?: Meta | undefined } {
   const i = text.indexOf("<<META");
   if (i < 0) return { speech: text };
   const m = text.slice(i).match(/<<META\s*(\{[\s\S]*\})\s*>>/);
   let meta: Meta | undefined;
-  if (m) { try { const p = JSON.parse(m[1] ?? ""); meta = { stress: Math.max(0, Math.min(100, Math.round(Number(p.stress) || 0))), observation: String(p.observation ?? ""), tell: String(p.tell ?? "") }; } catch { /* partial */ } }
+  if (m) { try { const p = JSON.parse(m[1] ?? ""); meta = { stress: Math.max(0, Math.min(100, Math.round(Number(p.stress) || 0))), observation: String(p.observation ?? ""), tell: String(p.tell ?? ""), jane: p.jane ? String(p.jane) : undefined }; } catch { /* partial */ } }
   return { speech: text.slice(0, i).trim(), meta };
 }
 
@@ -30,6 +37,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
   const [press, setPress] = useState(false);
+  const [trapOpen, setTrapOpen] = useState(false);
   const [clueId, setClueId] = useState<ClueId | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
@@ -50,11 +58,13 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   useEffect(() => { if (!injected) return; const c = clueById(injected.id); setInput(c.prompt); setClueId(c.id); inputRef.current?.focus(); }, [injected]);
   useEffect(() => { const f = () => inputRef.current?.focus(); window.addEventListener("focus-question", f); return () => window.removeEventListener("focus-question", f); }, []);
 
-  const submit = (text: string) => {
+  const submit = (text: string, action?: Action) => {
     if (!text.trim() || busy) return;
     const c = clueId ? clueById(clueId) : null;
-    void sendMessage({ text: `${press ? "[PRESSING] " : ""}${text.trim()}` }, { body: { suspectId, press, stress, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null } });
-    setInput(""); setClueId(null); inputRef.current?.focus();
+    const tag = action ? `[${ACTIONS[action].tag}] ` : press ? "[PRESSING] " : "";
+    void sendMessage({ text: `${tag}${text.trim()}` }, { body: { suspectId, press, stress, action: action ?? null, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null } });
+    if (!action) { setInput(""); setClueId(null); }
+    setTrapOpen(false); inputRef.current?.focus();
   };
   const visible = messages.length ? messages : [{ id: "opening", role: "assistant", parts: [{ type: "text", text: suspect.opener }] } as UIMessage];
 
@@ -65,11 +75,14 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
         <ConversationContent className="mx-auto w-full max-w-2xl gap-6 px-4 py-6 sm:px-8">
           {visible.map((message) => {
             const raw = textOf(message);
-            const { speech, meta } = message.role === "assistant" ? parseReply(raw) : { speech: raw.replace(/^\[PRESSING\]\s*/, ""), meta: undefined };
+            const tagMatch = message.role === "user" ? raw.match(/^\[([^\]]+)\]\s*/) : null;
+            const { speech, meta } = message.role === "assistant" ? parseReply(raw) : { speech: tagMatch ? raw.slice(tagMatch[0].length) : raw, meta: undefined };
             return (
               <Message from={message.role} key={message.id}>
                 <p className={`text-[9px] font-bold uppercase tracking-[.18em] ${message.role === "user" ? "text-right text-muted-foreground" : "text-primary"}`}>{message.role === "user" ? "You" : suspect.short}</p>
-                {meta?.observation && <p className="text-[11px] italic text-muted-foreground">[{meta.observation}]</p>}
+                {tagMatch && <p className="text-right text-[9px] font-bold uppercase tracking-[.16em] text-primary">{tagMatch[1]}</p>}
+                {meta?.jane && <div className="rounded-sm border-l-2 border-primary bg-accent/60 px-3 py-2 text-xs italic"><span className="mr-1 font-bold not-italic text-primary">JANE:</span>{meta.jane}</div>}
+                {meta?.observation && <p className="w-fit rounded-sm border border-border bg-muted/60 px-2 py-0.5 text-[10px] italic text-muted-foreground">[{meta.observation}]</p>}
                 <MessageContent className={message.role === "user" ? "border border-primary/25 bg-accent text-accent-foreground" : "font-display text-[17px] leading-7"}>
                   {speech ? <MessageResponse>{speech}</MessageResponse> : null}
                 </MessageContent>
@@ -84,10 +97,15 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
       <div className="border-t bg-panel p-3 sm:p-4">
         {clueStrip}
         {clueId && <p className="mx-auto mb-2 flex max-w-2xl items-center gap-2 text-[10px] font-semibold uppercase tracking-[.14em] text-primary">Showing clue: {clueById(clueId).title}<button aria-label="Remove clue" onClick={() => setClueId(null)}><X className="size-3 text-muted-foreground" /></button></p>}
+        {trapOpen && <div className="mx-auto mb-2 grid max-w-2xl gap-1 sm:grid-cols-3 rounded-md border bg-popover p-1 shadow-xl">{(["bluff", "detail", "blink"] as Action[]).map((a) => <button key={a} type="button" onClick={() => submit(ACTIONS[a].line, a)} className="flex w-full items-start border bg-panel-raised gap-2 rounded-sm px-2.5 py-2 text-left text-xs hover:bg-accent"><Sparkle className="mt-0.5 size-3 shrink-0 text-primary" /><span><span className="block font-semibold">{ACTIONS[a].label}</span><span className="text-muted-foreground">"{ACTIONS[a].line}"</span></span></button>)}</div>}
         <PromptInput className="mx-auto max-w-2xl border-border bg-panel-raised shadow-xl" onSubmit={({ text }) => submit(text)}>
           <PromptInputTextarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Ask ${suspect.short} a question…`} className="min-h-16 text-sm" />
           <PromptInputFooter>
-            <PromptInputTools><Button type="button" size="sm" variant={press ? "default" : "ghost"} onClick={() => setPress(!press)} className="h-8 text-[10px] uppercase tracking-[.12em]"><Mic2 /> Press suspect</Button></PromptInputTools>
+            <PromptInputTools className="relative flex-wrap gap-1">
+              <Button type="button" size="sm" variant={press ? "default" : "ghost"} onClick={() => setPress(!press)} className="h-8 px-2 text-[10px] uppercase tracking-[.1em]"><Mic2 /> Press</Button>
+              <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => submit(ACTIONS.coldread.line, "coldread")} className="h-8 px-2 text-[10px] uppercase tracking-[.1em] text-primary"><Eye /> Cold read</Button>
+              <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => setTrapOpen(!trapOpen)} aria-expanded={trapOpen} className="h-8 px-2 text-[10px] uppercase tracking-[.1em]"><Target /> Set a trap</Button>
+            </PromptInputTools>
             <PromptInputSubmit status={status} onStop={stop} disabled={!input.trim() && !busy} />
           </PromptInputFooter>
         </PromptInput>
