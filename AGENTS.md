@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep each suspect's interrogation transcript in browser storage; this preserves case progress without requiring accounts.
+- Keep all suspect roleplay prompts and AI Gateway access server-side; this prevents hidden case truths and credentials from reaching the browser.
