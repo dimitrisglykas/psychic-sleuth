@@ -8,7 +8,7 @@ import { Eyebrow, Overlay, Rich } from "./ui";
 
 const rating = (s: number) => s === 100 ? "Master Mentalist" : s >= 75 ? "Sharp Consultant" : s >= 50 ? "Promising Rookie" : "Back to the Couch";
 
-export function AccuseModal({ found, onClose, onRestart }: { found: ClueId[]; onClose: () => void; onRestart: () => void }) {
+export function AccuseModal({ found, onClose, onRestart, onOutcome }: { found: ClueId[]; onClose: () => void; onRestart: () => void; onOutcome?: () => void }) {
   const C = useCase(); const { motives, suspectIds: SUSPECT_IDS, suspects } = C; const clueById = (id: ClueId) => clueOf(C, id);
   const [culprit, setCulprit] = useState<SuspectId | null>(null);
   const [motive, setMotive] = useState<MotiveId | null>(null);
@@ -28,7 +28,7 @@ export function AccuseModal({ found, onClose, onRestart }: { found: ClueId[]; on
   const submit = async () => {
     if (!culprit || !motive) return;
     setBusy(true); setErr("");
-    try { const checked = await check({ data: { caseCode: C.code, culprit, motive, clues: picked } }); setResult(checked); setDone(true); localStorage.setItem(`${C.storageKey}-outcome`, JSON.stringify({ culprit, motive, picked, result: checked })); }
+    try { const checked = await check({ data: { caseCode: C.code, culprit, motive, clues: picked } }); setResult(checked); setDone(true); localStorage.setItem(`${C.storageKey}-outcome`, JSON.stringify({ culprit, motive, picked, result: checked })); onOutcome?.(); }
     catch { setErr("Jane couldn't reach the case file. Try again in a moment."); }
     finally { setBusy(false); }
   };
