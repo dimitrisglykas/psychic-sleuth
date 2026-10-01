@@ -9,7 +9,6 @@ import { Desk } from "@/components/game/desk";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Overlay, Rich, StressBar, stressLabel } from "@/components/game/ui";
 import { CASES, CaseContext, clueOf, janeQuotes, type CaseData, type ClueId, type PersonId } from "@/game/case";
-import galaEvidence from "@/assets/gala-evidence-collection.jpg";
 
 
 export const Route = createFileRoute("/")({
@@ -119,13 +118,12 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
 
   const clueButtons = (compact: boolean) => found.map((id) => {
     const c = clueById(id); const glow = (guiding && id === guide.clue) || !!tea?.pair.includes(id);
-    if (C.code === "002") return <div key={id} className={`group relative shrink-0 overflow-hidden rounded-sm border bg-panel-raised transition-colors hover:border-primary/60 ${compact ? "w-36" : ""} ${glow ? "guide-ring border-primary" : ""}`}>
+    return <div key={id} className={`group relative shrink-0 overflow-hidden rounded-sm border bg-panel-raised transition-colors hover:border-primary/60 ${compact ? "w-36" : ""} ${glow ? "guide-ring border-primary" : ""}`}>
       <div className={`relative overflow-hidden bg-muted ${compact ? "h-16" : "h-24"}`}><EvidenceCrop id={id} /><div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" /><div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-2"><p className={`${compact ? "text-[10px]" : "text-xs"} font-semibold`}>{c.title}</p><Button size="icon" variant="secondary" className="size-7 shrink-0" onClick={() => setInspected(id)} aria-label={`Inspect ${c.title}`} title={`Inspect ${c.title}`}><ZoomIn className="size-3.5" /></Button></div></div>
       {!compact && <Button variant="ghost" size="sm" onClick={() => askClue(id)} aria-label={`Ask about ${c.title}`} className="w-full justify-start rounded-none text-[10px] text-primary"><MessageSquareQuote className="size-3.5" /> Use in interview</Button>}
       {compact && <Button variant="ghost" size="sm" onClick={() => askClue(id)} aria-label={`Ask about ${c.title}`} className="h-7 w-full justify-start rounded-none px-2 text-[9px] text-primary"><MessageSquareQuote className="size-3" /> Ask with clue</Button>}
       {guiding && id === guide.clue && <span className="absolute whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Start here</span>}
     </div>;
-    return <Button key={id} variant="ghost" onClick={() => askClue(id)} title={c.detail.replace(/\*\*/g, "")} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center justify-start gap-2 rounded-sm border bg-panel-raised text-left hover:border-primary/60 hover:bg-accent ${compact ? "h-auto p-2" : "h-auto w-full p-2.5"} ${glow ? "guide-ring border-primary" : ""}`}><c.icon className="size-4 shrink-0 text-primary" /><span className="text-[11px] font-semibold">{c.title}</span>{guiding && id === guide.clue && <span className="absolute -top-3 right-2 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Start here</span>}</Button>;
   });
 
   const reaction = stressOf(suspectId) >= 75 ? "Tension spike" : meta[suspectId]?.observation || (stressOf(suspectId) >= 50 ? "Guarded posture" : "Controlled");
@@ -176,7 +174,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         {/* Right: clues & actions */}
         <aside className="hidden min-h-0 flex-col overflow-y-auto border-l bg-panel lg:flex">
           <div className="border-b p-4"><Button className="h-11 w-full" onClick={() => setOverlay("scene")}><Search /> Inspect crime scene</Button></div>
-          <div className="space-y-3 p-4"><div className="flex items-center justify-between"><Eyebrow>Evidence</Eyebrow><span className="text-[10px] text-muted-foreground">Inspect or question</span></div><div className={C.code === "002" ? "grid grid-cols-2 gap-2" : "space-y-2"}>{clueButtons(false)}</div>{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} clue{left > 1 ? "s" : ""} still hidden in the scene.</p>}</div>
+          <div className="space-y-3 p-4"><div className="flex items-center justify-between"><Eyebrow>Evidence</Eyebrow><span className="text-[10px] text-muted-foreground">Inspect or question</span></div><div className="grid grid-cols-2 gap-2">{clueButtons(false)}</div>{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} clue{left > 1 ? "s" : ""} still hidden in the scene.</p>}</div>
           <div className="mt-auto border-t p-4">
             <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => setShowProgress(!showProgress)}>Investigation details {showProgress ? <ChevronUp /> : <ChevronDown />}</Button>
             {showProgress && <div className="mt-3 space-y-3"><Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="People questioned" value={`${questioned.length + ((counts["victim"] ?? 0) > 0 ? 1 : 0)} / 4`} />
@@ -195,7 +193,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       </footer>
 
       {discovered && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,360px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}
-      {tea && <div className="discover-pop fixed left-1/2 top-20 z-[70] w-[min(94vw,560px)] -translate-x-1/2 overflow-hidden rounded-md border border-primary bg-panel-raised shadow-2xl"><div className="relative h-28 overflow-hidden"><img src={C.code === "002" ? galaEvidence : C.scene.image} alt="" className="h-full w-full object-cover opacity-55" width={1600} height={1008} /><div className="absolute inset-0 bg-gradient-to-t from-panel-raised to-transparent" /><div className="absolute inset-0 grid place-items-center"><span className="tea-ripple grid size-16 place-items-center rounded-full border border-primary/60 bg-background/45 backdrop-blur"><Coffee className="size-7 text-primary" /></span></div></div><div className="p-4 pt-2"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Jane sees the connection</p><p className="mt-2 font-display text-[15px] italic leading-6">{tea.quote}</p><p className="mt-2 border-t pt-2 text-xs"><span className="font-semibold text-primary">Overlooked connection: </span><Rich text={tea.text} /></p><p className="mt-1 text-[10px] text-muted-foreground">{clueById(tea.pair[0]).title} + {clueById(tea.pair[1]).title}</p></div></div>}
+      {tea && <div className="discover-pop fixed left-1/2 top-20 z-[70] w-[min(94vw,560px)] -translate-x-1/2 overflow-hidden rounded-md border border-primary bg-panel-raised shadow-2xl"><div className="relative h-28 overflow-hidden"><img src={C.scene.evidenceImage} alt="" className="h-full w-full object-cover opacity-55" width={1600} height={1008} /><div className="absolute inset-0 bg-gradient-to-t from-panel-raised to-transparent" /><div className="absolute inset-0 grid place-items-center"><span className="tea-ripple grid size-16 place-items-center rounded-full border border-primary/60 bg-background/45 backdrop-blur"><Coffee className="size-7 text-primary" /></span></div></div><div className="p-4 pt-2"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Jane sees the connection</p><p className="mt-2 font-display text-[15px] italic leading-6">{tea.quote}</p><p className="mt-2 border-t pt-2 text-xs"><span className="font-semibold text-primary">Overlooked connection: </span><Rich text={tea.text} /></p><p className="mt-1 text-[10px] text-muted-foreground">{clueById(tea.pair[0]).title} + {clueById(tea.pair[1]).title}</p></div></div>}
       {overlay === "desk" && <Desk playing={playing} onTogglePlay={togglePlay} calm={!!calmSince} onToggleCalm={toggleCalm} onOpenCases={() => setOverlay("cases")} onPick={(c) => { setPlaying(false); setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => { setPlaying(false); setOverlay(null); }} />}
       {overlay === "intro" && <HowToPlay onClose={() => { save(`${K}-intro`, true); setOverlay(null); }} />}
       {overlay === "cases" && <Cases onPick={(c) => { setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
@@ -220,9 +218,9 @@ function Timer({ startedAt, pausedAt }: { startedAt: number | null; pausedAt: nu
 function Info({ label, text }: { label: string; text: string }) { return <div><p className="mb-1 text-[9px] font-bold uppercase tracking-[.2em] text-muted-foreground">{label}</p><p className="text-xs leading-5 text-foreground/85"><Rich text={text} /></p></div>; }
 function Row({ label, value }: { label: string; value: string }) { return <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-mono font-semibold">{value}</span></div>; }
 
-const evidenceCropClass: Record<string, string> = {
-  gap: "evidence-gap", bribe: "evidence-bribe", tie: "evidence-tie", claim: "evidence-claim", paste: "evidence-paste", badge: "evidence-badge", radio: "evidence-radio",
-};
 function EvidenceCrop({ id, large = false }: { id: ClueId; large?: boolean }) {
-  return <div className={`absolute inset-0 overflow-hidden ${evidenceCropClass[id] ?? "evidence-gap"}`}><img src={galaEvidence} alt="" className={`evidence-sheet max-w-none ${large ? "evidence-sheet-large" : ""}`} width={1600} height={1008} loading="lazy" /></div>;
+  const C = CASES[localStorage.getItem("psychic-case") ?? "001"] ?? CASES["001"];
+  const clue = C?.clues.find((item) => item.id === id);
+  if (!C || !clue) return null;
+  return <div className={`absolute inset-0 overflow-hidden evidence-slot-${clue.visualSlot}`}><img src={C.scene.evidenceImage} alt="" className={`evidence-sheet max-w-none ${large ? "evidence-sheet-large" : ""}`} width={1600} height={1008} loading="lazy" /></div>;
 }

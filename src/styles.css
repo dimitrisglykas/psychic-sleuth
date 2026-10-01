@@ -95,10 +95,10 @@
 
 .evidence-sheet { position:absolute; height:220%; width:330%; object-fit:cover; }
 .evidence-sheet-large { height:205%; width:305%; }
-.evidence-gap .evidence-sheet { left:0; top:0; }
-.evidence-bribe .evidence-sheet { left:-106%; top:0; }
-.evidence-tie .evidence-sheet { right:0; top:0; }
-.evidence-claim .evidence-sheet { left:0; bottom:0; }
-.evidence-paste .evidence-sheet { left:-92%; bottom:0; }
-.evidence-badge .evidence-sheet { left:-182%; bottom:0; }
-.evidence-radio .evidence-sheet { right:0; bottom:0; }
+.evidence-slot-0 .evidence-sheet { left:0; top:0; }
+.evidence-slot-1 .evidence-sheet { left:-106%; top:0; }
+.evidence-slot-2 .evidence-sheet { right:0; top:0; }
+.evidence-slot-3 .evidence-sheet { left:0; bottom:0; }
+.evidence-slot-4 .evidence-sheet { left:-92%; bottom:0; }
+.evidence-slot-5 .evidence-sheet { left:-182%; bottom:0; }
+.evidence-slot-6 .evidence-sheet { right:0; bottom:0; }
