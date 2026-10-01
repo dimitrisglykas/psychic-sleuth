@@ -48,12 +48,35 @@ const nav = [
   { icon: Archive, label: "Evidence Board" }, { icon: UsersRound, label: "Suspect List" }, { icon: UserRoundSearch, label: "Profile" },
 ];
 
+type Meta = { stress: number; observation: string; tell: string };
+
+function parseReply(text: string): { speech: string; meta?: Meta | undefined } {
+  const i = text.indexOf("<<META");
+  if (i < 0) return { speech: text };
+  const m = text.slice(i).match(/<<META\s*(\{[\s\S]*\})\s*>>/);
+  let meta: Meta | undefined;
+  if (m) { try { const p = JSON.parse(m[1] ?? ""); meta = { stress: Math.max(0, Math.min(100, Math.round(Number(p.stress) || 0))), observation: String(p.observation ?? ""), tell: String(p.tell ?? "") }; } catch { /* partial */ } }
+  return { speech: text.slice(0, i).trim(), meta };
+}
+
 function MysteryGame() {
   const [suspectId, setSuspectId] = useState<SuspectId>("partner");
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [accusing, setAccusing] = useState(false);
+  const [meta, setMeta] = useState<Partial<Record<SuspectId, Meta>>>({});
+  const [hints, setHints] = useState(3);
+  const [intuition, setIntuition] = useState<string | null>(null);
+  useEffect(() => { const h = localStorage.getItem("blackwood-hints"); if (h !== null) setHints(Number(h)); }, []);
   const suspect = suspects[suspectId];
+  const stress = meta[suspectId]?.stress ?? suspect.stress;
+  const useJane = () => {
+    const m = meta[suspectId];
+    if (!m?.tell) { setIntuition("Ask a question first — even Jane needs something to read."); return; }
+    if (hints <= 0) { setIntuition("No intuition left. You'll have to read them yourself."); return; }
+    const next = hints - 1; setHints(next); localStorage.setItem("blackwood-hints", String(next));
+    setIntuition(`${m.observation ? `“${m.observation}.” ` : ""}${m.tell}`);
+  };
   return (
     <main className="min-h-dvh bg-background text-foreground lg:grid lg:h-dvh lg:grid-cols-[76px_minmax(0,1fr)] lg:overflow-hidden">
       <aside className="hidden w-[76px] flex-col border-r bg-panel lg:flex">
@@ -66,7 +89,8 @@ function MysteryGame() {
         <header className="flex min-h-16 items-center gap-3 border-b bg-panel px-4 lg:px-6">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setNavOpen(true)} aria-label="Open navigation"><Menu /></Button>
           <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Case 0017 · Active investigation</p><h1 className="truncate font-display text-lg text-foreground sm:text-xl">The Enigma at Blackwood Manor</h1></div>
-          <div className="hidden items-center gap-5 md:flex"><Stat icon={Clock3} label="Case Time" value="01:42:18" /><Stat icon={Lightbulb} label="Jane Intuition" value="3 hints" /></div>
+          <div className="hidden items-center gap-5 md:flex"><Stat icon={Clock3} label="Case Time" value="01:42:18" /></div>
+          <button onClick={useJane} className="flex items-center gap-2 rounded-sm border border-primary/40 px-2 py-1.5 hover:bg-accent" aria-label="Use Jane Intuition"><Lightbulb className="size-4 text-primary" /><div className="text-left"><p className="hidden text-[9px] uppercase tracking-[.16em] text-muted-foreground sm:block">Jane Intuition</p><p className="font-mono text-xs font-semibold">{hints} <span className="hidden sm:inline">hints</span></p></div></button>
           <Button className="h-10 bg-destructive px-3 text-xs font-bold uppercase tracking-[.12em] text-destructive-foreground hover:bg-destructive/90 sm:px-5" onClick={() => setAccusing(true)}><Gavel className="size-4" /> <span className="hidden sm:inline">Accuse Suspect</span><span className="sm:hidden">Accuse</span></Button>
         </header>
 
@@ -76,8 +100,8 @@ function MysteryGame() {
         </div>
 
         <div className="grid min-h-0 flex-1 lg:grid-cols-[286px_minmax(400px,1fr)_300px]">
-          <Dossier suspectId={suspectId} onSelect={setSuspectId} />
-          <Interrogation key={suspectId} suspectId={suspectId} onEvidence={() => setEvidenceOpen(true)} />
+          <Dossier suspectId={suspectId} stress={stress} onSelect={(id) => { setSuspectId(id); setIntuition(null); }} />
+          <Interrogation key={suspectId} suspectId={suspectId} stress={stress} onMeta={(m) => setMeta((prev) => ({ ...prev, [suspectId]: m }) as Partial<Record<SuspectId, Meta>>)} onEvidence={() => setEvidenceOpen(true)} />
           <EvidenceDrawer className="hidden lg:flex" onUse={(prompt) => window.dispatchEvent(new CustomEvent("use-evidence", { detail: prompt }))} />
         </div>
       </section>
@@ -85,6 +109,7 @@ function MysteryGame() {
       {evidenceOpen && <div className="fixed inset-0 z-50 flex justify-end bg-background/75 backdrop-blur-sm lg:hidden" onClick={() => setEvidenceOpen(false)}><EvidenceDrawer className="w-[88%] max-w-sm" onClose={() => setEvidenceOpen(false)} onUse={(prompt) => { window.dispatchEvent(new CustomEvent("use-evidence", { detail: prompt })); setEvidenceOpen(false); }} /></div>}
       {navOpen && <div className="fixed inset-0 z-50 bg-background/85 lg:hidden" onClick={() => setNavOpen(false)}><aside className="h-full w-72 border-r bg-panel p-5" onClick={(e) => e.stopPropagation()}><div className="mb-8 flex items-center justify-between"><p className="font-display text-xl">Blackwood Casefiles</p><Button variant="ghost" size="icon" onClick={() => setNavOpen(false)}><X /></Button></div>{nav.map(({icon:Icon,label,active}) => <button key={label} className={`mb-2 flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm ${active ? "bg-accent text-primary" : "text-muted-foreground"}`}><Icon className="size-4" />{label}</button>)}</aside></div>}
       {accusing && <AccuseDialog current={suspectId} onClose={() => setAccusing(false)} />}
+      {intuition && <div className="fixed inset-x-3 bottom-28 z-40 mx-auto max-w-md rounded-md border border-primary/60 bg-panel-raised p-4 shadow-2xl"><div className="mb-2 flex items-center justify-between"><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><Lightbulb className="size-4" /> Jane's observation</p><Button variant="ghost" size="icon" className="size-7" onClick={() => setIntuition(null)} aria-label="Close"><X /></Button></div><p className="font-display text-[15px] italic leading-6">{intuition}</p></div>}
     </main>
   );
 }
@@ -93,36 +118,52 @@ function Stat({ icon: Icon, label, value }: { icon: typeof Clock3; label: string
   return <div className="flex items-center gap-2"><Icon className="size-4 text-primary" /><div><p className="text-[9px] uppercase tracking-[.16em] text-muted-foreground">{label}</p><p className="font-mono text-xs font-semibold">{value}</p></div></div>;
 }
 
-function Dossier({ suspectId, onSelect }: { suspectId: SuspectId; onSelect: (id: SuspectId) => void }) {
-  const suspect = suspects[suspectId];
+function Dossier({ suspectId, stress, onSelect }: { suspectId: SuspectId; stress: number; onSelect: (id: SuspectId) => void }) {
+  const suspect = { ...suspects[suspectId], stress };
   return <aside className="hidden min-h-0 flex-col overflow-y-auto border-r bg-panel lg:flex">
     <div className="relative aspect-[4/3] overflow-hidden border-b"><img src={suspect.image} alt={suspect.name} className="h-full w-full object-cover object-[center_28%] grayscale-[18%]" width={768} height={1024} /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-panel to-transparent p-4 pt-16"><p className="font-display text-2xl">{suspect.name}</p><p className="text-[10px] uppercase tracking-[.18em] text-primary">{suspect.role}</p></div></div>
     <div className="space-y-5 p-4"><div className="grid grid-cols-3 gap-2">{(Object.keys(suspects) as SuspectId[]).map(id => <button key={id} onClick={() => onSelect(id)} className={`overflow-hidden rounded-sm border ${id === suspectId ? "border-primary" : "border-border opacity-60 hover:opacity-100"}`}><img src={suspects[id].image} alt={suspects[id].name} className="aspect-square w-full object-cover object-top" width={768} height={1024} loading="lazy" /></button>)}</div>
       <Info label="Profile" text={`${suspect.age} years old · ${suspect.bio}`} /><Info label="Alibi" text={suspect.alibi} /><Info label="Relationship" text={suspect.relation} />
-      <div><div className="mb-2 flex justify-between text-[10px] font-semibold uppercase tracking-[.16em]"><span>Stress level</span><span className="text-primary">{suspect.stress}% · Elevated</span></div><div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="stress-pulse h-full bg-primary" style={{ width: `${suspect.stress}%` }} /></div></div>
+      <div><div className="mb-2 flex justify-between text-[10px] font-semibold uppercase tracking-[.16em]"><span>Stress level</span><span className="text-primary">{suspect.stress}% · {suspect.stress >= 75 ? "Breaking" : suspect.stress >= 50 ? "Elevated" : "Composed"}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className={`stress-pulse h-full transition-all duration-700 ${suspect.stress >= 75 ? "bg-destructive" : "bg-primary"}`} style={{ width: `${suspect.stress}%` }} /></div></div>
     </div>
   </aside>;
 }
 
 function Info({ label, text }: { label: string; text: string }) { return <div><p className="mb-1 text-[9px] font-bold uppercase tracking-[.2em] text-muted-foreground">{label}</p><p className="text-xs leading-5 text-foreground/85">{text}</p></div>; }
 
-function Interrogation({ suspectId, onEvidence }: { suspectId: SuspectId; onEvidence: () => void }) {
+function Interrogation({ suspectId, stress, onMeta, onEvidence }: { suspectId: SuspectId; stress: number; onMeta: (m: Meta) => void; onEvidence: () => void }) {
   const suspect = suspects[suspectId];
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
   const [press, setPress] = useState(false);
+  const [clueId, setClueId] = useState<string | null>(null);
   const [storageReady, setStorageReady] = useState(false);
-  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat", body: { suspectId, press } }), [suspectId, press]);
+  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
   const { messages, sendMessage, status, stop, error, setMessages } = useChat({ id: `blackwood-${suspectId}`, transport, onFinish: () => inputRef.current?.focus() });
   const busy = status === "submitted" || status === "streaming";
   useEffect(() => { const saved = localStorage.getItem(`blackwood-chat-${suspectId}`); if (saved) { try { setMessages(JSON.parse(saved) as UIMessage[]); } catch { localStorage.removeItem(`blackwood-chat-${suspectId}`); } } setStorageReady(true); inputRef.current?.focus(); }, [setMessages, suspectId]);
   useEffect(() => { if (storageReady && !busy) localStorage.setItem(`blackwood-chat-${suspectId}`, JSON.stringify(messages)); }, [messages, busy, storageReady, suspectId]);
-  useEffect(() => { const handle = (event: Event) => { const custom = event as CustomEvent<string>; setInput(custom.detail); inputRef.current?.focus(); }; window.addEventListener("use-evidence", handle); return () => window.removeEventListener("use-evidence", handle); }, []);
-  const submit = (text: string) => { if (!text.trim() || busy) return; void sendMessage({ text: `${press ? "[PRESSING] " : ""}${text.trim()}` }); setInput(""); inputRef.current?.focus(); };
+  const onMetaRef = useRef(onMeta); onMetaRef.current = onMeta;
+  useEffect(() => {
+    if (busy) return;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i]; if (!m || m.role !== "assistant") continue;
+      const text = m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
+      const { meta } = parseReply(text); if (meta) { onMetaRef.current(meta); return; }
+    }
+  }, [messages, busy]);
+  useEffect(() => { const handle = (event: Event) => { const id = (event as CustomEvent<string>).detail; const clue = evidence.find((c) => c.id === id); if (!clue) return; setInput(clue.prompt); setClueId(clue.id); inputRef.current?.focus(); }; window.addEventListener("use-evidence", handle); return () => window.removeEventListener("use-evidence", handle); }, []);
+  const submit = (text: string) => {
+    if (!text.trim() || busy) return;
+    const clue = evidence.find((c) => c.id === clueId);
+    void sendMessage({ text: `${press ? "[PRESSING] " : ""}${text.trim()}` }, { body: { suspectId, press, stress, evidence: clue ? { title: clue.title, detail: clue.detail } : null } });
+    setInput(""); setClueId(null); inputRef.current?.focus();
+  };
   const visible = messages.length ? messages : [{ id: "opening", role: "assistant", parts: [{ type: "text", text: suspect.opener }] } as UIMessage];
   return <section className="flex min-h-[calc(100dvh-106px)] min-w-0 flex-col bg-background lg:min-h-0">
-    <div className="flex items-center justify-between border-b px-4 py-3"><div className="flex items-center gap-3"><img src={suspect.image} alt="" className="size-9 rounded-full object-cover object-top ring-1 ring-primary/50" width={768} height={1024} loading="lazy" /><div><p className="text-xs font-semibold">Interrogating {suspect.name}</p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording active</p></div></div><Button variant="ghost" size="icon" className="lg:hidden" onClick={onEvidence} aria-label="Open evidence"><Paperclip /></Button></div>
-    <Conversation className="min-h-0"><ConversationContent className="mx-auto w-full max-w-2xl gap-6 px-4 py-7 sm:px-8">{visible.map((message) => <Message from={message.role} key={message.id} className={message.role === "assistant" ? "before:mb-1 before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-primary before:content-['SUSPECT']" : "before:mb-1 before:text-right before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-muted-foreground before:content-['YOU']"}><MessageContent className={message.role === "user" ? "border border-primary/25 bg-accent text-accent-foreground" : "font-display text-[17px] leading-7"}>{message.parts.map((part, i) => part.type === "text" ? <MessageResponse key={i}>{part.text.replace(/^\[PRESSING\]\s*/, "")}</MessageResponse> : null)}</MessageContent></Message>)}{status === "submitted" && <div className="text-xs"><Shimmer>{`${suspect.name} weighs the question…`}</Shimmer></div>}{error && <p className="rounded-sm border border-destructive/50 bg-destructive/10 p-3 text-xs text-destructive">{error.message}</p>}</ConversationContent><ConversationScrollButton /></Conversation>
+    <div className="flex items-center justify-between border-b px-4 py-3"><div className="flex items-center gap-3"><img src={suspect.image} alt="" className="size-9 rounded-full object-cover object-top ring-1 ring-primary/50" width={768} height={1024} loading="lazy" /><div><p className="text-xs font-semibold">Interrogating {suspect.name}</p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording active · Stress {stress}%</p></div></div><Button variant="ghost" size="icon" className="lg:hidden" onClick={onEvidence} aria-label="Open evidence"><Paperclip /></Button></div>
+    <Conversation className="min-h-0"><ConversationContent className="mx-auto w-full max-w-2xl gap-6 px-4 py-7 sm:px-8">{visible.map((message) => { const raw = message.parts.map((p) => (p.type === "text" ? p.text : "")).join(""); const { speech, meta } = message.role === "assistant" ? parseReply(raw) : { speech: raw.replace(/^\[PRESSING\]\s*/, ""), meta: undefined }; return <Message from={message.role} key={message.id} className={message.role === "assistant" ? "before:mb-1 before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-primary before:content-['SUSPECT']" : "before:mb-1 before:text-right before:text-[9px] before:font-bold before:uppercase before:tracking-[.18em] before:text-muted-foreground before:content-['YOU']"}><MessageContent className={message.role === "user" ? "border border-primary/25 bg-accent text-accent-foreground" : "font-display text-[17px] leading-7"}>{speech && <MessageResponse>{speech}</MessageResponse>}{meta?.observation && <p className="mt-2 border-l-2 border-primary/50 pl-3 font-sans text-xs italic text-muted-foreground">{meta.observation}</p>}</MessageContent></Message>; })}{status === "submitted" && <div className="text-xs"><Shimmer>{`${suspect.name} weighs the question…`}</Shimmer></div>}{error && <p className="rounded-sm border border-destructive/50 bg-destructive/10 p-3 text-xs text-destructive">{error.message}</p>}</ConversationContent><ConversationScrollButton /></Conversation>
+    {clueId && <p className="border-t bg-panel px-4 pt-2 text-[10px] uppercase tracking-[.14em] text-primary">Presenting: {evidence.find((c) => c.id === clueId)?.title} <button className="ml-2 text-muted-foreground underline" onClick={() => setClueId(null)}>remove</button></p>}
     <div className="border-t bg-panel p-3 sm:p-4"><PromptInput className="mx-auto max-w-2xl border-border bg-panel-raised shadow-xl" onSubmit={({text}) => submit(text)}><PromptInputTextarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Question ${suspect.name.split(" ")[0]}…`} className="min-h-20 text-sm" /><PromptInputFooter><PromptInputTools><Button type="button" size="sm" variant={press ? "default" : "ghost"} onClick={() => setPress(!press)} className="h-8 text-[10px] uppercase tracking-[.12em]"><Mic2 /> Press suspect</Button><span className="hidden text-[10px] text-muted-foreground sm:inline">Responses may reveal contradictions</span></PromptInputTools><PromptInputSubmit status={status} onStop={stop} disabled={!input.trim() && !busy} /></PromptInputFooter></PromptInput></div>
   </section>;
 }
