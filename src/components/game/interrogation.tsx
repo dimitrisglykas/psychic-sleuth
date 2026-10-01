@@ -97,6 +97,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
       <div className="border-t bg-panel p-3 sm:p-4">
         {clueStrip}
         {clueId && <p className="mx-auto mb-2 flex max-w-2xl items-center gap-2 text-[10px] font-semibold uppercase tracking-[.14em] text-primary">Showing clue: {clueById(clueId).title}<button aria-label="Remove clue" onClick={() => setClueId(null)}><X className="size-3 text-muted-foreground" /></button></p>}
+        {trapOpen && <div className="mx-auto mb-2 grid max-w-2xl gap-1 sm:grid-cols-3 rounded-md border bg-popover p-1 shadow-xl">{(["bluff", "detail", "blink"] as Action[]).map((a) => <button key={a} type="button" onClick={() => submit(ACTIONS[a].line, a)} className="flex w-full items-start border bg-panel-raised gap-2 rounded-sm px-2.5 py-2 text-left text-xs hover:bg-accent"><Sparkle className="mt-0.5 size-3 shrink-0 text-primary" /><span><span className="block font-semibold">{ACTIONS[a].label}</span><span className="text-muted-foreground">"{ACTIONS[a].line}"</span></span></button>)}</div>}
         <PromptInput className="mx-auto max-w-2xl border-border bg-panel-raised shadow-xl" onSubmit={({ text }) => submit(text)}>
           <PromptInputTextarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Ask ${suspect.short} a question…`} className="min-h-16 text-sm" />
           <PromptInputFooter>
@@ -104,7 +105,6 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
               <Button type="button" size="sm" variant={press ? "default" : "ghost"} onClick={() => setPress(!press)} className="h-8 px-2 text-[10px] uppercase tracking-[.1em]"><Mic2 /> Press</Button>
               <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => submit(ACTIONS.coldread.line, "coldread")} className="h-8 px-2 text-[10px] uppercase tracking-[.1em] text-primary"><Eye /> Cold read</Button>
               <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => setTrapOpen(!trapOpen)} aria-expanded={trapOpen} className="h-8 px-2 text-[10px] uppercase tracking-[.1em]"><Target /> Set a trap</Button>
-              {trapOpen && <div className="absolute bottom-10 left-0 z-20 w-64 rounded-md border bg-popover p-1 shadow-xl">{(["bluff", "detail", "blink"] as Action[]).map((a) => <button key={a} type="button" onClick={() => submit(ACTIONS[a].line, a)} className="flex w-full items-start gap-2 rounded-sm px-2.5 py-2 text-left text-xs hover:bg-accent"><Sparkle className="mt-0.5 size-3 shrink-0 text-primary" /><span><span className="block font-semibold">{ACTIONS[a].label}</span><span className="text-muted-foreground">"{ACTIONS[a].line}"</span></span></button>)}</div>}
             </PromptInputTools>
             <PromptInputSubmit status={status} onStop={stop} disabled={!input.trim() && !busy} />
           </PromptInputFooter>
