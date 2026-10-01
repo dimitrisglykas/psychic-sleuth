@@ -219,7 +219,7 @@ function Info({ label, text }: { label: string; text: string }) { return <div><p
 function Row({ label, value }: { label: string; value: string }) { return <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-mono font-semibold">{value}</span></div>; }
 
 function EvidenceCrop({ id, large = false }: { id: ClueId; large?: boolean }) {
-  const C = CASES[localStorage.getItem("psychic-case") ?? "001"] ?? CASES["001"];
+  const C = useCase();
   const clue = C?.clues.find((item) => item.id === id);
   if (!C || !clue) return null;
   return <div className={`absolute inset-0 overflow-hidden evidence-slot-${clue.visualSlot}`}><img src={C.scene.evidenceImage} alt="" className={`evidence-sheet max-w-none ${large ? "evidence-sheet-large" : ""}`} width={1600} height={1008} loading="lazy" /></div>;
