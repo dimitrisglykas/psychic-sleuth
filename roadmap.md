@@ -40,5 +40,5 @@
 
 ## Character research and full verification
 - [x] Add a pre-case portrait gallery with public backgrounds, statements, and known secrets
-- [ ] Play both cases from briefing to the correct win screen and verify every hotspot-to-evidence match
-- [ ] Confirm two independent players retain separate clues, stress, transcripts, and results after reload
+- [x] Play both cases from briefing to the correct win screen and verify every hotspot-to-evidence match
+- [x] Confirm two independent players retain separate clues, stress, transcripts, and results after reload
