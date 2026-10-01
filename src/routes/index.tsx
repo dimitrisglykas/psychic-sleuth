@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Clock3, FolderOpen, Gavel, Lightbulb, MessageSquareQuote, Search, Sparkles as _unused, Target } from "lucide-react";
+import { Clock3, FolderOpen, Gavel, Lightbulb, MessageSquareQuote, Search, Target } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AccuseModal } from "@/components/game/accuse";
@@ -9,7 +9,6 @@ import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/
 import { Eyebrow, Rich, StressBar, stressLabel } from "@/components/game/ui";
 import { clueById, clues, START_CLUES, SUSPECT_IDS, suspects, type ClueId, type SuspectId } from "@/game/case";
 
-void _unused;
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -54,7 +53,7 @@ function MysteryGame() {
   const guiding = !(counts.partner ?? 0) && suspectId === "partner";
 
   const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<SuspectId, Meta>>; save("blackwood-meta", next); return next; });
-  const useClue = (id: ClueId) => setInjected({ id, n: Date.now() });
+  const askClue = (id: ClueId) => setInjected({ id, n: Date.now() });
   const discover = (id: ClueId) => { setFound((f) => { const next = f.includes(id) ? f : [...f, id]; save("blackwood-found", next); return next; }); setDiscovered(id); window.setTimeout(() => setDiscovered(null), 2600); };
   const switchSuspect = (id: SuspectId) => { setSuspectId(id); setInjected(null); };
   const jane = () => {
@@ -75,7 +74,7 @@ function MysteryGame() {
 
   const clueButtons = (compact: boolean) => found.map((id) => {
     const c = clueById(id); const guide = guiding && id === "invoice";
-    return <button key={id} onClick={() => useClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${guide ? "guide-ring border-primary" : ""}`}>
+    return <button key={id} onClick={() => askClue(id)} title={c.title} aria-label={`Ask about ${c.title}`} className={`relative flex shrink-0 items-center gap-2 rounded-sm border bg-panel-raised text-left transition-colors hover:border-primary/60 hover:bg-accent ${compact ? "p-2" : "w-full p-2.5"} ${guide ? "guide-ring border-primary" : ""}`}>
       <c.icon className="size-4 shrink-0 text-primary" />
       {compact ? <span className="text-[11px] font-medium">{c.title}</span> : <span className="min-w-0"><span className="block text-xs font-semibold">{c.title}</span><span className="block text-[11px] leading-4 text-muted-foreground"><Rich text={c.detail} /></span></span>}
       {guide && <span className="absolute -top-7 left-0 whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Tap to ask Julian about this</span>}
