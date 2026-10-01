@@ -54,14 +54,20 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const [tea, setTea] = useState<{ quote: string; text: string; pair: [ClueId, ClueId] } | null>(null);
   const [showProgress, setShowProgress] = useState(false);
   const [inspected, setInspected] = useState<ClueId | null>(null);
+  const [hasOutcome, setHasOutcome] = useState(false);
 
   useEffect(() => {
     setMeta(load(`${K}-meta`, {})); setFound(load(`${K}-found`, START_CLUES)); setHints(load(`${K}-hints`, 3));
+    const savedSuspect = load<PersonId>(`${K}-active-person`, guide.suspect);
+    if (people[savedSuspect]) setSuspectId(savedSuspect);
     const c: Partial<Record<PersonId, number>> = {};
     for (const id of [...SUSPECT_IDS, "victim" as const]) c[id] = load<{ role: string }[]>(`${K}-chat-${id}`, []).filter((m) => m.role === "user").length;
     setCounts(c);
     const s = load<number | null>(`${K}-started`, null) ?? Date.now(); save(`${K}-started`, s); setStartedAt(s);
-    if (!load(`${K}-intro`, false)) setOverlay("intro");
+    const outcome = load<unknown | null>(`${K}-outcome`, null);
+    setHasOutcome(!!outcome);
+    if (outcome) setOverlay("accuse");
+    else if (!load(`${K}-intro`, false)) setOverlay("intro");
   }, []);
 
   const suspect = people[suspectId]!;
@@ -72,7 +78,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const updateMeta = (m: Meta) => setMeta((prev) => { const next = { ...prev, [suspectId]: m } as Partial<Record<PersonId, Meta>>; save(`${K}-meta`, next); return next; });
   const askClue = (id: ClueId) => setInjected({ id, n: Date.now() });
   const discover = (id: ClueId) => { setFound((f) => { const next = f.includes(id) ? f : [...f, id]; save(`${K}-found`, next); return next; }); setDiscovered(id); window.setTimeout(() => setDiscovered(null), 2600); };
-  const switchSuspect = (id: PersonId) => { setSuspectId(id); setInjected(null); };
+  const switchSuspect = (id: PersonId) => { setSuspectId(id); save(`${K}-active-person`, id); setInjected(null); };
   const jane = () => {
     const m = meta[suspectId];
     if (hints <= 0) { setOverlay("shop"); return; }
@@ -94,7 +100,8 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const restart = () => { Object.keys(localStorage).filter((k) => k.startsWith(`${K}-`) && k !== `${K}-intro`).forEach((k) => localStorage.removeItem(k)); window.location.reload(); };
 
   const left = clues.length - found.length;
-  const nextStep = !(counts[guide.suspect] ?? 0) ? `Show ${suspects[guide.suspect]!.short} the ${guide.label}`
+  const nextStep = hasOutcome ? "Review the case conclusion"
+    : !(counts[guide.suspect] ?? 0) ? `Show ${suspects[guide.suspect]!.short} the ${guide.label}`
     : !(counts["victim"] ?? 0) ? `Interview ${C.victim.short}`
     : left > 0 ? `Search the crime scene (${left} clue${left > 1 ? "s" : ""} left)`
     : questioned.length < 3 ? `Question ${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id]!.short).join(" and ")}`
@@ -108,6 +115,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const readyToSolve = left === 0 && questioned.length === SUSPECT_IDS.length && (counts["victim"] ?? 0) > 0;
 
   const doNext = () => {
+    if (hasOutcome) { setOverlay("accuse"); return; }
     if (!(counts[guide.suspect] ?? 0)) { switchSuspect(guide.suspect); askClue(guide.clue); return; }
     if (!(counts["victim"] ?? 0)) { switchSuspect("victim"); return; }
     if (left > 0) { setOverlay("scene"); return; }
@@ -199,7 +207,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       {overlay === "cases" && <Cases onPick={(c) => { setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
       {overlay === "pass" && <SeasonPass onClose={() => setOverlay(null)} />}
       {overlay === "scene" && <CrimeScene found={found} onDiscover={discover} onClose={() => setOverlay(null)} />}
-      {overlay === "accuse" && <AccuseModal found={found} onClose={() => setOverlay(null)} onRestart={restart} />}
+      {overlay === "accuse" && <AccuseModal found={found} onClose={() => setOverlay(null)} onRestart={restart} onOutcome={() => setHasOutcome(true)} />}
       {overlay === "shop" && <HintShop onClose={() => setOverlay(null)} onRefill={() => { setHints(3); save(`${K}-hints`, 3); setOverlay(null); }} />}
       {intuition && <Intuition text={intuition} image={suspect.image} name={suspect.short} stress={stressOf(suspectId)} onClose={() => setIntuition(null)} />}
       {inspected && (() => { const c = clueById(inspected); return <Overlay label={`Inspect ${c.title}`} onClose={() => setInspected(null)} className="max-w-3xl overflow-hidden p-0"><div className="relative aspect-[16/9] overflow-hidden bg-muted"><EvidenceCrop id={inspected} large /><div className="absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" /><div className="absolute bottom-4 left-4"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Forensic evidence · Case {C.code}</p><h2 className="font-display text-3xl">{c.title}</h2></div></div><div className="p-5"><p className="text-sm leading-6 text-muted-foreground"><Rich text={c.detail} /></p><Button className="mt-4 w-full" onClick={() => { askClue(inspected); setInspected(null); }}><MessageSquareQuote /> Question someone with this</Button></div></Overlay>; })()}
