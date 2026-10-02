@@ -106,6 +106,51 @@ export type Database = {
           },
         ]
       }
+      case_room_messages: {
+        Row: {
+          body: string
+          created_at: string
+          display_name: string
+          id: string
+          member_id: string
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          display_name: string
+          id?: string
+          member_id: string
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          member_id?: string
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_room_messages_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "case_room_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_room_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "case_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_rooms: {
         Row: {
           case_code: string
