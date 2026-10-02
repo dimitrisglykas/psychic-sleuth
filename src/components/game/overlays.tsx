@@ -7,7 +7,7 @@ import { Eyebrow, Overlay, Rich } from "./ui";
 export function HowToPlay({ onClose, returning = false }: { onClose: () => void; returning?: boolean }) {
   const steps = [
     { icon: Eye, title: "Search", text: "Scour the scene for physical evidence." },
-    { icon: MessageSquareQuote, title: "Interrogate", text: "Show clues to suspects to trigger a "tell"." },
+    { icon: MessageSquareQuote, title: "Interrogate", text: "Show clues to suspects and watch for a tell." },
     { icon: Gavel, title: "Deduce", text: "Connect the motive and evidence to close the case." },
   ];
   const C = useCase();
