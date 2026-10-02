@@ -143,7 +143,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   return (
     <main className="flex min-h-dvh flex-col bg-background text-foreground lg:h-dvh lg:overflow-hidden">
       <header className="flex min-h-14 items-center gap-3 border-b bg-panel px-4 lg:px-6">
-        <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · Case {C.code}</p><h1 className="truncate font-display text-lg sm:text-xl">{C.title}</h1></div>
+        <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · You are the consultant</p><h1 className="truncate font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div>
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
         <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={localProgress} onSharedClues={mergeSharedClues} onSharedProgress={setSharedProgress} />
@@ -155,8 +155,8 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       <div className="border-b bg-accent/40 px-4 py-3 lg:px-6">
         <div className="mx-auto flex max-w-5xl items-center gap-3">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><Target className="size-4" /></span>
-          <div className="min-w-0 flex-1"><p className="truncate text-[10px] text-muted-foreground"><span className="font-bold uppercase text-foreground">The case:</span> {C.tagline}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-[.18em] text-primary">Do this next</p><p className="text-sm font-semibold">{nextStep}</p><p className="hidden text-[11px] text-muted-foreground sm:block">{nextHint}</p></div>
-          <Button size="sm" onClick={doNext}>Go</Button>
+           <div className="min-w-0 flex-1"><p className="truncate text-[10px] text-muted-foreground"><span className="font-bold uppercase text-foreground">Mystery:</span> {C.tagline}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-[.18em] text-primary">Your next move</p><p className="text-sm font-semibold">{nextStep}</p><p className="hidden text-[11px] text-muted-foreground sm:block">{nextHint}</p></div>
+           <Button size="sm" onClick={doNext}>Do it</Button>
         </div>
         <div className="mx-auto mt-2 flex max-w-5xl items-center gap-2"><div className="h-1 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px] text-muted-foreground">Case {progress}%</span></div>
       </div>

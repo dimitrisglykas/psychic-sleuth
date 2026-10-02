@@ -15,6 +15,7 @@ export type LobbyState = {
   roomId: string; caseCode: string; inviteCode?: string; memberToken?: string;
   members: { name: string; active: boolean }[]; clues: string[]; progress: number;
   outcome: SharedOutcome | null; lastEvent: { text: string; at: string } | null;
+  messages: { id: string; name: string; body: string; at: string; mine: boolean }[];
 };
 
 async function digest(value: string) {
@@ -40,19 +41,21 @@ async function roomForMember(roomId: string, memberToken: string) {
   const { data: member } = await supabaseAdmin.from("case_room_members").select("id, room_id").eq("room_id", roomId).eq("member_hash", memberHash).maybeSingle();
   if (!member) throw new Error("This room invitation is no longer valid.");
   await supabaseAdmin.from("case_room_members").update({ last_seen_at: new Date().toISOString() }).eq("id", member.id);
-  return supabaseAdmin;
+  return { supabaseAdmin, member };
 }
 
-async function stateFor(supabaseAdmin: Awaited<ReturnType<typeof roomForMember>>, roomId: string): Promise<LobbyState> {
+async function stateFor(supabaseAdmin: Awaited<ReturnType<typeof roomForMember>>["supabaseAdmin"], roomId: string, memberId: string): Promise<LobbyState> {
   const { data: room } = await supabaseAdmin.from("case_rooms").select("id, case_code, shared_clues, progress, outcome, last_event, expires_at").eq("id", roomId).maybeSingle();
   if (!room || new Date(room.expires_at).getTime() < Date.now()) throw new Error("This room has expired.");
   const { data: members } = await supabaseAdmin.from("case_room_members").select("display_name, last_seen_at").eq("room_id", roomId).order("created_at");
+  const { data: messages } = await supabaseAdmin.from("case_room_messages").select("id, member_id, display_name, body, created_at").eq("room_id", roomId).order("created_at", { ascending: false }).limit(50);
   return {
     roomId: room.id, caseCode: room.case_code,
     clues: Array.isArray(room.shared_clues) ? room.shared_clues.filter((v): v is string => typeof v === "string") : [],
     progress: room.progress, outcome: room.outcome as SharedOutcome | null,
     lastEvent: room.last_event as LobbyState["lastEvent"],
     members: (members ?? []).map((member) => ({ name: member.display_name, active: Date.now() - new Date(member.last_seen_at).getTime() < 45_000 })),
+    messages: (messages ?? []).reverse().map((message) => ({ id: message.id, name: message.display_name, body: message.body, at: message.created_at, mine: message.member_id === memberId })),
   };
 }
 
@@ -65,9 +68,9 @@ export const createLobby = createServerFn({ method: "POST" })
     const clues = [...new Set(data.clues.filter((clue) => allowed.includes(clue)))];
     const { data: room, error } = await supabaseAdmin.from("case_rooms").insert({ case_code: data.caseCode, invite_hash: await digest(code), shared_clues: clues, progress: Math.round(clues.length / allowed.length * 100), last_event: { text: `${data.displayName} opened the case room.`, at: new Date().toISOString() } }).select("id").single();
     if (error || !room) throw new Error("The case room could not be opened.");
-    const { error: memberError } = await supabaseAdmin.from("case_room_members").insert({ room_id: room.id, member_hash: await digest(memberToken), display_name: data.displayName });
-    if (memberError) throw new Error("The host could not enter the room.");
-    const state = await stateFor(supabaseAdmin, room.id);
+    const { data: member, error: memberError } = await supabaseAdmin.from("case_room_members").insert({ room_id: room.id, member_hash: await digest(memberToken), display_name: data.displayName }).select("id").single();
+    if (memberError || !member) throw new Error("The host could not enter the room.");
+    const state = await stateFor(supabaseAdmin, room.id, member.id);
     return { ...state, inviteCode: code, memberToken };
   });
 
@@ -78,20 +81,23 @@ export const joinLobby = createServerFn({ method: "POST" })
     const { data: room } = await supabaseAdmin.from("case_rooms").select("id").eq("invite_hash", await digest(data.inviteCode)).eq("case_code", data.caseCode).gt("expires_at", new Date().toISOString()).maybeSingle();
     if (!room) throw new Error("That invite code is invalid or expired.");
     const memberToken = randomHex(24);
-    const { error } = await supabaseAdmin.from("case_room_members").insert({ room_id: room.id, member_hash: await digest(memberToken), display_name: data.displayName });
-    if (error) throw new Error("You could not join this room.");
-    const state = await stateFor(supabaseAdmin, room.id);
+    const { data: member, error } = await supabaseAdmin.from("case_room_members").insert({ room_id: room.id, member_hash: await digest(memberToken), display_name: data.displayName }).select("id").single();
+    if (error || !member) throw new Error("You could not join this room.");
+    const state = await stateFor(supabaseAdmin, room.id, member.id);
     return { ...state, inviteCode: data.inviteCode, memberToken };
   });
 
 export const getLobby = createServerFn({ method: "POST" })
   .inputValidator((input) => Credentials.parse(input))
-  .handler(async ({ data }) => stateFor(await roomForMember(data.roomId, data.memberToken), data.roomId));
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, member } = await roomForMember(data.roomId, data.memberToken);
+    return stateFor(supabaseAdmin, data.roomId, member.id);
+  });
 
 export const updateLobby = createServerFn({ method: "POST" })
   .inputValidator((input) => Credentials.extend({ clues: z.array(z.string()).max(12), progress: z.number().int().min(0).max(100), event: z.string().trim().max(80).optional() }).parse(input))
   .handler(async ({ data }) => {
-    const supabaseAdmin = await roomForMember(data.roomId, data.memberToken);
+    const { supabaseAdmin, member } = await roomForMember(data.roomId, data.memberToken);
     const { data: room } = await supabaseAdmin.from("case_rooms").select("case_code, shared_clues").eq("id", data.roomId).single();
     if (!room) throw new Error("This room is no longer available.");
     const allowed = CASE_CLUES[room.case_code] ?? [];
@@ -100,13 +106,24 @@ export const updateLobby = createServerFn({ method: "POST" })
     const update: { shared_clues: string[]; progress: number; last_event?: { text: string; at: string } } = { shared_clues: clues, progress: Math.max(data.progress, Math.round(clues.length / allowed.length * 100)) };
     if (data.event) update.last_event = { text: data.event, at: new Date().toISOString() };
     await supabaseAdmin.from("case_rooms").update(update).eq("id", data.roomId);
-    return stateFor(supabaseAdmin, data.roomId);
+    return stateFor(supabaseAdmin, data.roomId, member.id);
   });
 
 export const saveLobbyOutcome = createServerFn({ method: "POST" })
   .inputValidator((input) => Credentials.extend({ outcome: z.object({ won: z.boolean(), score: z.number().int().min(0).max(100), rating: z.string().max(40) }) }).parse(input))
   .handler(async ({ data }) => {
-    const supabaseAdmin = await roomForMember(data.roomId, data.memberToken);
+    const { supabaseAdmin, member } = await roomForMember(data.roomId, data.memberToken);
     await supabaseAdmin.from("case_rooms").update({ outcome: data.outcome, progress: 100, last_event: { text: "The team made its final accusation.", at: new Date().toISOString() } }).eq("id", data.roomId);
-    return stateFor(supabaseAdmin, data.roomId);
+    return stateFor(supabaseAdmin, data.roomId, member.id);
+  });
+
+export const sendLobbyMessage = createServerFn({ method: "POST" })
+  .inputValidator((input) => Credentials.extend({ body: z.string().trim().min(1).max(500) }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin, member } = await roomForMember(data.roomId, data.memberToken);
+    const { data: profile } = await supabaseAdmin.from("case_room_members").select("display_name").eq("id", member.id).single();
+    if (!profile) throw new Error("You are no longer in this room.");
+    const { error } = await supabaseAdmin.from("case_room_messages").insert({ room_id: data.roomId, member_id: member.id, display_name: profile.display_name, body: data.body });
+    if (error) throw new Error("Your message could not be sent.");
+    return stateFor(supabaseAdmin, data.roomId, member.id);
   });

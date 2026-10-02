@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, Briefcase, Crown, Eye, FileSearch, Gavel, Lightbulb, Lock, MessageSquareQuote, Play, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Briefcase, Crown, Eye, FileSearch, Gavel, Lightbulb, Lock, MessageSquareQuote, Play, Search, ShieldAlert, Sparkles, Target } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CASES, JANE_PROFILE, WORLD_LORE, lockedCases, useCase, type CaseData } from "@/game/case";
@@ -19,6 +19,11 @@ export function HowToPlay({ onClose, returning = false }: { onClose: () => void;
         <div className="absolute inset-x-0 bottom-0 p-5"><Eyebrow>Case file {C.code} · {C.briefing.time}</Eyebrow><h2 className="font-display text-2xl sm:text-3xl">{C.title}</h2><p className="text-sm text-foreground/80">{C.tagline}</p></div>
       </div>
       <div className="space-y-5 p-5">
+        <div className="grid gap-2 sm:grid-cols-3">
+          <div className="rounded-sm border bg-panel-raised p-3"><p className="flex items-center gap-2 text-[10px] font-bold uppercase text-primary"><Search className="size-3.5" /> What happened</p><p className="mt-1 text-xs leading-5">{C.tagline}</p></div>
+          <div className="rounded-sm border bg-panel-raised p-3"><p className="flex items-center gap-2 text-[10px] font-bold uppercase text-primary"><Briefcase className="size-3.5" /> Your role</p><p className="mt-1 text-xs leading-5">You are Jane's partner. Read people, test alibis, follow evidence.</p></div>
+          <div className="rounded-sm border bg-panel-raised p-3"><p className="flex items-center gap-2 text-[10px] font-bold uppercase text-primary"><Target className="size-3.5" /> Your goal</p><p className="mt-1 text-xs leading-5">Name the culprit, motive, and two clues that prove it.</p></div>
+        </div>
         <div className="space-y-2 rounded-sm border-l-2 border-primary bg-accent/50 p-3 text-sm leading-6">
           {C.briefing.lines.map((l) => <p key={l}><span className="font-semibold text-primary">Lisbon:</span> "{l}"</p>)}
         </div>
@@ -31,10 +36,10 @@ export function HowToPlay({ onClose, returning = false }: { onClose: () => void;
           <div className="grid gap-2 sm:grid-cols-3">{C.suspectIds.map((id) => { const p = C.suspects[id]; if (!p) return null; return <div key={id} className="flex gap-3 rounded-sm border bg-panel-raised p-2.5 sm:block"><img src={p.image} alt={p.name} className="size-14 shrink-0 rounded-sm object-cover object-top sm:mb-2 sm:aspect-[4/3] sm:h-auto sm:w-full" width={256} height={192} /><div className="text-xs leading-5"><p className="font-semibold">{p.name}</p><p className="text-[10px] uppercase tracking-[.12em] text-primary">{p.role}</p><p className="mt-1 text-muted-foreground"><Rich text={p.alibi} /></p></div></div>; })}</div>
         </div>
         <div>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-primary">How to solve it</p>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-primary">Three moves. That’s the whole game.</p>
           <ol className="grid gap-2 sm:grid-cols-3">{steps.map((s, i) => <li key={s.title} className="flex gap-2.5 rounded-sm border bg-panel-raised p-3"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><s.icon className="size-4" /></span><div><p className="text-sm font-semibold">{i + 1}. {s.title}</p><p className="text-xs text-muted-foreground">{s.text}</p></div></li>)}</ol>
         </div>
-        <Button className="h-11 w-full" onClick={onClose}>{returning ? <><ArrowLeft /> Back to the investigation</> : <><Play /> Start the investigation</>}</Button>
+        <Button className="h-12 w-full text-base" onClick={onClose}>{returning ? <><ArrowLeft /> Back to the investigation</> : <><Play /> Start the investigation</>}</Button>
         {returning && <p className="text-center text-[11px] text-muted-foreground">Open this case file anytime from the top bar.</p>}
       </div>
     </Overlay>
