@@ -49,3 +49,5 @@
 - [x] Add no-account invite-code lobbies with live shared clues and case progress
 - [x] Keep interviews, notes, and suspect stress private to each player
 - [x] Verify room joining, live synchronization, reload recovery, and secret isolation
+- [x] Add room chat for player-authored clues and theories without exposing private interviews or stress
+- [x] Clarify the opening case file, player role, goal, and next action
