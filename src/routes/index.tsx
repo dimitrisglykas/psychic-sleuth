@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
   component: MysteryGame,
 });
 
-type OverlayKind = null | "desk" | "intro" | "cases" | "scene" | "accuse" | "shop" | "pass";
+type OverlayKind = null | "desk" | "intro" | "casefile" | "cases" | "scene" | "accuse" | "shop" | "pass";
 const load = <T,>(k: string, fb: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } };
 const save = (k: string, v: unknown) => localStorage.setItem(k, JSON.stringify(v));
 
@@ -147,6 +147,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
         <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={localProgress} onSharedClues={mergeSharedClues} onSharedProgress={setSharedProgress} />
+        <Button variant="outline" size="sm" className="border-primary/60 text-primary" onClick={() => setOverlay("casefile")}><BookOpen /> Case</Button>
         <Button variant="ghost" size="sm" onClick={() => setOverlay("desk")}><Armchair /> <span className="hidden sm:inline">My desk</span></Button>
         <Button variant="ghost" size="sm" onClick={() => setOverlay("cases")}><FolderOpen /> <span className="hidden sm:inline">Cases</span></Button>
       </header>
@@ -209,6 +210,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       {tea && <div className="discover-pop fixed left-1/2 top-20 z-[70] w-[min(94vw,560px)] -translate-x-1/2 overflow-hidden rounded-md border border-primary bg-panel-raised shadow-2xl"><div className="relative h-28 overflow-hidden"><img src={C.scene.evidenceImage} alt="" className="h-full w-full object-cover opacity-55" width={1600} height={1008} /><div className="absolute inset-0 bg-gradient-to-t from-panel-raised to-transparent" /><div className="absolute inset-0 grid place-items-center"><span className="tea-ripple grid size-16 place-items-center rounded-full border border-primary/60 bg-background/45 backdrop-blur"><Coffee className="size-7 text-primary" /></span></div></div><div className="p-4 pt-2"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Jane sees the connection</p><p className="mt-2 font-display text-[15px] italic leading-6">{tea.quote}</p><p className="mt-2 border-t pt-2 text-xs"><span className="font-semibold text-primary">Overlooked connection: </span><Rich text={tea.text} /></p><p className="mt-1 text-[10px] text-muted-foreground">{clueById(tea.pair[0]).title} + {clueById(tea.pair[1]).title}</p></div></div>}
       {overlay === "desk" && <Desk playing={playing} onTogglePlay={togglePlay} calm={!!calmSince} onToggleCalm={toggleCalm} onOpenCases={() => setOverlay("cases")} onPick={(c) => { setPlaying(false); setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => { setPlaying(false); setOverlay(null); }} />}
       {overlay === "intro" && <HowToPlay onClose={() => { save(`${K}-intro`, true); setOverlay(null); }} />}
+      {overlay === "casefile" && <HowToPlay returning onClose={() => setOverlay(null)} />}
       {overlay === "cases" && <Cases onPick={(c) => { setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
       {overlay === "pass" && <SeasonPass onClose={() => setOverlay(null)} />}
       {overlay === "scene" && <CrimeScene found={found} onDiscover={discover} onClose={() => setOverlay(null)} />}
