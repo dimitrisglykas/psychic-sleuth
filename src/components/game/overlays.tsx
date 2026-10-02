@@ -6,17 +6,17 @@ import { Eyebrow, Overlay, Rich } from "./ui";
 
 export function HowToPlay({ onClose, returning = false }: { onClose: () => void; returning?: boolean }) {
   const steps = [
-    { icon: Eye, title: "Find clues", text: "Search the crime scene for anything suspicious." },
-    { icon: MessageSquareQuote, title: "Question suspects", text: "Tap a clue, then ask a suspect about it." },
-    { icon: Gavel, title: "Solve it", text: "Name the killer, the reason, and two clues that prove it." },
+    { icon: Eye, title: "Search", text: "Scour the scene for physical evidence." },
+    { icon: MessageSquareQuote, title: "Interrogate", text: "Show clues to suspects to trigger a "tell"." },
+    { icon: Gavel, title: "Deduce", text: "Connect the motive and evidence to close the case." },
   ];
   const C = useCase();
   return (
-    <Overlay label="Case file" onClose={onClose} className="max-w-3xl overflow-hidden p-0">
+    <Overlay label="Mission Briefing" onClose={onClose} className="max-w-3xl overflow-hidden p-0">
       <div className="relative">
         <img src={C.scene.image} alt={C.scene.alt} className="aspect-[16/7] w-full object-cover" width={1280} height={720} />
         <div className="absolute inset-0 bg-gradient-to-t from-panel via-background/30 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 p-5"><Eyebrow>Case file {C.code} · {C.briefing.time}</Eyebrow><h2 className="font-display text-2xl sm:text-3xl">{C.title}</h2><p className="text-sm text-foreground/80">{C.tagline}</p></div>
+        <div className="absolute inset-x-0 bottom-0 p-5"><Eyebrow>Mission Briefing · Case {C.code}</Eyebrow><h2 className="font-display text-2xl sm:text-3xl">{C.title}</h2><p className="text-sm text-foreground/80">{C.tagline}</p></div>
       </div>
       <div className="space-y-5 p-5">
         <div className="grid gap-2 sm:grid-cols-3">

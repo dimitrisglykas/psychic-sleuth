@@ -187,7 +187,14 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
 
         {/* Right: clues & actions */}
         <aside className="hidden min-h-0 flex-col overflow-y-auto border-l bg-panel lg:flex">
-          <div className="border-b p-4"><Button className="h-11 w-full" onClick={() => setOverlay("scene")}><Search /> Inspect crime scene</Button></div>
+          <div className="border-b p-4">
+            <Button 
+              className={`h-11 w-full ${left > 0 && found.length <= START_CLUES.length ? "animate-guide-pulse border-primary" : ""}`} 
+              onClick={() => setOverlay("scene")}
+            >
+              <Search /> Inspect crime scene
+            </Button>
+          </div>
           <div className="space-y-3 p-4"><div className="flex items-center justify-between"><Eyebrow>Evidence</Eyebrow><span className="text-[10px] text-muted-foreground">Inspect or question</span></div><div className="grid grid-cols-2 gap-2">{clueButtons(false)}</div>{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} clue{left > 1 ? "s" : ""} still hidden in the scene.</p>}</div>
           <div className="mt-auto border-t p-4">
             <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => setShowProgress(!showProgress)}>Investigation details {showProgress ? <ChevronUp /> : <ChevronDown />}</Button>
