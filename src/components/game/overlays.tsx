@@ -4,31 +4,39 @@ import { Button } from "@/components/ui/button";
 import { CASES, JANE_PROFILE, WORLD_LORE, lockedCases, useCase, type CaseData } from "@/game/case";
 import { Eyebrow, Overlay, Rich } from "./ui";
 
-export function HowToPlay({ onClose }: { onClose: () => void }) {
+export function HowToPlay({ onClose, returning = false }: { onClose: () => void; returning?: boolean }) {
   const steps = [
-    { icon: Eye, title: "Find clues", text: "Search the scene and tap anything suspicious." },
-    { icon: MessageSquareQuote, title: "Ask questions", text: "Tap a clue to prepare a question, then send it to a suspect." },
-    { icon: Gavel, title: "Solve it", text: "When the story fits, name the killer and prove it with two clues." },
+    { icon: Eye, title: "Find clues", text: "Search the crime scene for anything suspicious." },
+    { icon: MessageSquareQuote, title: "Question suspects", text: "Tap a clue, then ask a suspect about it." },
+    { icon: Gavel, title: "Solve it", text: "Name the killer, the reason, and two clues that prove it." },
   ];
   const C = useCase();
-  const [briefed, setBriefed] = useState(false);
-  if (!briefed) return (
-    <Overlay label="Case briefing" onClose={() => setBriefed(true)}>
-      <img src={C.scene.image} alt={C.scene.alt} className="-mx-1 mb-4 aspect-[16/7] w-[calc(100%+0.5rem)] rounded-sm object-cover" width={1280} height={720} />
-      <Eyebrow>Incoming call · {C.briefing.time}</Eyebrow><h2 className="font-display text-2xl">You're on the case</h2>
-      <div className="mt-3 space-y-2 rounded-sm border-l-2 border-primary bg-accent/50 p-3 text-sm leading-6">
-        {C.briefing.lines.map((l) => <p key={l}><span className="font-semibold text-primary">Lisbon:</span> "{l}"</p>)}
-      </div>
-      <p className="mt-3 text-xs italic text-muted-foreground">{C.briefing.aside}</p>
-      <Button className="mt-5 h-11 w-full" onClick={() => setBriefed(true)}><Briefcase /> Accept the case</Button>
-    </Overlay>
-  );
   return (
-    <Overlay label="How to play" onClose={onClose}>
-      <Eyebrow>Case {C.code} · {C.title}</Eyebrow><h2 className="font-display text-2xl">Three things to do</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Follow the highlighted next step. The game will always point you forward.</p>
-      <ol className="mt-5 space-y-3">{steps.map((s, i) => <li key={s.title} className="flex gap-3 rounded-sm border bg-panel-raised p-3"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><s.icon className="size-4" /></span><div><p className="text-sm font-semibold">{i + 1}. {s.title}</p><p className="text-xs text-muted-foreground">{s.text}</p></div></li>)}</ol>
-      <Button className="mt-5 h-11 w-full" onClick={onClose}><Play /> Start the investigation</Button>
+    <Overlay label="Case file" onClose={onClose} className="max-w-3xl overflow-hidden p-0">
+      <div className="relative">
+        <img src={C.scene.image} alt={C.scene.alt} className="aspect-[16/7] w-full object-cover" width={1280} height={720} />
+        <div className="absolute inset-0 bg-gradient-to-t from-panel via-background/30 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-5"><Eyebrow>Case file {C.code} · {C.briefing.time}</Eyebrow><h2 className="font-display text-2xl sm:text-3xl">{C.title}</h2><p className="text-sm text-foreground/80">{C.tagline}</p></div>
+      </div>
+      <div className="space-y-5 p-5">
+        <div className="space-y-2 rounded-sm border-l-2 border-primary bg-accent/50 p-3 text-sm leading-6">
+          {C.briefing.lines.map((l) => <p key={l}><span className="font-semibold text-primary">Lisbon:</span> "{l}"</p>)}
+        </div>
+        <div>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-primary">The victim</p>
+          <div className="flex gap-3 rounded-sm border bg-panel-raised p-3"><img src={C.victim.image} alt={C.victim.name} className="size-16 shrink-0 rounded-sm object-cover object-top" width={128} height={128} /><div className="text-xs leading-5"><p className="font-display text-lg">{C.victim.name}</p><p><Rich text={C.victim.alibi} /></p></div></div>
+        </div>
+        <div>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-primary">The suspects</p>
+          <div className="grid gap-2 sm:grid-cols-3">{C.suspectIds.map((id) => { const p = C.suspects[id]; if (!p) return null; return <div key={id} className="flex gap-3 rounded-sm border bg-panel-raised p-2.5 sm:block"><img src={p.image} alt={p.name} className="size-14 shrink-0 rounded-sm object-cover object-top sm:mb-2 sm:aspect-[4/3] sm:h-auto sm:w-full" width={256} height={192} /><div className="text-xs leading-5"><p className="font-semibold">{p.name}</p><p className="text-[10px] uppercase tracking-[.12em] text-primary">{p.role}</p><p className="mt-1 text-muted-foreground"><Rich text={p.alibi} /></p></div></div>; })}</div>
+        </div>
+        <div>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-primary">How to solve it</p>
+          <ol className="grid gap-2 sm:grid-cols-3">{steps.map((s, i) => <li key={s.title} className="flex gap-2.5 rounded-sm border bg-panel-raised p-3"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><s.icon className="size-4" /></span><div><p className="text-sm font-semibold">{i + 1}. {s.title}</p><p className="text-xs text-muted-foreground">{s.text}</p></div></li>)}</ol>
+        </div>
+        <Button className="h-11 w-full" onClick={onClose}>{returning ? <><ArrowLeft /> Back to the investigation</> : <><Play /> Start the investigation</>}</Button>
+        {returning && <p className="text-center text-[11px] text-muted-foreground">Open this case file anytime from the top bar.</p>}
+      </div>
     </Overlay>
   );
 }
