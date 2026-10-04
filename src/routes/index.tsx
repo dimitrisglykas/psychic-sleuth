@@ -7,6 +7,7 @@ import { CrimeScene } from "@/components/game/crime-scene";
 import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
 import { CaseLobby } from "@/components/game/lobby";
+import { OpeningCredits } from "@/components/game/opening";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Overlay, Rich, StressBar, stressLabel } from "@/components/game/ui";
 import { CASES, CaseContext, clueOf, janeQuotes, useCase, type CaseData, type ClueId, type PersonId } from "@/game/case";
@@ -14,9 +15,9 @@ import { CASES, CaseContext, clueOf, janeQuotes, useCase, type CaseData, type Cl
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
-    { title: "Psychic Sleuth — Cinematic AI Mystery Game" },
+    { title: "Psychic Sleuth: Cinematic Mystery Game" },
     { name: "description", content: "Search cinematic crime scenes, question AI suspects, read every tell, and solve each Psychic Sleuth case." },
-    { property: "og:title", content: "Psychic Sleuth — Cinematic AI Mystery Game" },
+    { property: "og:title", content: "Psychic Sleuth: Cinematic Mystery Game" },
     { property: "og:description", content: "Search the scene. Question every alibi. Read every tell. Name the killer." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -30,9 +31,11 @@ const save = (k: string, v: unknown) => localStorage.setItem(k, JSON.stringify(v
 
 function MysteryGame() {
   const [code, setCode] = useState("001");
-  useEffect(() => { const c = localStorage.getItem("psychic-case"); if (c && CASES[c]) setCode(c); }, []);
+  const [opening, setOpening] = useState(true);
+  useEffect(() => { const c = localStorage.getItem("psychic-case"); if (c && CASES[c]) setCode(c); if (sessionStorage.getItem("psychic-opening-seen")) setOpening(false); }, []);
   const pick = (c: string) => { localStorage.setItem("psychic-case", c); setCode(c); };
   const C = CASES[code]!;
+  if (opening) return <OpeningCredits activeCase={C} cases={Object.values(CASES)} onEnter={() => setOpening(false)} onChooseCase={(next) => { pick(next); sessionStorage.setItem("psychic-opening-seen", "true"); setOpening(false); }} />;
   return <CaseContext.Provider value={C}><Game key={code} C={C} onPickCase={pick} /></CaseContext.Provider>;
 }
 
@@ -85,7 +88,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const jane = () => {
     const m = meta[suspectId];
     if (hints <= 0) { setOverlay("shop"); return; }
-    if (!m?.tell) { setIntuition(`Ask ${suspect.short} something first — even Jane needs a reaction to read.`); return; }
+    if (!m?.tell) { setIntuition(`Ask ${suspect.short} something first. Even Jane needs a reaction to read.`); return; }
     const next = hints - 1; setHints(next); save(`${K}-hints`, next);
     setIntuition(`${m.observation ? `"${m.observation}." ` : ""}${m.tell}`);
   };
@@ -221,7 +224,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       {overlay === "cases" && <Cases onPick={(c) => { setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
       {overlay === "pass" && <SeasonPass onClose={() => setOverlay(null)} />}
       {overlay === "scene" && <CrimeScene found={found} onDiscover={discover} onClose={() => setOverlay(null)} />}
-      {overlay === "accuse" && <AccuseModal found={found} onClose={() => setOverlay(null)} onRestart={restart} onOutcome={() => setHasOutcome(true)} />}
+      {overlay === "accuse" && <AccuseModal found={found} onClose={() => setOverlay(null)} onRestart={restart} onOutcome={() => setHasOutcome(true)} nextCase={Object.values(CASES).find((item) => Number(item.code) === Number(C.code) + 1)} onNextCase={(next) => { setOverlay(null); onPickCase(next); }} />}
       {overlay === "shop" && <HintShop onClose={() => setOverlay(null)} onRefill={() => { setHints(3); save(`${K}-hints`, 3); setOverlay(null); }} />}
       {intuition && <Intuition text={intuition} image={suspect.image} name={suspect.short} stress={stressOf(suspectId)} onClose={() => setIntuition(null)} />}
       {inspected && (() => { const c = clueById(inspected); return <Overlay label={`Inspect ${c.title}`} onClose={() => setInspected(null)} className="max-w-3xl overflow-hidden p-0"><div className="relative aspect-[16/9] overflow-hidden bg-muted"><EvidenceCrop id={inspected} large /><div className="absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" /><div className="absolute bottom-4 left-4"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Forensic evidence · Case {C.code}</p><h2 className="font-display text-3xl">{c.title}</h2></div></div><div className="p-5"><p className="text-sm leading-6 text-muted-foreground"><Rich text={c.detail} /></p><Button className="mt-4 w-full" onClick={() => { askClue(inspected); setInspected(null); }}><MessageSquareQuote /> Question someone with this</Button></div></Overlay>; })()}

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function Rich({ text }: { text: string }) {
-  return <>{text.split(/(\*\*[^*]+\*\*)/g).map((p, i) => p.startsWith("**") ? <strong key={i} className="font-semibold text-amber-soft">{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>)}</>;
+  const clean = text.replace(/[—–]/g, ",");
+  return <>{clean.split(/(\*\*[^*]+\*\*)/g).map((p, i) => p.startsWith("**") ? <strong key={i} className="font-semibold text-amber-soft">{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>)}</>;
 }
 
 export function Overlay({ onClose, children, className, label }: { onClose: () => void; children: ReactNode; className?: string; label: string }) {

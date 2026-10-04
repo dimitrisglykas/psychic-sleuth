@@ -14,7 +14,7 @@ export type Action = "coldread" | "bluff" | "detail" | "blink";
 const ACTIONS: Record<Action, { tag: string; label: string; line: string }> = {
   coldread: { tag: "COLD READ", label: "Cold read", line: "Jane studies them closely before speaking." },
   bluff: { tag: "TRAP: BLUFF", label: "Bluff about evidence", line: "We have a witness who saw you near the study just before ten." },
-  detail: { tag: "TRAP: KILLER'S DETAIL", label: "Mention a detail only the killer knows", line: "Funny thing — whoever did this swept the broken glass into a neat little pile." },
+  detail: { tag: "TRAP: KILLER'S DETAIL", label: "Mention a detail only the killer knows", line: "Funny thing. Whoever did this swept the broken glass into a neat little pile." },
   blink: { tag: "TRAP: BLINK RATE", label: "Observe eye blink rate", line: "(You quietly watch their eyes.) Tell me again where you were at ten to ten." },
 };
 
@@ -80,7 +80,9 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
           {visible.map((message) => {
             const raw = textOf(message);
             const tagMatch = message.role === "user" ? raw.match(/^\[([^\]]+)\]\s*/) : null;
-            const { speech, meta } = message.role === "assistant" ? parseReply(raw) : { speech: tagMatch ? raw.slice(tagMatch[0].length) : raw, meta: undefined };
+            const parsed = message.role === "assistant" ? parseReply(raw) : { speech: tagMatch ? raw.slice(tagMatch[0].length) : raw, meta: undefined };
+            const speech = parsed.speech.replace(/[—–]/g, ",");
+            const meta = parsed.meta;
             return (
               <Message from={message.role} key={message.id}>
                 <p className={`text-[9px] font-bold uppercase tracking-[.18em] ${message.role === "user" ? "text-right text-muted-foreground" : "text-primary"}`}>{message.role === "user" ? "You" : suspect.short}</p>
