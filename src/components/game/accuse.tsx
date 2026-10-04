@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { Gavel, RotateCcw, Trophy } from "lucide-react";
+import { ArrowRight, Gavel, RotateCcw, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
 import { checkAccusation } from "@/lib/accuse.functions";
-import { clueOf, useCase, type ClueId, type MotiveId, type SuspectId } from "@/game/case";
+import { clueOf, useCase, type CaseData, type ClueId, type MotiveId, type SuspectId } from "@/game/case";
 import { Eyebrow, Overlay, Rich } from "./ui";
 
 const rating = (s: number) => s === 100 ? "Master Mentalist" : s >= 75 ? "Sharp Consultant" : s >= 50 ? "Promising Rookie" : "Back to the Couch";
 
-export function AccuseModal({ found, onClose, onRestart, onOutcome }: { found: ClueId[]; onClose: () => void; onRestart: () => void; onOutcome?: () => void }) {
+export function AccuseModal({ found, onClose, onRestart, onOutcome, nextCase, onNextCase }: { found: ClueId[]; onClose: () => void; onRestart: () => void; onOutcome?: () => void; nextCase?: CaseData; onNextCase?: (code: string) => void }) {
   const C = useCase(); const { motives, suspectIds: SUSPECT_IDS, suspects } = C; const clueById = (id: ClueId) => clueOf(C, id);
   const [culprit, setCulprit] = useState<SuspectId | null>(null);
   const [motive, setMotive] = useState<MotiveId | null>(null);
@@ -47,7 +47,8 @@ export function AccuseModal({ found, onClose, onRestart, onOutcome }: { found: C
           {result.lines.map((l) => <p key={l}><Rich text={l} /></p>)}
           <p className="text-sm text-muted-foreground">Your motive: {motives.find((m) => m.id === motive)?.label} {result.motiveOk ? "✓" : "✗"} · Your clues: {picked.map((c, i) => `${clueById(c).title} ${result.clueOk[i] ? "✓" : "✗"}`).join(", ")}</p>
         </div>
-        <div className="mt-5 grid gap-2 sm:grid-cols-2"><Button variant="outline" onClick={() => setDone(false)}>Review my choices</Button><Button onClick={onRestart}><RotateCcw /> Play again</Button></div>
+        <div className={`mt-5 grid gap-2 ${won && nextCase ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}><Button variant="outline" onClick={() => setDone(false)}>Review my choices</Button><Button variant="outline" onClick={onRestart}><RotateCcw /> Play again</Button>{won && nextCase && onNextCase && <Button onClick={() => onNextCase(nextCase.code)}>Next episode <ArrowRight /></Button>}</div>
+        {won && nextCase && <p className="mt-3 text-center text-xs text-muted-foreground">Case {nextCase.code}: {nextCase.title} continues the story.</p>}
       </Overlay>
     );
   }

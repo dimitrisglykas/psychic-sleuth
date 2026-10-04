@@ -21,3 +21,4 @@
 - Case solutions and final explanations live in Lovable Cloud `case_files` and are checked by the `checkAccusation` server function; never put answers in `src/game/case.ts`. Keeps answers out of the browser.
 - Every case supplies its crime-scene image, evidence sheet, evidence crop slots, scene stamp, and hotspot coordinates through `CaseContext`; shared UI must not branch on case codes. Keeps every current and future case cinematic without duplicating presentation logic.
 - Cooperative rooms share clues, progress, final outcomes, and player-authored chat through server-validated room credentials; interviews, stress, notes, and intuition remain browser-private.
+- The series opening reads public metadata from the case registry and hands off through the existing case selector; this keeps episode continuity data-driven.

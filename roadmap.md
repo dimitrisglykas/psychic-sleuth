@@ -51,3 +51,8 @@
 - [x] Verify room joining, live synchronization, reload recovery, and secret isolation
 - [x] Add room chat for player-authored clues and theories without exposing private interviews or stress
 - [x] Clarify the opening case file, player role, goal, and next action
+
+## Series opening and continuity
+- [x] Add an original cinematic opening credits sequence and title screen
+- [x] Connect a solved episode directly to the next playable case
+- [x] Remove oversized dash punctuation from all player-facing text
