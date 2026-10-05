@@ -120,6 +120,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const localProgress = Math.round(((found.length / clues.length) + (questioned.length / 3) + ((counts["victim"] ?? 0) > 0 ? 1 : 0)) / 3 * 100);
   const progress = Math.max(localProgress, sharedProgress);
   const readyToSolve = left === 0 && questioned.length === SUSPECT_IDS.length && (counts["victim"] ?? 0) > 0;
+  const nextCase = Object.values(CASES).find((item) => Number(item.code) === Number(C.code) + 1);
 
   const doNext = () => {
     if (hasOutcome) { setOverlay("accuse"); return; }
@@ -224,7 +225,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       {overlay === "cases" && <Cases onPick={(c) => { setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => setOverlay(null)} onPremium={() => setOverlay("pass")} />}
       {overlay === "pass" && <SeasonPass onClose={() => setOverlay(null)} />}
       {overlay === "scene" && <CrimeScene found={found} onDiscover={discover} onClose={() => setOverlay(null)} />}
-      {overlay === "accuse" && <AccuseModal found={found} onClose={() => setOverlay(null)} onRestart={restart} onOutcome={() => setHasOutcome(true)} nextCase={Object.values(CASES).find((item) => Number(item.code) === Number(C.code) + 1)} onNextCase={(next) => { setOverlay(null); onPickCase(next); }} />}
+      {overlay === "accuse" && <AccuseModal found={found} onClose={() => setOverlay(null)} onRestart={restart} onOutcome={() => setHasOutcome(true)} {...(nextCase ? { nextCase } : {})} onNextCase={(next) => { setOverlay(null); onPickCase(next); }} />}
       {overlay === "shop" && <HintShop onClose={() => setOverlay(null)} onRefill={() => { setHints(3); save(`${K}-hints`, 3); setOverlay(null); }} />}
       {intuition && <Intuition text={intuition} image={suspect.image} name={suspect.short} stress={stressOf(suspectId)} onClose={() => setIntuition(null)} />}
       {inspected && (() => { const c = clueById(inspected); return <Overlay label={`Inspect ${c.title}`} onClose={() => setInspected(null)} className="max-w-3xl overflow-hidden p-0"><div className="relative aspect-[16/9] overflow-hidden bg-muted"><EvidenceCrop id={inspected} large /><div className="absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" /><div className="absolute bottom-4 left-4"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Forensic evidence · Case {C.code}</p><h2 className="font-display text-3xl">{c.title}</h2></div></div><div className="p-5"><p className="text-sm leading-6 text-muted-foreground"><Rich text={c.detail} /></p><Button className="mt-4 w-full" onClick={() => { askClue(inspected); setInspected(null); }}><MessageSquareQuote /> Question someone with this</Button></div></Overlay>; })()}

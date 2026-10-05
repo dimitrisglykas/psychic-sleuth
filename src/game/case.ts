@@ -61,19 +61,19 @@ export const case001 = mk({
   code: "001", title: "The Enigma at Blackwood Manor", tagline: "A wealthy businessman, a locked study, three liars.", storageKey: "blackwood",
   suspectIds: ["partner", "spouse", "butler"],
   suspects: {
-    partner: { name: "Julian Voss", short: "Julian", role: "The Business Partner", age: 48, image: julianImage, stress: 45, bio: "Co-owns the family firm with Alistair. **Smooth talker**, hates being questioned.", alibi: "Says he **left at 9:15 PM** after an argument about money.", motive: "The company books don't add up — and **Alistair was about to check them**.", opener: "You wished to speak with me, detective? I've already given your constable my statement.", knownSecret: "The company accounts contain an **£80,000 discrepancy** he has not explained." },
+    partner: { name: "Julian Voss", short: "Julian", role: "The Business Partner", age: 48, image: julianImage, stress: 45, bio: "Co-owns the family firm with Alistair. **Smooth talker**, hates being questioned.", alibi: "Says he **left at 9:15 PM** after an argument about money.", motive: "The company books don't add up, and **Alistair was about to check them**.", opener: "You wished to speak with me, detective? I've already given your constable my statement.", knownSecret: "The company accounts contain an **£80,000 discrepancy** he has not explained." },
     spouse: { name: "Evelyn Blackwood", short: "Evelyn", role: "The Ex-Spouse", age: 42, image: evelynImage, stress: 35, bio: "Divorced Alistair two years ago. **Proud and sharp-tongued.**", alibi: "Says she was **alone in the drawing room from 9:40 PM**.", motive: "Alistair kept **her private letters** locked in his safe.", opener: "If this is about Alistair, ask plainly. I have no appetite for theatrics tonight.", knownSecret: "Alistair still held **private letters** she desperately wanted returned." },
     butler: { name: "Arthur Bell", short: "Arthur", role: "The Butler", age: 63, image: arthurImage, stress: 25, bio: "Served the family for **31 years**. Knows every room and hidden corridor.", alibi: "Says he was **in the wine cellar from 9:45 to 10:20 PM**.", motive: "Fiercely loyal to **the Blackwood family name**.", opener: "I am at your service. The household deserves clarity, however unpleasant it may be.", knownSecret: "He knows the manor's **hidden corridors** and has buried scandals for the family before." },
   },
-  victim: { name: "Alistair Blackwood", short: "Alistair", role: "The Victim · Reconstruction", age: 58, image: alistairImage, stress: 20, bio: "Head of the Blackwood firm. Jane **reconstructs his last hour** from what the room remembers.", alibi: "Found dead in his study. **Last seen alive around 9:50 PM.**", motive: "Planned to **make something public** the night he died.", opener: "(Jane closes his eyes.) …Tea. I'd rung for tea. Ask me about tonight, detective — my memory is all I have left." },
+  victim: { name: "Alistair Blackwood", short: "Alistair", role: "The Victim · Reconstruction", age: 58, image: alistairImage, stress: 20, bio: "Head of the Blackwood firm. Jane **reconstructs his last hour** from what the room remembers.", alibi: "Found dead in his study. **Last seen alive around 9:50 PM.**", motive: "Planned to **make something public** the night he died.", opener: "(Jane closes his eyes.) …Tea. I'd rung for tea. Ask me about tonight, detective. My memory is all I have left." },
   clues: [
-    { id: "watch", icon: Watch, visualSlot: 0, title: "Broken Watch", detail: "Alistair's watch **stopped at 9:40 PM** — right after Evelyn's visit.", prompt: "Alistair's watch stopped at 9:40 PM. Where were you at that exact moment?" },
+    { id: "watch", icon: Watch, visualSlot: 0, title: "Broken Watch", detail: "Alistair's watch **stopped at 9:40 PM**, right after Evelyn's visit.", prompt: "Alistair's watch stopped at 9:40 PM. Where were you at that exact moment?" },
     { id: "invoice", icon: FileText, visualSlot: 1, title: "Altered Ledger", detail: "An invoice for **£80,000** was changed in Julian's handwriting.", prompt: "The £80,000 invoice in the ledger was altered in your handwriting. What were you hiding?" },
     { id: "ash", icon: Flame, visualSlot: 2, title: "Burned Blue Letters", detail: "Scraps of **blue paper** in the fire. One reads: \"…the Blackwood name…\"", prompt: "Someone burned blue letters in the fireplace mentioning the Blackwood name. What were they?" },
-    { id: "print", icon: Fingerprint, visualSlot: 3, title: "Print on Tea Tray", detail: "**Arthur's fingerprint** in fresh tea — made **after 9:45 PM**.", prompt: "Your fingerprint is on the tea tray, in tea poured after 9:45. How, if you were in the cellar?" },
+    { id: "print", icon: Fingerprint, visualSlot: 3, title: "Print on Tea Tray", detail: "**Arthur's fingerprint** in fresh tea, made **after 9:45 PM**.", prompt: "Your fingerprint is on the tea tray, in tea poured after 9:45. How, if you were in the cellar?" },
     { id: "clock", icon: Clock, visualSlot: 4, title: "Moved Study Clock", detail: "The mantel clock was **lifted and set forward to 10:17**. Dust gives it away.", prompt: "Someone moved the study clock forward to 10:17. Who would want to confuse the time?" },
     { id: "safe", icon: LockKeyhole, visualSlot: 5, title: "Empty Letter Folder", detail: "The safe was opened with a key. **Evelyn's letters are gone.**", prompt: "Your letters are missing from Alistair's safe. Did you take them tonight?" },
-    { id: "glass", icon: GlassWater, visualSlot: 6, title: "Swept Watch Glass", detail: "The broken watch glass was **swept into a neat pile** — a servant's habit.", prompt: "The watch glass was swept into a tidy pile. Who in this house cleans up without thinking?" },
+    { id: "glass", icon: GlassWater, visualSlot: 6, title: "Swept Watch Glass", detail: "The broken watch glass was **swept into a neat pile**, a servant's habit.", prompt: "The watch glass was swept into a tidy pile. Who in this house cleans up without thinking?" },
   ],
   startClues: ["watch", "invoice"],
   scene: { image: studyImage, evidenceImage: blackwoodEvidenceImage, label: "Alistair's study", alt: "Alistair Blackwood's study at night", stamp: "Blackwood Manor · 11:42 PM" },
@@ -87,9 +87,9 @@ export const case001 = mk({
   ],
   motives: [{ id: "fraud", label: "Hide the £80,000 fraud" }, { id: "letters", label: "Get back private letters" }, { id: "name", label: "Protect the Blackwood name" }, { id: "money", label: "Inherit the estate" }],
   connections: [
-    { a: "print", b: "glass", text: "The tray print and the tidy glass share a habit — someone who **serves** and someone who **cleans up**. Same person?" },
+    { a: "print", b: "glass", text: "The tray print and the tidy glass share a habit. Someone who **serves** and someone who **cleans up**. Same person?" },
     { a: "watch", b: "clock", text: "Two broken clocks, two different times. A real death only needs **one**. Someone was **staging the time**." },
-    { a: "ash", b: "safe", text: "The safe gave up Evelyn's letters, but the fire ate **different ones — blue ones**. Who wanted those gone?" },
+    { a: "ash", b: "safe", text: "The safe gave up Evelyn's letters, but the fire ate **different blue ones**. Who wanted those gone?" },
     { a: "invoice", b: "watch", text: "Julian's lie is about **money**, not time. A fraud hides in ledgers, not in **9:40**." },
   ],
   timeline: [
@@ -97,14 +97,14 @@ export const case001 = mk({
     { time: "9:30 PM", text: "Evelyn meets Alistair in the study." },
     { time: "9:40 PM", text: "Alistair's watch **stops**." },
     { time: "9:45 PM", text: "Arthur **says** he went down to the cellar.", claimed: true },
-    { time: "after 9:45", text: "Fresh tea poured — **Arthur's print** on the tray." },
+    { time: "after 9:45", text: "Fresh tea poured. **Arthur's print** on the tray." },
     { time: "10:17 PM", text: "Study clock **set forward** to this time." },
     { time: "10:20 PM", text: "Arthur **says** he left the cellar.", claimed: true },
   ],
-  briefing: { time: "11:42 PM", lines: ["Alistair Blackwood is dead in his study at Blackwood Manor. Local police are calling it a robbery gone wrong. I'm not buying it.", "Three people were in that house tonight. The case is yours — find me who did it, and why. And please, no stunts."], aside: "Jane sets down his tea. \"No stunts. Of course.\"" },
+  briefing: { time: "11:42 PM", lines: ["Alistair Blackwood is dead in his study at Blackwood Manor. Local police are calling it a robbery gone wrong. I'm not buying it.", "Three people were in that house tonight. The case is yours. Find me who did it, and why. And please, no stunts."], aside: "Jane sets down his tea. \"No stunts. Of course.\"" },
   guide: { suspect: "partner", clue: "invoice", label: "ledger" },
   ending: {
-    lose: (s) => `"Ah. You chased the loudest secret in the room. ${s} is guilty of plenty — just not murder."`,
+    lose: (s) => `"Ah. You chased the loudest secret in the room. ${s} is guilty of plenty, just not murder."`,
   },
   lore: { title: "The House That Kept Its Secrets", summary: "Blackwood Manor has sheltered a powerful family for four generations. Tonight, the walls have finally begun to talk.", entries: [
     { title: "The Blackwood dynasty", text: "The family fortune began in rail and shipping, then became Blackwood & Voss, a discreet firm trusted by people who prefer their wealth unexamined." },
@@ -118,9 +118,9 @@ export const case002 = mk({
   code: "002", title: "The Gala Heist", tagline: "A diamond vanishes at the museum gala. A guard lies dead by the vault.", storageKey: "gala",
   suspectIds: ["curator", "collector", "tech"],
   suspects: {
-    curator: { name: "Dr. Helena Marsh", short: "Helena", role: "The Curator", age: 51, image: helenaImage, stress: 40, bio: "Runs the Aldridge Museum. **Brilliant, proud** — and the museum is quietly broke.", alibi: "Says she was **on stage hosting the auction, 10:00–10:30 PM**.", motive: "The Lisbon Star is **insured for £12 million**.", opener: "Detective. Tonight was meant to save this museum. Please be quick — I have donors to calm.", knownSecret: "The museum is **close to insolvency**, despite the lavish gala around it." },
+    curator: { name: "Dr. Helena Marsh", short: "Helena", role: "The Curator", age: 51, image: helenaImage, stress: 40, bio: "Runs the Aldridge Museum. **Brilliant, proud**, and the museum is quietly broke.", alibi: "Says she was **on stage hosting the auction, 10:00 to 10:30 PM**.", motive: "The Lisbon Star is **insured for £12 million**.", opener: "Detective. Tonight was meant to save this museum. Please be quick. I have donors to calm.", knownSecret: "The museum is **close to insolvency**, despite the lavish gala around it." },
     collector: { name: "Victor Crane", short: "Victor", role: "The Collector", age: 60, image: victorImage, stress: 30, bio: "Billionaire donor. **Has wanted the Lisbon Star for twenty years.**", alibi: "Says he was **at the bar the entire auction**.", motive: "The museum **refused to sell** him the diamond.", opener: "Ah, the famous consultant. Do sit. I assume you'd like me to confess to something dramatic?", knownSecret: "He arranged a **private viewing** of the Lisbon Star before the auction." },
-    tech: { name: "Nina Reyes", short: "Nina", role: "The Security Tech", age: 34, image: ninaImage, stress: 35, bio: "Installed the museum's **new camera system** last month. Has admin access.", alibi: "Says she was **in the basement server room, 10:00–10:30**, fixing a fault.", motive: "Contractor's pay, **expensive tastes** — and nobody watches the watchers.", opener: "I've already sent your people the system logs. Not sure what else I can tell you.", knownSecret: "She alone retained **administrator access** to every new camera and door log." },
+    tech: { name: "Nina Reyes", short: "Nina", role: "The Security Tech", age: 34, image: ninaImage, stress: 35, bio: "Installed the museum's **new camera system** last month. Has admin access.", alibi: "Says she was **in the basement server room, 10:00 to 10:30**, fixing a fault.", motive: "Contractor's pay, **expensive tastes**, and nobody watches the watchers.", opener: "I've already sent your people the system logs. Not sure what else I can tell you.", knownSecret: "She alone retained **administrator access** to every new camera and door log." },
   },
   victim: { name: "Marcus Hale", short: "Marcus", role: "The Victim · Reconstruction", age: 45, image: marcusImage, stress: 20, bio: "Night guard, 12 years at the museum. Jane **reconstructs his last half hour**.", alibi: "Found dead by the vault gallery. **Last radio call at 10:14 PM.**", motive: "Needed money for **his daughter's surgery**.", opener: "(Jane closes his eyes.) …The screens hummed. Upstairs, the auction. Ask me about my last rounds, detective." },
   clues: [
@@ -128,9 +128,9 @@ export const case002 = mk({
     { id: "bribe", icon: Banknote, visualSlot: 1, title: "Envelope Marked V.C.", detail: "**£20,000 in cash** in Marcus's locker, envelope initialled **\"V.C.\"**", prompt: "There was £20,000 in Marcus's locker in an envelope marked V.C. What was it for?" },
     { id: "paste", icon: Gem, visualSlot: 4, title: "Paste Fragment", detail: "A chip from the case is **glass, not diamond**. The Lisbon Star on display was a **replica**.", prompt: "The stone in the case was a paste replica. When did the real Lisbon Star disappear?" },
     { id: "badge", icon: BadgeCheck, visualSlot: 5, title: "Keycard Log", detail: "The vault door opened at **10:13 PM** with contractor card **TECH-02**.", prompt: "The vault door opened at 10:13 with contractor keycard TECH-02. Whose card is that?" },
-    { id: "radio", icon: Radio, visualSlot: 6, title: "Marcus's Last Call", detail: "10:14 PM radio: **\"Oh, it's you — thought you'd fixed it.\"** He knew his killer.", prompt: "Marcus's last words on the radio were 'Oh, it's you — thought you'd fixed it.' Who was he talking to?" },
-    { id: "tie", icon: Cable, visualSlot: 2, title: "Clipped Cable Tie", detail: "A **black cable tie snipped** at the camera junction box — installer's kit.", prompt: "A cable tie was clipped at the camera junction box. Who carries those and the cutters?" },
-    { id: "claim", icon: ScrollText, visualSlot: 3, title: "Insurance Draft", detail: "A claim for **£12 million**, typed on Helena's computer **at 10:40 PM** — before police arrived.", prompt: "You drafted a £12 million insurance claim before the police even arrived. Why so fast?" },
+    { id: "radio", icon: Radio, visualSlot: 6, title: "Marcus's Last Call", detail: "10:14 PM radio: **\"Oh, it's you. Thought you'd fixed it.\"** He knew his killer.", prompt: "Marcus's last words on the radio were 'Oh, it's you. Thought you'd fixed it.' Who was he talking to?" },
+    { id: "tie", icon: Cable, visualSlot: 2, title: "Clipped Cable Tie", detail: "A **black cable tie snipped** at the camera junction box, from an installer's kit.", prompt: "A cable tie was clipped at the camera junction box. Who carries those and the cutters?" },
+    { id: "claim", icon: ScrollText, visualSlot: 3, title: "Insurance Draft", detail: "A claim for **£12 million**, typed on Helena's computer **at 10:40 PM**, before police arrived.", prompt: "You drafted a £12 million insurance claim before the police even arrived. Why so fast?" },
   ],
   startClues: ["gap", "bribe"],
   scene: { image: galaCinematicImage, evidenceImage: galaEvidenceImage, label: "The vault gallery", alt: "The Aldridge Museum vault gallery after the gala", stamp: "Aldridge Museum · 11:58 PM" },
@@ -144,9 +144,9 @@ export const case002 = mk({
   motives: [{ id: "debt", label: "Pay off dangerous debts" }, { id: "cover", label: "Hide that the diamond was fake" }, { id: "own", label: "Finally own the Lisbon Star" }, { id: "silence", label: "Silence a guard taking bribes" }],
   connections: [
     { a: "gap", b: "tie", text: "A loop needs **admin access** and a **hand in the junction box**. Only one person here had both." },
-    { a: "badge", b: "radio", text: "The door opened at **10:13**, Marcus spoke at **10:14** — to someone he **expected to see near the cameras**." },
+    { a: "badge", b: "radio", text: "The door opened at **10:13**. Marcus spoke at **10:14** to someone he **expected to see near the cameras**." },
     { a: "paste", b: "claim", text: "A curator filing for **£12 million** on a **fake stone**? Fraud, certainly. Murder needs more than paperwork." },
-    { a: "bribe", b: "gap", text: "Victor paid to **look**, not to loop. Bribes buy doors opened — not **cameras rewired**." },
+    { a: "bribe", b: "gap", text: "Victor paid to **look**, not to loop. Bribes buy doors opened, not **cameras rewired**." },
   ],
   timeline: [
     { time: "9:45 PM", text: "Victor's **private viewing** of the diamond with Marcus." },
@@ -157,10 +157,10 @@ export const case002 = mk({
     { time: "10:14 PM", text: "Marcus radios: **\"Oh, it's you.\"**" },
     { time: "10:40 PM", text: "Insurance claim typed on Helena's computer." },
   ],
-  briefing: { time: "11:58 PM", lines: ["Gala at the Aldridge Museum. The Lisbon Star is gone and the night guard, Marcus Hale, is dead by the vault.", "Three people had the access and the reasons. Find the thief — and the killer. Try not to insult any billionaires."], aside: "Jane straightens his waistcoat. \"I'll insult them politely.\"" },
+  briefing: { time: "11:58 PM", lines: ["Gala at the Aldridge Museum. The Lisbon Star is gone and the night guard, Marcus Hale, is dead by the vault.", "Three people had the access and the reasons. Find the thief and the killer. Try not to insult any billionaires."], aside: "Jane straightens his waistcoat. \"I'll insult them politely.\"" },
   guide: { suspect: "collector", clue: "bribe", label: "envelope" },
   ending: {
-    lose: (s) => `"Close — but ${s} only stole money, or truth, or time. Someone else stole a life."`,
+    lose: (s) => `"Close, but ${s} only stole money, or truth, or time. Someone else stole a life."`,
   },
   lore: { title: "The Aldridge After Dark", summary: "The museum survives on reputation, private money, and objects whose histories are less clean than their display cases.", entries: [
     { title: "The Aldridge Museum", text: "Founded by industrialist Edwin Aldridge, the museum grew through private gifts. Its grand galleries conceal years of deferred repairs and fragile finances." },
@@ -177,7 +177,7 @@ export const janeQuotes = [
   "\"Tea is the most underrated tool of detection. Nobody lies well to a man holding a teacup.\"",
   "\"I'm not psychic. I just pay attention. Let the room talk for a minute.\"",
   "\"The trick is to stop looking for the answer and start looking at the people.\"",
-  "\"Everyone's guilty of something. The question is — of what?\"",
+  "\"Everyone's guilty of something. The question is, of what?\"",
 ];
 
 export const CaseContext = createContext<CaseData>(case001);
