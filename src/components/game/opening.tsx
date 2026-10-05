@@ -19,6 +19,7 @@ const beats = [
 export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: OpeningProps) {
   const [beat, setBeat] = useState(0);
   const [titleReady, setTitleReady] = useState(false);
+  const [showCases, setShowCases] = useState(false);
   const caseImages = useMemo(() => cases.flatMap((item) => [item.scene.image, ...item.suspectIds.map((id) => item.suspects[id]?.image).filter((image): image is string => Boolean(image))]), [cases]);
 
   useEffect(() => {
@@ -78,8 +79,9 @@ export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: Ope
             <p className="mt-5 max-w-lg font-display text-lg italic text-foreground/75 sm:text-xl">The truth always moves before the lie is spoken.</p>
             <div className="mt-8 flex flex-col gap-2 sm:flex-row">
               <Button className="h-12 px-6 text-base" onClick={enter}><Play /> Enter Case {activeCase.code}</Button>
-              <Button variant="outline" className="h-12 px-6" onClick={() => onChooseCase(cases.find((item) => item.code !== activeCase.code)?.code ?? activeCase.code)}><Files /> View next case</Button>
+              <Button variant="outline" className="h-12 px-6" onClick={() => setShowCases((value) => !value)}><Files /> Case files</Button>
             </div>
+            {showCases && <div className="mt-3 grid max-w-xl gap-2 sm:grid-cols-2">{cases.map((item) => <Button key={item.code} variant={item.code === activeCase.code ? "secondary" : "outline"} className="h-auto justify-start px-3 py-2 text-left" onClick={() => item.code === activeCase.code ? enter() : onChooseCase(item.code)}><span><span className="block text-[9px] uppercase tracking-[.16em] text-primary">Case {item.code}</span><span className="block text-xs">{item.title}</span></span></Button>)}</div>}
             <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 border-t border-border/70 pt-4 text-[10px] uppercase tracking-[.16em] text-muted-foreground">
               <span>Episode {activeCase.code}</span><span>{activeCase.title}</span><span>{activeCase.scene.stamp}</span>
             </div>
