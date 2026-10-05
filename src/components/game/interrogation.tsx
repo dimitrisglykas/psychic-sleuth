@@ -81,7 +81,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
             const raw = textOf(message);
             const tagMatch = message.role === "user" ? raw.match(/^\[([^\]]+)\]\s*/) : null;
             const parsed = message.role === "assistant" ? parseReply(raw) : { speech: tagMatch ? raw.slice(tagMatch[0].length) : raw, meta: undefined };
-            const speech = parsed.speech.replace(/[—–]/g, ",");
+            const speech = parsed.speech.replace(/[\u2014\u2013]/g, ",");
             const meta = parsed.meta;
             return (
               <Message from={message.role} key={message.id}>
