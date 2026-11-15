@@ -80,16 +80,14 @@ export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: Ope
         <div className="opening-shutter absolute inset-0" />
       </div>
 
-      <div className={`absolute left-4 top-4 z-20 flex items-center gap-2 ${titleReady ? "hidden" : ""}`}>
+      <div className={`relative z-20 mx-auto flex w-full max-w-6xl flex-wrap items-center gap-3 p-4 ${titleReady ? "hidden" : ""}`}>
         <Button variant="outline" size="sm" onClick={() => playing ? silence() : replayOpening()} aria-label={playing ? "Mute opening theme" : "Play opening with sound"}>{playing ? <Volume2 /> : <VolumeX />} {playing ? "Sound on" : "Play with sound"}</Button>
+        <Button variant="ghost" size="sm" onClick={skip}><FastForward /> Skip opening</Button>
       </div>
       {audioError && <p role="alert" className="absolute left-4 top-16 z-20 text-xs text-foreground">{audioError}</p>}
       {!titleReady ? (
         <>
-          <Button variant="ghost" size="sm" className="absolute right-40 top-16 z-20 sm:top-4" onClick={skip}>
-            <FastForward /> Skip opening
-          </Button>
-          {phase === "credits" ? <div className="opening-roll-window absolute inset-x-0 bottom-12 top-24 z-10 overflow-hidden px-6 text-center" aria-label="Opening credits roll"><div className="opening-roll"><p className="mb-10 font-display text-4xl text-primary sm:text-6xl">Psychic Sleuth</p>{credits.map((credit) => <div key={credit.role} className="mb-10"><p className="text-[10px] font-bold uppercase text-primary">{credit.role}</p><p className="mx-auto mt-2 max-w-lg font-display text-2xl sm:text-3xl">{credit.name}</p></div>)}<p className="text-xs text-muted-foreground">An original interactive mystery</p></div></div> : <div className="relative z-10 flex h-full items-center px-6 sm:px-12 lg:px-24">
+          {phase === "credits" ? <div className="opening-roll-window relative z-10 h-[75dvh] overflow-hidden px-6 text-center" aria-label="Opening credits roll"><div className="opening-roll"><p className="mb-10 font-display text-4xl text-primary sm:text-6xl">Psychic Sleuth</p>{credits.map((credit) => <div key={credit.role} className="mb-10"><p className="text-[10px] font-bold uppercase text-primary">{credit.role}</p><p className="mx-auto mt-2 max-w-lg font-display text-2xl sm:text-3xl">{credit.name}</p></div>)}<p className="text-xs text-muted-foreground">An original interactive mystery</p></div></div> : <div className="relative z-10 flex min-h-[75dvh] items-center px-6 py-8 sm:px-12 lg:px-24">
             <div key={beat} className="opening-credit max-w-xl">
               <p className="text-[10px] font-bold uppercase tracking-[.28em] text-primary">{beats[beat]?.overline}</p>
               <p className="mt-2 font-display text-5xl leading-none sm:text-7xl">{beats[beat]?.title}</p>
