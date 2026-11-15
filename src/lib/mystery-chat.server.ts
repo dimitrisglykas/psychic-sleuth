@@ -49,13 +49,14 @@ Then, on a new final line, output exactly one metadata tag and nothing after it:
 Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggressive pressing: +5 to +12. Accurate questions touching the hidden truth or presented evidence that threatens the secret: +10 to +25. Irrelevant evidence lets them relax: -3 to -8.`;
 
   try {
+    const runId = request.headers.get("X-Lovable-AIG-Run-ID");
     const result = await streamResponse({
       model: "openai/gpt-6-astra",
       instructions: system,
       input: dialogueHistory(payload.messages),
       reasoning: { effort: "low", summary: "auto" },
       include: ["reasoning.encrypted_content"],
-    }, { signal: request.signal, runId: request.headers.get("X-Lovable-AIG-Run-ID") ?? undefined });
+    }, { signal: request.signal, ...(runId ? { runId } : {}) });
     const stream = createUIMessageStream({
       originalMessages: payload.messages,
       execute: async ({ writer }) => {

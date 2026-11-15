@@ -58,6 +58,6 @@
 - [x] Remove oversized dash punctuation from all player-facing text
 
 ## Message repair and expanded opening
-- [ ] Diagnose suspect message failures, preserve saved conversations, and verify replies
-- [ ] Add a title card, rolling credits, and an original full opening theme
-- [ ] Play the opening end to end and verify entering the case
+- [x] Diagnose suspect message failures, preserve saved conversations, and verify replies
+- [x] Add a title card, rolling credits, and an original full opening theme
+- [x] Play the opening end to end and verify entering the case

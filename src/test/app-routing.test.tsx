@@ -12,6 +12,9 @@ function renderAt(path: string) {
     context: { queryClient },
     history: createMemoryHistory({ initialEntries: [path] }),
   });
+  // TanStack's document shell mounts <html>; isolate the shell in unit tests.
+  const root = routeTree.options;
+  routeTree.update({ ...root, shellComponent: ({ children }) => <>{children}</> });
   return render(<RouterProvider router={router} />);
 }
 
