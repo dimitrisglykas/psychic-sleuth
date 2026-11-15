@@ -54,7 +54,6 @@ Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggress
       instructions: system,
       input: dialogueHistory(payload.messages),
       reasoning: { effort: "low", summary: "auto" },
-      store: false,
       include: ["reasoning.encrypted_content"],
     }, { signal: request.signal, runId: request.headers.get("X-Lovable-AIG-Run-ID") ?? undefined });
     const stream = createUIMessageStream({
@@ -83,7 +82,9 @@ Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggress
         return "The reply was interrupted. Your conversation is saved. Please try again when the connection returns.";
       },
     });
-    return createUIMessageStreamResponse({ stream, headers: result.runId ? { "X-Lovable-AIG-Run-ID": result.runId, "Access-Control-Expose-Headers": "X-Lovable-AIG-Run-ID" } : undefined });
+    const headers = new Headers();
+    if (result.runId) { headers.set("X-Lovable-AIG-Run-ID", result.runId); headers.set("Access-Control-Expose-Headers", "X-Lovable-AIG-Run-ID"); }
+    return createUIMessageStreamResponse({ stream, headers });
   } catch (error) {
     if (request.signal.aborted) return new Response(null, { status: 499 });
     if (error instanceof GatewayError) {
