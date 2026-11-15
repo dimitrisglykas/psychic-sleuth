@@ -81,7 +81,7 @@ Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggress
       onError: (error) => {
         if (error instanceof GatewayError) {
           console.error("Interrogation service error", error.toJSON());
-          return error.message;
+          return naturalText(error.message);
         }
         console.error("Interrogation stream error", error instanceof Error ? error.message : "Unknown stream failure");
         return "The reply was interrupted. Your conversation is saved. Please try again when the connection returns.";
@@ -94,7 +94,7 @@ Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggress
     if (request.signal.aborted) return new Response(null, { status: 499 });
     if (error instanceof GatewayError) {
       console.error("Interrogation service error", error.toJSON());
-      return Response.json({ message: error.message }, { status: error.httpStatus ?? 503 });
+      return Response.json({ message: naturalText(error.message) }, { status: error.httpStatus ?? 503 });
     }
     console.error("Interrogation request error", error instanceof Error ? error.message : "Unknown request failure");
     return Response.json({ message: "The conversation could not start. Your case progress is saved." }, { status: 500 });

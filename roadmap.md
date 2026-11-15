@@ -63,7 +63,7 @@
 - [x] Play the opening end to end and verify entering the case
 
 ## Language and natural punctuation
-- [ ] Remove long dashes across game text, saved dialogue display, and AI output
-- [ ] Add pre-game English, Greek, Spanish, and French choice with saved preference
-- [ ] Translate case content and controls, and apply language to AI interviews
-- [ ] Verify language choice, case entry, interviews, and punctuation
+- [x] Remove long dashes across game text, saved dialogue display, and AI output
+- [x] Add pre-game English, Greek, Spanish, and French choice with saved preference
+- [x] Translate case content and controls, and apply language to AI interviews
+- [x] Verify language choice, case entry, interviews, and punctuation

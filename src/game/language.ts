@@ -12,6 +12,13 @@ export function translate(text: string, language: Language): string {
   const key = clean.replace(/\s+/g, " ").trim();
   const dictionary = dictionaries[language];
   if (!dictionary) return clean;
+  const patterns: [RegExp, (match: RegExpMatchArray) => string][] = [
+    [/^Show (.+) the (.+)$/, (m) => ({ el: `Δείξε στον ${m[1]} το στοιχείο`, es: `Muestra la pista a ${m[1]}`, fr: `Montrez l’indice à ${m[1]}` })[language as "el" | "es" | "fr"]],
+    [/^Search the crime scene \((\d+) clues? left\)$/, (m) => ({ el: `Ψάξε τον τόπο του εγκλήματος (${m[1]} στοιχεία)`, es: `Busca en la escena (${m[1]} pistas)`, fr: `Fouillez la scène (${m[1]} indices)` })[language as "el" | "es" | "fr"]],
+    [/^What do you want to ask (.+)\?$/, (m) => ({ el: `Τι θέλεις να ρωτήσεις τον ${m[1]};`, es: `¿Qué quieres preguntar a ${m[1]}?`, fr: `Que voulez-vous demander à ${m[1]} ?` })[language as "el" | "es" | "fr"]],
+    [/^Enter Case$/, () => ({ el: "Μπες στην υπόθεση", es: "Entrar al caso", fr: "Ouvrir l’affaire" })[language as "el" | "es" | "fr"]],
+  ];
+  for (const [pattern, render] of patterns) { const match = key.match(pattern); if (match) return render(match); }
   const translated = dictionary[key];
   if (translated) return clean.replace(key, naturalText(translated));
   for (const [source, value] of Object.entries(dictionary)) {
