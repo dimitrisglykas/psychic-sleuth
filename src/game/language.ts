@@ -5,6 +5,7 @@ import fr from "./locales/fr.json";
 export const LANGUAGES = { en: "English", el: "Ελληνικά", es: "Español", fr: "Français" };
 export type Language = keyof typeof LANGUAGES;
 export const isLanguage = (value: unknown): value is Language => typeof value === "string" && value in LANGUAGES;
+export const initialLanguage = (saved: unknown): Language => isLanguage(saved) ? saved : "en";
 export const naturalText = (text: string) => text.replace(/[\u2013\u2014\u2015]/g, ",");
 const dictionaries: Record<string, Record<string, string>> = { el, es, fr };
 export function translate(text: string, language: Language): string {

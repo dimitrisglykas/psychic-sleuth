@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { isLanguage, naturalText, translate } from "../game/language";
+import { initialLanguage, isLanguage, naturalText, translate } from "../game/language";
 describe("player language and natural punctuation", () => {
+  it("defaults new visitors to English", () => {
+    expect(initialLanguage(null)).toBe("en");
+    expect(initialLanguage("invalid")).toBe("en");
+  });
+  it("retains each returning player's chosen language", () => {
+    for (const language of ["en", "el", "es", "fr"] as const) expect(initialLanguage(language)).toBe(language);
+  });
   it("allows English, Greek, Spanish, and French", () => {
     expect(["en", "el", "es", "fr"].every(isLanguage)).toBe(true);
     expect(isLanguage("xx")).toBe(false);
