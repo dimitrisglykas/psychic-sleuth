@@ -61,3 +61,9 @@
 - [x] Diagnose suspect message failures, preserve saved conversations, and verify replies
 - [x] Add a title card, rolling credits, and an original full opening theme
 - [x] Play the opening end to end and verify entering the case
+
+## Language and natural punctuation
+- [x] Remove long dashes across game text, saved dialogue display, and AI output
+- [x] Add pre-game English, Greek, Spanish, and French choice with saved preference
+- [x] Translate case content and controls, and apply language to AI interviews
+- [x] Verify language choice, case entry, interviews, and punctuation

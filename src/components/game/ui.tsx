@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "./language";
+import { translate } from "@/game/language";
 
 export function Rich({ text }: { text: string }) {
-  const clean = text.replace(/[\u2014\u2013]/g, ",");
+  const clean = translate(text, useLanguage());
   return <>{clean.split(/(\*\*[^*]+\*\*)/g).map((p, i) => p.startsWith("**") ? <strong key={i} className="font-semibold text-amber-soft">{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>)}</>;
 }
 

@@ -9,6 +9,8 @@ import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea,
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { clueOf, useCase, type ClueId, type PersonId } from "@/game/case";
 import { interrogationFetch } from "@/lib/chat-transport";
+import { useLanguage } from "./language";
+import { naturalText, translate } from "@/game/language";
 
 export type Meta = { stress: number; observation: string; tell: string; jane?: string | undefined };
 export type Action = "coldread" | "bluff" | "detail" | "blink";
@@ -34,7 +36,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   suspectId: PersonId; stress: number; injected: { id: ClueId; n: number } | null;
   onMeta: (m: Meta) => void; onCount: (n: number) => void; header?: ReactNode; clueStrip?: ReactNode;
 }) {
-  const C = useCase(); const K = C.storageKey; const clueById = (id: ClueId) => clueOf(C, id);
+  const C = useCase(); const language = useLanguage(); const K = C.storageKey; const clueById = (id: ClueId) => clueOf(C, id);
   const suspect = C.people[suspectId]!;
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
@@ -59,14 +61,14 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
       const { meta } = parseReply(textOf(m)); if (meta) { cb.current.onMeta(meta); return; }
     }
   }, [messages, busy]);
-  useEffect(() => { if (!injected) return; const c = clueById(injected.id); setInput(c.prompt); setClueId(c.id); inputRef.current?.focus(); }, [injected]);
+  useEffect(() => { if (!injected) return; const c = clueById(injected.id); setInput(translate(c.prompt, language)); setClueId(c.id); inputRef.current?.focus(); }, [injected]);
   useEffect(() => { const f = () => inputRef.current?.focus(); window.addEventListener("focus-question", f); return () => window.removeEventListener("focus-question", f); }, []);
 
   const submit = (text: string, action?: Action) => {
     if (!text.trim() || busy) return;
     const c = clueId ? clueById(clueId) : null;
     const tag = action ? `[${ACTIONS[action].tag}] ` : press ? "[PRESSING] " : "";
-    void sendMessage({ text: `${tag}${text.trim()}` }, { body: { caseCode: C.code, suspectId, press, stress, action: action ?? null, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null } });
+    void sendMessage({ text: naturalText(`${tag}${text.trim()}`) }, { body: { caseCode: C.code, language, suspectId, press, stress, action: action ?? null, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null } });
     if (action === "coldread") { setColdReadVisual(true); window.setTimeout(() => setColdReadVisual(false), 2400); }
     if (!action) { setInput(""); setClueId(null); }
     setTrapOpen(false); inputRef.current?.focus();

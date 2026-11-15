@@ -1,11 +1,13 @@
 import { GatewayError, streamResponse } from "@lovable.dev/ai-gateway";
 import { createUIMessageStream, createUIMessageStreamResponse, type UIMessage } from "ai";
 import { dialogueHistory } from "./chat-history";
+import { isLanguage, naturalText } from "@/game/language";
 
 type Body = {
   messages?: UIMessage[];
   suspectId?: string;
   caseCode?: string;
+  language?: string;
   press?: boolean;
   stress?: number;
   evidence?: { title: string; detail: string } | null;
@@ -14,6 +16,8 @@ type Body = {
 
 export async function handleMysteryChat(request: Request) {
   const payload = (await request.json()) as Body;
+  const language = isLanguage(payload.language) ? payload.language : "en";
+  const languageName = { en: "English", el: "Greek", es: "Spanish", fr: "French" }[language];
   const caseCode = payload.caseCode === "002" ? "002" : "001";
   if (!Array.isArray(payload.messages) || typeof payload.suspectId !== "string") {
     return Response.json({ message: "Invalid interrogation request." }, { status: 400 });
@@ -43,7 +47,7 @@ Current stress level: ${stress}%. ${ev}
 ${payload.press ? "The detective is applying intense psychological pressure." : ""}
 ${actionText}
 
-Reply in 1 to 3 tense, natural sentences of spoken dialogue only. Never use an em dash or en dash.
+Reply in 1 to 3 tense, natural sentences of spoken dialogue only. Write ALL dialogue, observation, tell, and Jane's cold read in ${languageName}, regardless of the language used in prior messages or evidence. Keep metadata JSON keys in English. Never use an em dash or en dash anywhere, including metadata. Use commas or full stops instead.
 Then, on a new final line, output exactly one metadata tag and nothing after it:
 <<META {"stress": <integer 0-100>, "observation": "<short third-person non-verbal cue, e.g. 'Julian fidgets with his cufflink'>", "tell": "<2 sentences in the voice of Patrick Jane, the Mentalist, explaining what that cue truly reveals about the suspect's hidden state or lie>", "jane": "<only for a cold read, otherwise omit>"}>>
 Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggressive pressing: +5 to +12. Accurate questions touching the hidden truth or presented evidence that threatens the secret: +10 to +25. Irrelevant evidence lets them relax: -3 to -8.`;
@@ -65,7 +69,7 @@ Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggress
         for await (const event of result) {
           if (event.type === "response.output_text.delta") {
             if (!started) { writer.write({ type: "text-start", id }); started = true; }
-            writer.write({ type: "text-delta", id, delta: event.delta });
+            writer.write({ type: "text-delta", id, delta: naturalText(event.delta) });
           }
           if (event.type === "response.refusal.delta") throw new Error(event.delta || "The conversation request was declined.");
           if (event.type === "response.incomplete") throw new Error("The reply was interrupted. Your conversation is saved.");
@@ -77,7 +81,7 @@ Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggress
       onError: (error) => {
         if (error instanceof GatewayError) {
           console.error("Interrogation service error", error.toJSON());
-          return error.message;
+          return naturalText(error.message);
         }
         console.error("Interrogation stream error", error instanceof Error ? error.message : "Unknown stream failure");
         return "The reply was interrupted. Your conversation is saved. Please try again when the connection returns.";
@@ -90,7 +94,7 @@ Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggress
     if (request.signal.aborted) return new Response(null, { status: 499 });
     if (error instanceof GatewayError) {
       console.error("Interrogation service error", error.toJSON());
-      return Response.json({ message: error.message }, { status: error.httpStatus ?? 503 });
+      return Response.json({ message: naturalText(error.message) }, { status: error.httpStatus ?? 503 });
     }
     console.error("Interrogation request error", error instanceof Error ? error.message : "Unknown request failure");
     return Response.json({ message: "The conversation could not start. Your case progress is saved." }, { status: 500 });
