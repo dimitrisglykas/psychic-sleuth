@@ -22,3 +22,5 @@
 - Every case supplies its crime-scene image, evidence sheet, evidence crop slots, scene stamp, and hotspot coordinates through `CaseContext`; shared UI must not branch on case codes. Keeps every current and future case cinematic without duplicating presentation logic.
 - Cooperative rooms share clues, progress, final outcomes, and player-authored chat through server-validated room credentials; interviews, stress, notes, and intuition remain browser-private.
 - The series opening reads public metadata from the case registry and hands off through the existing case selector; this keeps episode continuity data-driven.
+- Interrogations use the server-only AI Gateway SDK with inline dialogue history and an AI UI stream adapter; saved provider IDs cannot break resumed conversations, and service errors retain their safe reasons.
+- The opening soundtrack is an original local instrumental, played only after a user gesture and stopped on skip or case entry; no protected theme or autoplay audio is used.
