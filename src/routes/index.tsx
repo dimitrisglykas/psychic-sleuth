@@ -8,6 +8,7 @@ import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
 import { CaseLobby } from "@/components/game/lobby";
 import { OpeningCredits } from "@/components/game/opening";
+import { LanguageGate } from "@/components/game/language";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Overlay, Rich, StressBar, stressLabel } from "@/components/game/ui";
 import { CASES, CaseContext, clueOf, janeQuotes, useCase, type CaseData, type ClueId, type PersonId } from "@/game/case";
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),
-  component: MysteryGame,
+  component: () => <LanguageGate><MysteryGame /></LanguageGate>,
 });
 
 type OverlayKind = null | "desk" | "intro" | "casefile" | "cases" | "scene" | "accuse" | "shop" | "pass";
