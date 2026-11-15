@@ -1,5 +1,9 @@
 # Psychic Sleuth roadmap
 
+## Current conversation and branding repair
+- [ ] Reproduce and repair failed suspect conversations, then verify saved dialogue resumes
+- [ ] Replace template branding and browser tab icon with the game mark and hide the published badge
+
 ## Stage 1 — redesign + full game loop
 - [x] Single-screen layout (portrait left, chat center, clues/actions right), no sidebar
 - [x] Case Goal bar with live objective + progress
