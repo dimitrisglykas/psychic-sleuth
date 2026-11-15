@@ -8,7 +8,8 @@ import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
 import { CaseLobby } from "@/components/game/lobby";
 import { OpeningCredits } from "@/components/game/opening";
-import { LanguageGate } from "@/components/game/language";
+import { LanguageGate, useLanguage } from "@/components/game/language";
+import { translate } from "@/game/language";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Overlay, Rich, StressBar, stressLabel } from "@/components/game/ui";
 import { CASES, CaseContext, clueOf, janeQuotes, useCase, type CaseData, type ClueId, type PersonId } from "@/game/case";
@@ -41,6 +42,7 @@ function MysteryGame() {
 }
 
 function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => void }) {
+  const language = useLanguage();
   const { suspectIds: SUSPECT_IDS, suspects, people, clues, connections, storageKey: K, guide } = C;
   const START_CLUES = C.startClues;
   const clueById = (id: ClueId) => clueOf(C, id);
@@ -109,7 +111,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const left = clues.length - found.length;
   const nextStep = hasOutcome ? "Review the case conclusion"
     : !(counts[guide.suspect] ?? 0) ? `Show ${suspects[guide.suspect]!.short} the ${guide.label}`
-    : !(counts["victim"] ?? 0) ? `Interview ${C.victim.short}`
+    : !(counts["victim"] ?? 0) ? `${translate("Interview", language)} ${C.victim.short}`
     : left > 0 ? `Search the crime scene (${left} clue${left > 1 ? "s" : ""} left)`
     : questioned.length < 3 ? `Question ${SUSPECT_IDS.filter((id) => !questioned.includes(id)).map((id) => suspects[id]!.short).join(" and ")}`
     : "Solve the case";
@@ -200,7 +202,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
               <Search /> Inspect crime scene
             </Button>
           </div>
-          <div className="space-y-3 p-4"><div className="flex items-center justify-between"><Eyebrow>Evidence</Eyebrow><span className="text-[10px] text-muted-foreground">Inspect or question</span></div><div className="grid grid-cols-2 gap-2">{clueButtons(false)}</div>{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} clue{left > 1 ? "s" : ""} still hidden in the scene.</p>}</div>
+          <div className="space-y-3 p-4"><div className="flex items-center justify-between"><Eyebrow>Evidence</Eyebrow><span className="text-[10px] text-muted-foreground">Inspect or question</span></div><div className="grid grid-cols-2 gap-2">{clueButtons(false)}</div>{left > 0 && <p className="rounded-sm border border-dashed p-2.5 text-[11px] text-muted-foreground">{left} {translate(left > 1 ? "clues" : "clue", language)} {translate("still hidden in the scene.", language)}</p>}</div>
           <div className="mt-auto border-t p-4">
             <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => setShowProgress(!showProgress)}>Investigation details {showProgress ? <ChevronUp /> : <ChevronDown />}</Button>
             {showProgress && <div className="mt-3 space-y-3"><Row label="Clues found" value={`${found.length} / ${clues.length}`} /><Row label="People questioned" value={`${questioned.length + ((counts["victim"] ?? 0) > 0 ? 1 : 0)} / 4`} />
