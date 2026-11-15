@@ -433,7 +433,7 @@
   "Case files": "Φάκελοι υποθέσεων",
   "Replay opening": "Επανάληψη εισαγωγής",
   "Episode": "Επεισόδιο",
-  "Search": "Αναζήτηση",
+  "Search": "Ψάξε",
   "Scour the scene for physical evidence.": "Ερεύνησε εξονυχιστικά τη σκηνή για υλικά αποδεικτικά στοιχεία.",
   "Interrogate": "Ανάκριση",
   "Show clues to suspects and watch for a tell.": "Δείξε στοιχεία στους υπόπτους και πρόσεξε για αντιδράσεις που τους προδίδουν.",
@@ -521,5 +521,18 @@
   "stress-pulse h-full transition-all duration-700": "stress-pulse h-full transition-all duration-700",
   "Breaking": "Στα όρια",
   "Rattled": "Ταραγμένος",
-  "Composed": "Ψύχραιμος"
+  "Composed": "Ψύχραιμος",
+  "Language": "Γλώσσα",
+  "Interview": "Συζήτησε με",
+  "Question": "Ρώτησε",
+  "Show": "Δείξε στον",
+  "and": "και",
+  "clues": "στοιχεία",
+  "s": "",
+  "Intuition": "Διαίσθηση",
+  "Inspect": "Εξέτασε",
+  "Showing clue": "Στοιχείο",
+  "Your motive": "Το κίνητρό σου",
+  "Your clues": "Τα στοιχεία σου",
+  "Two key clues": "Δύο βασικά στοιχεία"
 }
