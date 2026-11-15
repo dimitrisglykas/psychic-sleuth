@@ -1,6 +1,7 @@
 # Psychic Sleuth roadmap
 
 ## Current conversation and branding repair
+- [ ] Add a lightweight first-load 3D animated intro without blocking game loading
 - [ ] Reproduce and repair failed suspect conversations, then verify saved dialogue resumes
 - [ ] Replace template branding and browser tab icon with the game mark and hide the published badge
 
