@@ -63,6 +63,12 @@
 - [x] Play the opening end to end and verify entering the case
 
 ## Immediate cinematic entry
+## Responsive layout repair
+- [ ] Contain viewport overflow and use fluid app and header layouts
+- [ ] Make evidence, scene controls, and overlays fit phones and short screens
+- [ ] Verify both cases across phone, tablet, desktop, and translated layouts
+
+## Immediate cinematic entry
 - [x] Replace language gate with English default and a persistent header dropdown
 - [x] Open on a cinematic title and real inspectable first clue, preserving optional credits and game progress
 - [x] Add portfolio footer attribution and verify mobile, languages, and case entry
