@@ -63,9 +63,9 @@
 - [x] Play the opening end to end and verify entering the case
 
 ## Immediate cinematic entry
-- [ ] Replace language gate with English default and a persistent header dropdown
-- [ ] Open on a cinematic title and real inspectable first clue, preserving optional credits and game progress
-- [ ] Add portfolio footer attribution and verify mobile, languages, and case entry
+- [x] Replace language gate with English default and a persistent header dropdown
+- [x] Open on a cinematic title and real inspectable first clue, preserving optional credits and game progress
+- [x] Add portfolio footer attribution and verify mobile, languages, and case entry
 
 ## Language and natural punctuation
 - [x] Remove long dashes across game text, saved dialogue display, and AI output
