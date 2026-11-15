@@ -143,6 +143,20 @@
 .discover-pop { max-height: calc(100dvh - 7rem); overflow-y: auto; overflow-wrap: anywhere; }
 .intro-splash { animation: intro-splash-exit 2s ease both; }
 .intro-splash canvas { display: block; width: 100%; height: 100%; }
+.game-hud { padding-top: max(.5rem, env(safe-area-inset-top)); padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+.game-actions { padding-bottom: max(.5rem, env(safe-area-inset-bottom)); }
+.game-workspace > section { min-height: 0; }
+.game-workspace [role="log"] { min-height: 8rem; max-height: none; }
+.game-workspace > section > div:last-of-type { flex-shrink: 0; }
+.game-shell > .discover-pop { position: fixed; z-index: 80; bottom: 5rem; left: 50%; transform: translateX(-50%); width: calc(100% - 2rem); }
+@media (max-width: 1023px) {
+  .game-workspace { display: flex; flex-direction: column; }
+  .game-workspace > aside { flex-shrink: 0; }
+  .game-workspace > section { min-height: 26rem; }
+  .game-workspace > aside button { padding: .5rem; gap: .5rem; }
+  .game-workspace > aside button img { width: 1.75rem; height: 2rem; }
+  .game-workspace > section [role="log"] { min-height: 10rem; max-height: 40dvh; }
+}
 @keyframes intro-splash-exit { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
