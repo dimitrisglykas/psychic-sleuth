@@ -26,7 +26,7 @@ export function Desk({ playing, onTogglePlay, calm, onToggleCalm, onOpenCases, o
     <Overlay label="My desk" onClose={onClose} className="max-w-5xl overflow-hidden border-wood bg-gradient-to-b from-leather/40 to-panel p-0">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 overflow-hidden opacity-20"><img src={C.scene.evidenceImage} alt="" className="h-full w-full object-cover" width={1600} height={1008} loading="lazy" /><div className="absolute inset-0 bg-gradient-to-b from-transparent to-panel" /></div>
       <div className="border-b border-wood/60 p-5"><Eyebrow>CBI · Jane's corner</Eyebrow><h2 className="font-display text-2xl">My desk</h2><p className="text-sm text-muted-foreground">Leather couch, cold tea, quiet thoughts. Nothing here can hurt your case.</p></div>
-      <div className="grid gap-4 p-5 md:grid-cols-[1fr_1.2fr]">
+      <div className="grid gap-4 p-4 sm:p-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div className="space-y-4">
           <div className="flex items-center gap-4 rounded-md border border-wood bg-wood/40 p-4">
             <div className={`grid size-20 shrink-0 place-items-center rounded-full border-4 border-background bg-background ${playing ? "record-spin" : ""}`}><Disc3 className="size-16 text-primary/80" /></div>

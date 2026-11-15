@@ -12,9 +12,9 @@ export function Rich({ text }: { text: string }) {
 
 export function Overlay({ onClose, children, className, label }: { onClose: () => void; children: ReactNode; className?: string; label: string }) {
   return (
-    <div role="dialog" aria-label={label} className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-background/85 p-3 backdrop-blur-md animate-in fade-in sm:items-center sm:p-6" onClick={onClose}>
-      <div className={cn("relative w-full max-w-lg rounded-md border bg-panel p-5 shadow-2xl animate-in zoom-in-95", className)} onClick={(e) => e.stopPropagation()}>
-        <Button variant="ghost" size="icon" className="absolute right-2 top-2 z-10" onClick={onClose} aria-label="Close"><X /></Button>
+    <div role="dialog" aria-modal="true" aria-label={label} className="game-overlay fixed inset-0 z-[150] overflow-y-auto overscroll-contain bg-background/85 p-4 backdrop-blur-md animate-in fade-in sm:p-6" onClick={onClose}>
+      <div className={cn("relative mx-auto my-2 w-full min-w-0 max-w-lg rounded-md border bg-panel p-4 shadow-2xl animate-in zoom-in-95 sm:p-6", className)} onClick={(e) => e.stopPropagation()}>
+        <div className="relative z-10 flex justify-end border-b bg-panel p-2"><Button variant="ghost" size="icon" className="size-11 shrink-0" onClick={onClose} aria-label="Close"><X /></Button></div>
         {children}
       </div>
     </div>

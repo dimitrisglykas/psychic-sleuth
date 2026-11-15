@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenu
 import { LANGUAGES, initialLanguage, isLanguage, translate, type Language } from "@/game/language";
 
 const LanguageContext = createContext<Language>("en");
+const LanguageSetterContext = createContext<(value: string) => void>(() => {});
 export const useLanguage = () => useContext(LanguageContext);
 
 export function LanguageGate({ children }: { children: ReactNode }) {
@@ -12,7 +13,12 @@ export function LanguageGate({ children }: { children: ReactNode }) {
   useEffect(() => { setLanguage(initialLanguage(localStorage.getItem("psychic-language"))); }, []);
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   const choose = (value: string) => { if (!isLanguage(value)) return; setLanguage(value); localStorage.setItem("psychic-language", value); };
-  return <LanguageContext.Provider value={language}><LocalizedSurface language={language}>{children}</LocalizedSurface><div className="fixed right-3 top-3 z-[130] sm:right-6"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="h-9 gap-2 rounded-full bg-panel/95 px-3 backdrop-blur" aria-label={translate("Language", language)}><Globe className="size-3.5 text-primary" /><span lang={language}>{LANGUAGES[language]}</span><ChevronDown className="size-3" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="z-[140] min-w-40"><DropdownMenuRadioGroup value={language} onValueChange={choose}>{Object.entries(LANGUAGES).map(([code, label]) => <DropdownMenuRadioItem key={code} value={code} lang={code} className="py-2.5">{label}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup></DropdownMenuContent></DropdownMenu></div></LanguageContext.Provider>;
+  return <LanguageContext.Provider value={language}><LanguageSetterContext.Provider value={choose}><LocalizedSurface language={language}>{children}</LocalizedSurface></LanguageSetterContext.Provider></LanguageContext.Provider>;
+}
+
+export function LanguageSwitcher() {
+  const language = useLanguage(); const choose = useContext(LanguageSetterContext);
+  return <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="h-11 shrink-0 gap-2 rounded-full bg-panel/95 px-3 backdrop-blur" aria-label={translate("Language", language)}><Globe className="size-3.5 text-primary" /><span lang={language}>{LANGUAGES[language]}</span><ChevronDown className="size-3" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="z-[170] min-w-40"><DropdownMenuRadioGroup value={language} onValueChange={choose}>{Object.entries(LANGUAGES).map(([code, label]) => <DropdownMenuRadioItem key={code} value={code} lang={code} className="py-3">{label}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup></DropdownMenuContent></DropdownMenu>;
 }
 
 // Covers all shared screens, including overlays and restored dialogue, while

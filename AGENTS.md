@@ -27,3 +27,4 @@
 - Player locale uses a nonblocking header dropdown and is persisted separately from case progress; local public-text dictionaries translate shared screens, while the server applies locale to dialogue and metadata without translating IDs or private solutions.
 - The opening defaults to its playable title screen with a case-data-driven evidence preview; credits and gesture-triggered music are opt-in so first entry never waits on a sequence.
 - Normalize long dash punctuation at the AI stream boundary and visible text boundary so restored dialogue and metadata follow the same copy rule without rewriting saved outcomes.
+- Use fluid document-flow app layouts and grid-based headers with inline language controls; scroll overlays from the top and offer scene hotspot controls in a wrapping grid so narrow or short viewports never hide required actions.

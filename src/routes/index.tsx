@@ -9,7 +9,7 @@ import { Desk } from "@/components/game/desk";
 import { CaseLobby } from "@/components/game/lobby";
 import { OpeningCredits } from "@/components/game/opening";
 import { Attribution } from "@/components/game/attribution";
-import { LanguageGate, useLanguage } from "@/components/game/language";
+import { LanguageGate, LanguageSwitcher, useLanguage } from "@/components/game/language";
 import { translate } from "@/game/language";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Overlay, Rich, StressBar, stressLabel } from "@/components/game/ui";
@@ -139,26 +139,28 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
 
   const clueButtons = (compact: boolean) => found.map((id) => {
     const c = clueById(id); const glow = (guiding && id === guide.clue) || !!tea?.pair.includes(id);
-    return <div key={id} className={`group relative shrink-0 overflow-hidden rounded-sm border bg-panel-raised transition-colors hover:border-primary/60 ${compact ? "w-36" : ""} ${glow ? "guide-ring border-primary" : ""}`}>
+    return <div key={id} className={`group relative min-w-0 overflow-hidden rounded-sm border bg-panel-raised transition-colors hover:border-primary/60 ${glow ? "guide-ring border-primary" : ""}`}>
       <div className={`relative overflow-hidden bg-muted ${compact ? "h-16" : "h-24"}`}><EvidenceCrop id={id} /><div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" /><div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-2"><p className={`${compact ? "text-[10px]" : "text-xs"} font-semibold`}>{c.title}</p><Button size="icon" variant="secondary" className="size-7 shrink-0" onClick={() => setInspected(id)} aria-label={`Inspect ${c.title}`} title={`Inspect ${c.title}`}><ZoomIn className="size-3.5" /></Button></div></div>
       {!compact && <Button variant="ghost" size="sm" onClick={() => askClue(id)} aria-label={`Ask about ${c.title}`} className="w-full justify-start rounded-none text-[10px] text-primary"><MessageSquareQuote className="size-3.5" /> Use in interview</Button>}
       {compact && <Button variant="ghost" size="sm" onClick={() => askClue(id)} aria-label={`Ask about ${c.title}`} className="h-7 w-full justify-start rounded-none px-2 text-[9px] text-primary"><MessageSquareQuote className="size-3" /> Ask with clue</Button>}
-      {guiding && id === guide.clue && <span className="absolute whitespace-nowrap rounded-sm bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Start here</span>}
+      {guiding && id === guide.clue && <span className="block bg-primary px-2 py-1 text-[10px] font-semibold text-primary-foreground">Start here</span>}
     </div>;
   });
 
   const reaction = stressOf(suspectId) >= 75 ? "Tension spike" : meta[suspectId]?.observation || (stressOf(suspectId) >= 50 ? "Guarded posture" : "Controlled");
 
   return (
-    <main className="flex min-h-dvh flex-col bg-background text-foreground lg:h-dvh lg:overflow-hidden">
-      <header className="flex min-h-14 flex-wrap items-center gap-2 border-b bg-panel px-4 pb-2 pt-3 lg:px-6">
-        <div className="min-w-0 basis-full pr-36 lg:pr-40"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth · You are the consultant</p><h1 className="truncate font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div>
+    <main className="game-shell mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col justify-between bg-background px-4 text-foreground sm:px-6 lg:px-8">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-panel py-4">
+        <div className="min-w-0"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth · You are the consultant</p><h1 className="font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div><LanguageSwitcher />
+        <div className="col-span-2 grid grid-cols-3 items-center gap-3 sm:flex sm:flex-wrap">
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
         <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={localProgress} onSharedClues={mergeSharedClues} onSharedProgress={setSharedProgress} />
         <Button variant="outline" size="sm" className="border-primary/60 text-primary" onClick={() => setOverlay("casefile")}><BookOpen /> Case</Button>
         <Button variant="ghost" size="sm" onClick={() => setOverlay("desk")}><Armchair /> <span className="hidden sm:inline">My desk</span></Button>
         <Button variant="ghost" size="sm" onClick={() => setOverlay("cases")}><FolderOpen /> <span className="hidden sm:inline">Cases</span></Button>
+        </div>
       </header>
 
       <div className="border-b bg-accent/40 px-4 py-3 lg:px-6">
@@ -170,15 +172,15 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <div className="mx-auto mt-2 flex max-w-5xl items-center gap-2"><div className="h-1 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px] text-muted-foreground">Case {progress}%</span></div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr] lg:grid-rows-1 lg:grid-cols-[280px_minmax(0,1fr)_300px]">
+      <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]">
         {/* Left: suspect */}
         <aside className="min-h-0 border-b bg-panel lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <div className={`relative hidden aspect-[4/3] overflow-hidden lg:block ${stressOf(suspectId) >= 75 ? "tension-aura" : ""}`}><img src={suspect.image} alt={suspect.name} className="h-full w-full object-cover object-[center_28%] transition-transform duration-700 hover:scale-[1.02]" width={768} height={1024} /><div className="absolute inset-0 bg-gradient-to-t from-panel via-transparent to-background/10" /><div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-sm border bg-background/75 px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] backdrop-blur"><Activity className={`size-3.5 ${stressOf(suspectId) >= 75 ? "text-destructive" : "text-primary"}`} /> {reaction}</div><div className="absolute inset-x-0 bottom-0 p-4 pt-16"><p className="font-display text-2xl">{suspect.name}</p><p className="text-[10px] uppercase tracking-[.18em] text-primary">{suspect.role}</p></div></div>
-          <div className="flex gap-2 overflow-x-auto p-3 lg:grid lg:grid-cols-3 lg:overflow-visible">
-            {SUSPECT_IDS.map((id) => <button key={id} onClick={() => switchSuspect(id)} className={`flex min-w-[112px] items-center gap-2 rounded-sm border p-1.5 text-left lg:min-w-0 lg:flex-col lg:items-stretch ${id === suspectId ? "border-primary bg-accent" : "opacity-70 hover:opacity-100"}`}>
-              <img src={suspects[id]!.image} alt="" className="size-9 rounded-full object-cover object-top lg:aspect-square lg:size-auto lg:w-full lg:rounded-sm" width={768} height={1024} loading="lazy" />
+          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-1">
+            {SUSPECT_IDS.map((id) => <Button variant="outline" key={id} onClick={() => switchSuspect(id)} className={`h-auto min-w-0 justify-start gap-3 whitespace-normal rounded-sm border p-3 text-left ${id === suspectId ? "border-primary bg-accent" : "opacity-70 hover:opacity-100"}`}>
+              <img src={suspects[id]!.image} alt="" className="size-11 shrink-0 rounded-sm object-cover object-top" width={768} height={1024} loading="lazy" />
               <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold">{suspects[id]!.short}</span><StressBar value={stressOf(id)} thin /></span>
-            </button>)}
+            </Button>)}
           </div>
           <div className="flex items-center gap-3 border-t px-3 py-2 lg:hidden"><img src={suspect.image} alt="" className="size-10 rounded-full object-cover object-top" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{suspect.name}</p><p className="text-[10px] text-muted-foreground">{suspect.role}</p></div><div className="w-24"><p className="mb-1 text-right text-[10px] text-primary">Stress {stressOf(suspectId)}%</p><StressBar value={stressOf(suspectId)} thin /></div></div>
           <div className="hidden space-y-4 px-4 pb-5 lg:block">
@@ -191,7 +193,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <Interrogation key={suspectId} suspectId={suspectId} stress={stressOf(suspectId)} injected={injected} onMeta={updateMeta}
           onCount={(n) => setCounts((c) => (c[suspectId] === n ? c : { ...c, [suspectId]: n }))}
           header={<div className="flex items-center justify-between border-b px-4 py-2.5"><p className="text-xs"><span className="font-semibold">{suspectId === "victim" ? "Reconstructing" : "Questioning"} {suspect.name}</span> <span className="text-muted-foreground lg:hidden">· stress {stressOf(suspectId)}%</span></p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording</p></div>}
-          clueStrip={<div className="mx-auto mb-2 flex max-w-2xl gap-2 overflow-x-auto pb-1 pt-4 lg:hidden">{clueButtons(true)}<button onClick={() => setOverlay("scene")} className="flex shrink-0 items-center gap-1.5 rounded-sm border border-dashed border-primary/60 p-2 text-[11px] text-primary"><Search className="size-4" /> Crime scene</button></div>}
+          clueStrip={<div className="mx-auto mb-2 grid min-w-0 max-w-2xl grid-cols-1 gap-3 pb-1 pt-4 sm:grid-cols-2 lg:hidden">{clueButtons(true)}<Button variant="outline" onClick={() => setOverlay("scene")} className="h-auto min-h-11 whitespace-normal border-dashed border-primary/60 p-3 text-xs text-primary"><Search className="size-4" /> Crime scene</Button></div>}
         />
 
         {/* Right: clues & actions */}
@@ -214,8 +216,8 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         </aside>
       </div>
 
-      <footer className="sticky bottom-0 z-30 border-t bg-panel/95 p-2 backdrop-blur sm:p-3">
-        <div className="mx-auto grid max-w-2xl grid-cols-3 gap-2">
+      <footer className="border-t bg-panel/95 p-4 backdrop-blur sm:p-6">
+        <div className="mx-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
           <Button variant="outline" className="h-12 flex-col gap-0.5 text-[11px] sm:flex-row sm:text-sm" onClick={() => window.dispatchEvent(new Event("focus-question"))}><MessageSquareQuote /> Ask question</Button>
           <Button variant="outline" className="h-12 flex-col gap-0.5 border-primary/60 text-[11px] text-primary sm:flex-row sm:text-sm" onClick={jane}><Lightbulb /> Intuition ({hints})</Button>
           <Button variant={readyToSolve ? "default" : "outline"} className={`h-12 flex-col gap-0.5 text-[11px] sm:flex-row sm:text-sm ${readyToSolve ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "border-destructive/50 text-muted-foreground"}`} onClick={() => setOverlay("accuse")}><Gavel /> Solve case</Button>
@@ -223,8 +225,8 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <div className="mt-2 text-center"><Attribution /></div>
       </footer>
 
-      {discovered && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,360px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}
-      {tea && <div className="discover-pop fixed left-1/2 top-20 z-[70] w-[min(94vw,560px)] -translate-x-1/2 overflow-hidden rounded-md border border-primary bg-panel-raised shadow-2xl"><div className="relative h-28 overflow-hidden"><img src={C.scene.evidenceImage} alt="" className="h-full w-full object-cover opacity-55" width={1600} height={1008} /><div className="absolute inset-0 bg-gradient-to-t from-panel-raised to-transparent" /><div className="absolute inset-0 grid place-items-center"><span className="tea-ripple grid size-16 place-items-center rounded-full border border-primary/60 bg-background/45 backdrop-blur"><Coffee className="size-7 text-primary" /></span></div></div><div className="p-4 pt-2"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Jane sees the connection</p><p className="mt-2 font-display text-[15px] italic leading-6">{tea.quote}</p><p className="mt-2 border-t pt-2 text-xs"><span className="font-semibold text-primary">Overlooked connection: </span><Rich text={tea.text} /></p><p className="mt-1 text-[10px] text-muted-foreground">{clueById(tea.pair[0]).title} + {clueById(tea.pair[1]).title}</p></div></div>}
+      {discovered && <div className="discover-pop relative mx-auto w-full max-w-xl rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}
+      {tea && <div className="discover-pop relative mx-auto w-full max-w-xl overflow-hidden rounded-md border border-primary bg-panel-raised shadow-2xl"><div className="relative h-28 overflow-hidden"><img src={C.scene.evidenceImage} alt="" className="h-full w-full object-cover opacity-55" width={1600} height={1008} /><div className="absolute inset-0 bg-gradient-to-t from-panel-raised to-transparent" /><div className="absolute inset-0 grid place-items-center"><span className="tea-ripple grid size-16 place-items-center rounded-full border border-primary/60 bg-background/45 backdrop-blur"><Coffee className="size-7 text-primary" /></span></div></div><div className="p-4 pt-2"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Jane sees the connection</p><p className="mt-2 font-display text-[15px] italic leading-6">{tea.quote}</p><p className="mt-2 border-t pt-2 text-xs"><span className="font-semibold text-primary">Overlooked connection: </span><Rich text={tea.text} /></p><p className="mt-1 text-[10px] text-muted-foreground">{clueById(tea.pair[0]).title} + {clueById(tea.pair[1]).title}</p></div></div>}
       {overlay === "desk" && <Desk playing={playing} onTogglePlay={togglePlay} calm={!!calmSince} onToggleCalm={toggleCalm} onOpenCases={() => setOverlay("cases")} onPick={(c) => { setPlaying(false); setOverlay(null); if (c !== C.code) onPickCase(c); }} onClose={() => { setPlaying(false); setOverlay(null); }} />}
       {overlay === "intro" && <HowToPlay onClose={() => { save(`${K}-intro`, true); setOverlay(null); }} />}
       {overlay === "casefile" && <HowToPlay returning onClose={() => setOverlay(null)} />}
