@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
 
 import { routeTree } from "@/routeTree.gen";
 import { Route as rootRoute } from "@/routes/__root";
@@ -14,7 +15,7 @@ function renderAt(path: string) {
     history: createMemoryHistory({ initialEntries: [path] }),
   });
   // TanStack's document shell mounts <html>; isolate the shell in unit tests.
-  rootRoute.options.shellComponent = ({ children }) => <>{children}</>;
+  Object.defineProperty(rootRoute.options, "shellComponent", { configurable: true, writable: true, value: ({ children }: { children: ReactNode }) => <>{children}</> });
   return render(<RouterProvider router={router} />);
 }
 
