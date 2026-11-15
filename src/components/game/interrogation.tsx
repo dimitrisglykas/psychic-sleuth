@@ -109,7 +109,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
         {tacticsOpen && <div className="mx-auto mb-2 max-w-2xl rounded-md border bg-popover p-2 shadow-xl">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">Optional tactics</p>
           <div className="grid gap-3 xl:grid-cols-3"><Button type="button" size="sm" variant={press ? "default" : "outline"} onClick={() => setPress(!press)} className="min-h-11 justify-start whitespace-normal"><Mic2 /> {press ? "Pressing is on" : "Press harder"}</Button><Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => submit(ACTIONS.coldread.line, "coldread")} className="min-h-11 justify-start whitespace-normal"><Eye /> Cold read</Button><Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setTrapOpen(!trapOpen)} className="min-h-11 justify-start whitespace-normal"><Target /> Set a trap</Button></div>
-          {trapOpen && <div className="mt-2 grid gap-1 sm:grid-cols-3">{(["bluff", "detail", "blink"] as Action[]).map((a) => <button key={a} type="button" onClick={() => submit(ACTIONS[a].line, a)} className="flex w-full items-start gap-2 rounded-sm border bg-panel-raised px-2.5 py-2 text-left text-xs hover:bg-accent"><Sparkle className="mt-0.5 size-3 shrink-0 text-primary" /><span><span className="block font-semibold">{ACTIONS[a].label}</span><span className="text-muted-foreground">{ACTIONS[a].line}</span></span></button>)}</div>}
+          {trapOpen && <div className="mt-3 grid gap-3 xl:grid-cols-3">{(["bluff", "detail", "blink"] as Action[]).map((a) => <button key={a} type="button" onClick={() => submit(ACTIONS[a].line, a)} className="flex w-full items-start gap-2 rounded-sm border bg-panel-raised px-2.5 py-2 text-left text-xs hover:bg-accent"><Sparkle className="mt-0.5 size-3 shrink-0 text-primary" /><span><span className="block font-semibold">{ACTIONS[a].label}</span><span className="text-muted-foreground">{ACTIONS[a].line}</span></span></button>)}</div>}
         </div>}
         <PromptInput className="mx-auto max-w-2xl border-border bg-panel-raised shadow-xl" onSubmit={({ text }) => submit(text)}>
           <PromptInputTextarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder={`What do you want to ask ${suspect.short}?`} className="min-h-16 text-sm" />
@@ -119,8 +119,8 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
           </PromptInputFooter>
         </PromptInput>
       </div>
-      {coldReadVisual && <div className="pointer-events-none fixed inset-0 z-[75] grid place-items-center bg-background/80 p-5 backdrop-blur-sm animate-in fade-in">
-        <div className="cold-read-frame relative w-full max-w-md overflow-hidden rounded-md border border-primary bg-panel shadow-2xl">
+      {coldReadVisual && <div className="pointer-events-none fixed inset-0 z-[75] overflow-y-auto bg-background/80 p-4 sm:p-6 backdrop-blur-sm animate-in fade-in">
+        <div className="cold-read-frame relative mx-auto w-full max-w-md overflow-hidden rounded-md border border-primary bg-panel shadow-2xl">
           <img src={suspect.image} alt="" className="aspect-[4/3] w-full object-cover object-top opacity-80" width={768} height={1024} />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-5"><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-primary"><ScanEye className="size-4" /> Cold read</p><p className="mt-2 font-display text-xl italic">Don’t listen to the answer. Watch the moment before it.</p></div>
