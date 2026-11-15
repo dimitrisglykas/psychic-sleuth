@@ -1,20 +1,18 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Globe } from "lucide-react";
+import { ChevronDown, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LANGUAGES, isLanguage, translate, type Language } from "@/game/language";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { LANGUAGES, initialLanguage, isLanguage, translate, type Language } from "@/game/language";
 
 const LanguageContext = createContext<Language>("en");
 export const useLanguage = () => useContext(LanguageContext);
 
 export function LanguageGate({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>("en");
-  const [ready, setReady] = useState(false);
-  const [choosing, setChoosing] = useState(true);
-  useEffect(() => { const saved = localStorage.getItem("psychic-language"); if (isLanguage(saved)) { setLanguage(saved); setChoosing(false); } setReady(true); }, []);
+  useEffect(() => { setLanguage(initialLanguage(localStorage.getItem("psychic-language"))); }, []);
   useEffect(() => { document.documentElement.lang = language; }, [language]);
-  const choose = (value: Language) => { setLanguage(value); localStorage.setItem("psychic-language", value); setChoosing(false); };
-  if (!ready || choosing) return <main className="fixed inset-0 z-[120] flex flex-col items-center justify-center overflow-y-auto bg-background px-6 py-10 text-foreground"><Globe className="mb-4 size-8 text-primary" /><h1 className="font-display text-4xl">Psychic Sleuth</h1><p className="mb-8 mt-3 text-center text-sm text-muted-foreground">Choose your language · Διάλεξε γλώσσα<br />Elige tu idioma · Choisissez votre langue</p><div className="grid w-full max-w-sm gap-3">{Object.entries(LANGUAGES).map(([code, label]) => <Button key={code} variant="outline" className="h-14 justify-start text-lg" onClick={() => { if (isLanguage(code)) choose(code); }} lang={code}>{label}</Button>)}</div></main>;
-  return <LanguageContext.Provider value={language}><LocalizedSurface key={language} language={language}>{children}</LocalizedSurface><Button variant="outline" size="icon" className="fixed right-3 bottom-20 z-[110] size-9 bg-panel" onClick={() => setChoosing(true)} aria-label={translate("Language", language)} title={LANGUAGES[language]}><Globe className="size-4" /></Button></LanguageContext.Provider>;
+  const choose = (value: string) => { if (!isLanguage(value)) return; setLanguage(value); localStorage.setItem("psychic-language", value); };
+  return <LanguageContext.Provider value={language}><LocalizedSurface language={language}>{children}</LocalizedSurface><div className="fixed right-3 top-3 z-[130] sm:right-6"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="h-9 gap-2 rounded-full bg-panel/95 px-3 backdrop-blur" aria-label={translate("Language", language)}><Globe className="size-3.5 text-primary" /><span lang={language}>{LANGUAGES[language]}</span><ChevronDown className="size-3" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="z-[140] min-w-40"><DropdownMenuRadioGroup value={language} onValueChange={choose}>{Object.entries(LANGUAGES).map(([code, label]) => <DropdownMenuRadioItem key={code} value={code} lang={code} className="py-2.5">{label}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup></DropdownMenuContent></DropdownMenu></div></LanguageContext.Provider>;
 }
 
 // Covers all shared screens, including overlays and restored dialogue, while
