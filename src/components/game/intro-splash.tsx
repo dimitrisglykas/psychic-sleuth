@@ -30,7 +30,12 @@ export function IntroSplash() {
       const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
       camera.position.z = 7;
       const color = getComputedStyle(host).color;
-      const material = new THREE.MeshBasicMaterial({ color: new THREE.Color(color) });
+      const swatch = document.createElement("canvas"); swatch.width = 1; swatch.height = 1;
+      const swatchContext = swatch.getContext("2d");
+      if (!swatchContext) { renderer.dispose(); renderer.domElement.remove(); setVisible(false); return; }
+      swatchContext.fillStyle = color; swatchContext.fillRect(0, 0, 1, 1);
+      const pixel = swatchContext.getImageData(0, 0, 1, 1).data;
+      const material = new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB((pixel[0] ?? 0) / 255, (pixel[1] ?? 0) / 255, (pixel[2] ?? 0) / 255, THREE.SRGBColorSpace) });
       const group = new THREE.Group();
       scene.add(group);
       const geometries: InstanceType<typeof THREE.BufferGeometry>[] = [];

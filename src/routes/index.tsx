@@ -155,7 +155,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
       <header className="game-hud grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-panel px-4 py-2">
         <div className="min-w-0"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth<span className="hidden sm:inline"> · You are the consultant</span></p><h1 className="font-display text-lg sm:text-xl">Case {C.code}<span className="hidden sm:inline">: {C.title}</span></h1></div><div className="flex items-center gap-1"><LanguageSwitcher /><FullscreenToggle /></div>
         <div className="col-span-2 flex flex-wrap items-center gap-2">
-        <Timer startedAt={startedAt} pausedAt={calmSince} />
+        <div className="hidden sm:block"><Timer startedAt={startedAt} pausedAt={calmSince} /></div>
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
         <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={localProgress} onSharedClues={mergeSharedClues} onSharedProgress={setSharedProgress} />
         <Button variant="outline" size="sm" className="border-primary/60 text-primary" onClick={() => setOverlay("casefile")}><BookOpen /> Case</Button>
@@ -194,7 +194,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <Interrogation key={suspectId} suspectId={suspectId} stress={stressOf(suspectId)} injected={injected} onMeta={updateMeta}
           onCount={(n) => setCounts((c) => (c[suspectId] === n ? c : { ...c, [suspectId]: n }))}
           header={<div className="flex items-center justify-between border-b px-4 py-2.5"><p className="text-xs"><span className="font-semibold">{suspectId === "victim" ? "Reconstructing" : "Questioning"} {suspect.name}</span> <span className="text-muted-foreground lg:hidden">· stress {stressOf(suspectId)}%</span></p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording</p></div>}
-          clueStrip={<div className="mx-auto mb-2 grid min-w-0 max-w-2xl grid-cols-1 gap-3 pb-1 pt-4 sm:grid-cols-2 lg:hidden">{clueButtons(true)}<Button variant="outline" onClick={() => setOverlay("scene")} className="h-auto min-h-11 whitespace-normal border-dashed border-primary/60 p-3 text-xs text-primary"><Search className="size-4" /> Crime scene</Button></div>}
+          clueStrip={<div className="mx-auto mb-2 grid max-h-32 min-w-0 max-w-2xl grid-cols-2 gap-2 overflow-y-auto pb-1 pt-2 lg:hidden">{clueButtons(true)}<Button variant="outline" onClick={() => setOverlay("scene")} className="h-auto min-h-11 whitespace-normal border-dashed border-primary/60 p-3 text-xs text-primary"><Search className="size-4" /> Crime scene</Button></div>}
         />
 
         {/* Right: clues & actions */}
