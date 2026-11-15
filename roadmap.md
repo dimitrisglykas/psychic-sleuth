@@ -62,11 +62,10 @@
 - [x] Add a title card, rolling credits, and an original full opening theme
 - [x] Play the opening end to end and verify entering the case
 
-## Immediate cinematic entry
 ## Responsive layout repair
-- [ ] Contain viewport overflow and use fluid app and header layouts
-- [ ] Make evidence, scene controls, and overlays fit phones and short screens
-- [ ] Verify both cases across phone, tablet, desktop, and translated layouts
+- [x] Contain viewport overflow and use fluid app and header layouts
+- [x] Make evidence, scene controls, and overlays fit phones and short screens
+- [x] Verify both cases across phone, tablet, desktop, and translated layouts
 
 ## Immediate cinematic entry
 - [x] Replace language gate with English default and a persistent header dropdown
