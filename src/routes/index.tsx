@@ -8,6 +8,7 @@ import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
 import { CaseLobby } from "@/components/game/lobby";
 import { OpeningCredits } from "@/components/game/opening";
+import { Attribution } from "@/components/game/attribution";
 import { LanguageGate, useLanguage } from "@/components/game/language";
 import { translate } from "@/game/language";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
@@ -36,7 +37,8 @@ function MysteryGame() {
   const [opening, setOpening] = useState(true);
   useEffect(() => { const c = localStorage.getItem("psychic-case"); if (c && CASES[c]) setCode(c); if (sessionStorage.getItem("psychic-opening-seen")) setOpening(false); }, []);
   const pick = (c: string) => { localStorage.setItem("psychic-case", c); setCode(c); };
-  const C = CASES[code]!;
+  const C = CASES[code] ?? CASES["001"];
+  if (!C) return null;
   if (opening) return <OpeningCredits activeCase={C} cases={Object.values(CASES)} onEnter={() => setOpening(false)} onChooseCase={(next) => { pick(next); sessionStorage.setItem("psychic-opening-seen", "true"); setOpening(false); }} />;
   return <CaseContext.Provider value={C}><Game key={code} C={C} onPickCase={pick} /></CaseContext.Provider>;
 }
@@ -149,8 +151,8 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
 
   return (
     <main className="flex min-h-dvh flex-col bg-background text-foreground lg:h-dvh lg:overflow-hidden">
-      <header className="flex min-h-14 items-center gap-3 border-b bg-panel px-4 lg:px-6">
-        <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-primary">Psychic Sleuth · You are the consultant</p><h1 className="truncate font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div>
+      <header className="flex min-h-14 flex-wrap items-center gap-2 border-b bg-panel px-4 pb-2 pt-3 lg:px-6">
+        <div className="min-w-0 basis-full pr-36 lg:pr-40"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth · You are the consultant</p><h1 className="truncate font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div>
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
         <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={localProgress} onSharedClues={mergeSharedClues} onSharedProgress={setSharedProgress} />
@@ -218,6 +220,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
           <Button variant="outline" className="h-12 flex-col gap-0.5 border-primary/60 text-[11px] text-primary sm:flex-row sm:text-sm" onClick={jane}><Lightbulb /> Intuition ({hints})</Button>
           <Button variant={readyToSolve ? "default" : "outline"} className={`h-12 flex-col gap-0.5 text-[11px] sm:flex-row sm:text-sm ${readyToSolve ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "border-destructive/50 text-muted-foreground"}`} onClick={() => setOverlay("accuse")}><Gavel /> Solve case</Button>
         </div>
+        <div className="mt-2 text-center"><Attribution /></div>
       </footer>
 
       {discovered && <div className="discover-pop fixed left-1/2 top-24 z-[70] w-[min(92vw,360px)] -translate-x-1/2 rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}
