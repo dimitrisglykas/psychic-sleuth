@@ -63,7 +63,7 @@
 - [x] Play the opening end to end and verify entering the case
 
 ## Responsive layout repair
-- [ ] Sweep remaining credits, briefing, hints, gallery, room chat, and fallback views
+- [x] Sweep remaining credits, briefing, hints, gallery, room chat, and fallback views
 - [x] Contain viewport overflow and use fluid app and header layouts
 - [x] Make evidence, scene controls, and overlays fit phones and short screens
 - [x] Verify both cases across phone, tablet, desktop, and translated layouts

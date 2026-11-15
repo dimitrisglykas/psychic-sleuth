@@ -12,7 +12,6 @@ export function CrimeScene({ found, onDiscover, onClose }: { found: ClueId[]; on
       <div className="relative overflow-hidden border-y">
         <img src={C.scene.image} alt={C.scene.alt} width={1920} height={1280} className="cinematic-scene aspect-[3/2] w-full object-cover" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/20" />
-        <div className="flex items-center gap-2 bg-panel px-4 py-3 text-[10px] font-semibold"><Sparkles className="size-3.5 shrink-0 text-primary" /> {C.scene.stamp}</div>
         {hotspots.map((h) => {
           const done = found.includes(h.clue);
           return (
@@ -22,6 +21,7 @@ export function CrimeScene({ found, onDiscover, onClose }: { found: ClueId[]; on
           );
         })}
       </div>
+      <div className="flex items-center gap-2 bg-panel px-4 py-3 text-[10px] font-semibold"><Sparkles className="size-3.5 shrink-0 text-primary" /> {C.scene.stamp}</div>
       <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
         {hotspots.map((h) => { const c = clueById(h.clue); const done = found.includes(h.clue); return <article key={h.id} className="min-w-0 rounded-sm border bg-panel-raised p-4 text-xs"><Button variant="outline" className="w-full justify-start gap-3 text-left" onClick={() => !done && onDiscover(h.clue)} aria-label={done ? `${h.label} (searched)` : `Search ${h.label}`}>{done ? <Check className="shrink-0 text-success" /> : <Search className="shrink-0 text-primary" />}<span className="min-w-0">{h.label}</span></Button>{done && <><p className="mt-3 font-semibold">{c.title}</p><p className="mt-1 text-muted-foreground"><Rich text={c.detail} /></p></>}</article>; })}
       </div>
