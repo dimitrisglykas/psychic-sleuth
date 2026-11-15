@@ -24,3 +24,5 @@
 - The series opening reads public metadata from the case registry and hands off through the existing case selector; this keeps episode continuity data-driven.
 - Interrogations use the server-only AI Gateway SDK with inline dialogue history and an AI UI stream adapter; saved provider IDs cannot break resumed conversations, and service errors retain their safe reasons.
 - The opening soundtrack is an original local instrumental, played only after a user gesture and stopped on skip or case entry; no protected theme or autoplay audio is used.
+- Player locale is selected before the opening and persisted separately from case progress; local public-text dictionaries translate shared screens, while the server applies locale to dialogue and metadata without translating IDs or private solutions.
+- Normalize long dash punctuation at the AI stream boundary and visible text boundary so restored dialogue and metadata follow the same copy rule without rewriting saved outcomes.

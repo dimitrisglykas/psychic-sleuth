@@ -14,6 +14,9 @@ export function translate(text: string, language: Language): string {
   if (!dictionary) return clean;
   const translated = dictionary[key];
   if (translated) return clean.replace(key, naturalText(translated));
+  for (const [source, value] of Object.entries(dictionary)) {
+    if (source.length > 12 && key.includes(source)) return clean.replace(source, value);
+  }
   // Match dynamic labels such as "Case 001" without translating names or IDs.
   return clean.replace(/\b(Case|CASE|Episode|Stress|Score|Inspect|Search|Questioning|Reconstructing|Intuition|Interview|Showing clue|Your motive|Your clues|Two key clues|clues? left|clue|clues|ACTIVE|OPEN|FREE|LOCKED)\b/g, (word) => dictionary[word] ?? word);
 }

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LANGUAGES, isLanguage, naturalText, translate, type Language } from "@/game/language";
+import { LANGUAGES, isLanguage, translate, type Language } from "@/game/language";
 
 const LanguageContext = createContext<Language>("en");
 export const useLanguage = () => useContext(LanguageContext);
@@ -46,7 +46,7 @@ function LocalizedSurface({ language, children }: { language: Language; children
       }
     };
     update(); const observer = new MutationObserver(update); observer.observe(element, { subtree: true, childList: true, characterData: true });
-    return () => { observer.disconnect(); for (const node of element.querySelectorAll("textarea")) node.value = naturalText(node.value); };
+    return () => { observer.disconnect(); };
   }, [language]);
   return <div ref={root} className="contents" lang={language}>{children}</div>;
 }
