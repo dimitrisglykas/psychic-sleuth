@@ -8,6 +8,8 @@ import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
 import { CaseLobby } from "@/components/game/lobby";
 import { OpeningCredits } from "@/components/game/opening";
+import { IntroSplash } from "@/components/game/intro-splash";
+import { FullscreenToggle } from "@/components/game/fullscreen-toggle";
 import { Attribution } from "@/components/game/attribution";
 import { LanguageGate, LanguageSwitcher, useLanguage } from "@/components/game/language";
 import { translate } from "@/game/language";
@@ -39,8 +41,7 @@ function MysteryGame() {
   const pick = (c: string) => { localStorage.setItem("psychic-case", c); setCode(c); };
   const C = CASES[code] ?? CASES["001"];
   if (!C) return null;
-  if (opening) return <OpeningCredits activeCase={C} cases={Object.values(CASES)} onEnter={() => setOpening(false)} onChooseCase={(next) => { pick(next); sessionStorage.setItem("psychic-opening-seen", "true"); setOpening(false); }} />;
-  return <CaseContext.Provider value={C}><Game key={code} C={C} onPickCase={pick} /></CaseContext.Provider>;
+  return <><IntroSplash />{opening ? <OpeningCredits activeCase={C} cases={Object.values(CASES)} onEnter={() => setOpening(false)} onChooseCase={(next) => { pick(next); sessionStorage.setItem("psychic-opening-seen", "true"); setOpening(false); }} /> : <CaseContext.Provider value={C}><Game key={code} C={C} onPickCase={pick} /></CaseContext.Provider>}</>;
 }
 
 function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => void }) {
@@ -150,11 +151,11 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   const reaction = stressOf(suspectId) >= 75 ? "Tension spike" : meta[suspectId]?.observation || (stressOf(suspectId) >= 50 ? "Guarded posture" : "Controlled");
 
   return (
-    <main className="game-shell mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col justify-between bg-background px-4 text-foreground sm:px-6 lg:px-8">
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-panel py-4">
-        <div className="min-w-0"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth · You are the consultant</p><h1 className="font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div><LanguageSwitcher />
-        <div className="col-span-2 grid grid-cols-3 items-center gap-3 sm:flex sm:flex-wrap">
-        <Timer startedAt={startedAt} pausedAt={calmSince} />
+    <main className="game-shell flex h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
+      <header className="game-hud grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-panel px-4 py-2">
+        <div className="min-w-0"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth<span className="hidden sm:inline"> · You are the consultant</span></p><h1 className="font-display text-lg sm:text-xl">Case {C.code}<span className="hidden sm:inline">: {C.title}</span></h1></div><div className="flex items-center gap-1"><LanguageSwitcher /><FullscreenToggle /></div>
+        <div className="col-span-2 flex flex-wrap items-center gap-2">
+        <div className="hidden sm:block"><Timer startedAt={startedAt} pausedAt={calmSince} /></div>
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
         <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={localProgress} onSharedClues={mergeSharedClues} onSharedProgress={setSharedProgress} />
         <Button variant="outline" size="sm" className="border-primary/60 text-primary" onClick={() => setOverlay("casefile")}><BookOpen /> Case</Button>
@@ -163,7 +164,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         </div>
       </header>
 
-      <div className="border-b bg-accent/40 px-4 py-3 lg:px-6">
+      <div className="game-goal shrink-0 border-b bg-accent/40 px-4 py-2 lg:px-6">
         <div className="mx-auto flex max-w-5xl items-center gap-3">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><Target className="size-4" /></span>
            <div className="min-w-0 flex-1"><p className="truncate text-[10px] text-muted-foreground"><span className="font-bold uppercase text-foreground">Mystery:</span> {C.tagline}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-[.18em] text-primary">Your next move</p><p className="text-sm font-semibold">{nextStep}</p><p className="hidden text-[11px] text-muted-foreground sm:block">{nextHint}</p></div>
@@ -172,11 +173,11 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <div className="mx-auto mt-2 flex max-w-5xl items-center gap-2"><div className="h-1 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><span className="font-mono text-[10px] text-muted-foreground">Case {progress}%</span></div>
       </div>
 
-      <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="game-workspace grid min-h-0 min-w-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] lg:overflow-hidden">
         {/* Left: suspect */}
         <aside className="min-h-0 border-b bg-panel lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <div className={`relative hidden aspect-[4/3] overflow-hidden lg:block ${stressOf(suspectId) >= 75 ? "tension-aura" : ""}`}><img src={suspect.image} alt={suspect.name} className="h-full w-full object-cover object-[center_28%] transition-transform duration-700 hover:scale-[1.02]" width={768} height={1024} /><div className="absolute inset-0 bg-gradient-to-t from-panel via-transparent to-background/10" /><div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-sm border bg-background/75 px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] backdrop-blur"><Activity className={`size-3.5 ${stressOf(suspectId) >= 75 ? "text-destructive" : "text-primary"}`} /> {reaction}</div><div className="absolute inset-x-0 bottom-0 p-4 pt-16"><p className="font-display text-2xl">{suspect.name}</p><p className="text-[10px] uppercase tracking-[.18em] text-primary">{suspect.role}</p></div></div>
-          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-1">
+          <div className="grid grid-cols-3 gap-2 p-2 lg:grid-cols-1 lg:gap-3 lg:p-4">
             {SUSPECT_IDS.map((id) => <Button variant="outline" key={id} onClick={() => switchSuspect(id)} className={`h-auto min-w-0 justify-start gap-3 whitespace-normal rounded-sm border p-3 text-left ${id === suspectId ? "border-primary bg-accent" : "opacity-70 hover:opacity-100"}`}>
               <img src={suspects[id]!.image} alt="" className="size-11 shrink-0 rounded-sm object-cover object-top" width={768} height={1024} loading="lazy" />
               <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold">{suspects[id]!.short}</span><StressBar value={stressOf(id)} thin /></span>
@@ -193,7 +194,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         <Interrogation key={suspectId} suspectId={suspectId} stress={stressOf(suspectId)} injected={injected} onMeta={updateMeta}
           onCount={(n) => setCounts((c) => (c[suspectId] === n ? c : { ...c, [suspectId]: n }))}
           header={<div className="flex items-center justify-between border-b px-4 py-2.5"><p className="text-xs"><span className="font-semibold">{suspectId === "victim" ? "Reconstructing" : "Questioning"} {suspect.name}</span> <span className="text-muted-foreground lg:hidden">· stress {stressOf(suspectId)}%</span></p><p className="flex items-center gap-1 text-[10px] text-success"><span className="size-1.5 rounded-full bg-success" /> Recording</p></div>}
-          clueStrip={<div className="mx-auto mb-2 grid min-w-0 max-w-2xl grid-cols-1 gap-3 pb-1 pt-4 sm:grid-cols-2 lg:hidden">{clueButtons(true)}<Button variant="outline" onClick={() => setOverlay("scene")} className="h-auto min-h-11 whitespace-normal border-dashed border-primary/60 p-3 text-xs text-primary"><Search className="size-4" /> Crime scene</Button></div>}
+          clueStrip={<div className="mx-auto mb-2 grid max-h-32 min-w-0 max-w-2xl grid-cols-2 gap-2 overflow-y-auto pb-1 pt-2 lg:hidden">{clueButtons(true)}<Button variant="outline" onClick={() => setOverlay("scene")} className="h-auto min-h-11 whitespace-normal border-dashed border-primary/60 p-3 text-xs text-primary"><Search className="size-4" /> Crime scene</Button></div>}
         />
 
         {/* Right: clues & actions */}
@@ -216,13 +217,12 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
         </aside>
       </div>
 
-      <footer className="border-t bg-panel/95 p-4 backdrop-blur sm:p-6">
-        <div className="mx-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
+      <footer className="game-actions shrink-0 border-t bg-panel/95 px-3 py-2 backdrop-blur">
+        <div className="mx-auto grid max-w-2xl grid-cols-3 gap-2">
           <Button variant="outline" className="h-12 flex-col gap-0.5 text-[11px] sm:flex-row sm:text-sm" onClick={() => window.dispatchEvent(new Event("focus-question"))}><MessageSquareQuote /> Ask question</Button>
           <Button variant="outline" className="h-12 flex-col gap-0.5 border-primary/60 text-[11px] text-primary sm:flex-row sm:text-sm" onClick={jane}><Lightbulb /> Intuition ({hints})</Button>
           <Button variant={readyToSolve ? "default" : "outline"} className={`h-12 flex-col gap-0.5 text-[11px] sm:flex-row sm:text-sm ${readyToSolve ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "border-destructive/50 text-muted-foreground"}`} onClick={() => setOverlay("accuse")}><Gavel /> Solve case</Button>
         </div>
-        <div className="mt-2 text-center"><Attribution /></div>
       </footer>
 
       {discovered && <div className="discover-pop relative mx-auto w-full max-w-xl rounded-md border border-primary bg-panel-raised p-4 shadow-2xl"><Eyebrow>New evidence</Eyebrow><p className="mt-1 flex items-center gap-2 font-display text-xl">{(() => { const C = clueById(discovered).icon; return <C className="size-5 text-primary" />; })()}{clueById(discovered).title}</p><p className="mt-1 text-xs text-muted-foreground"><Rich text={clueById(discovered).detail} /></p></div>}

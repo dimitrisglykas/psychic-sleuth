@@ -9,6 +9,7 @@ import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea,
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { clueOf, useCase, type ClueId, type PersonId } from "@/game/case";
 import { interrogationFetch } from "@/lib/chat-transport";
+import { restoredDialogue } from "@/lib/chat-history";
 import { useLanguage } from "./language";
 import { naturalText, translate } from "@/game/language";
 
@@ -37,7 +38,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   onMeta: (m: Meta) => void; onCount: (n: number) => void; header?: ReactNode; clueStrip?: ReactNode;
 }) {
   const C = useCase(); const language = useLanguage(); const K = C.storageKey; const clueById = (id: ClueId) => clueOf(C, id);
-  const suspect = C.people[suspectId]!;
+  const suspect = C.people[suspectId];
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
   const [press, setPress] = useState(false);
@@ -47,12 +48,13 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   const [clueId, setClueId] = useState<ClueId | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat", fetch: interrogationFetch }), []);
-  const { messages, sendMessage, status, stop, error, setMessages } = useChat({ id: `${K}-${suspectId}`, transport, onFinish: () => inputRef.current?.focus() });
+  const requestBody = useRef<Record<string, unknown>>({});
+  const { messages, sendMessage, regenerate, status, stop, error, setMessages } = useChat({ id: `${K}-${suspectId}`, transport, onFinish: () => inputRef.current?.focus() });
   const busy = status === "submitted" || status === "streaming";
   const cb = useRef({ onMeta, onCount }); cb.current = { onMeta, onCount };
 
-  useEffect(() => { const saved = localStorage.getItem(`${K}-chat-${suspectId}`); if (saved) { try { setMessages(JSON.parse(saved) as UIMessage[]); } catch { localStorage.removeItem(`${K}-chat-${suspectId}`); } } setStorageReady(true); }, [setMessages, suspectId]);
-  useEffect(() => { if (storageReady && !busy) localStorage.setItem(`${K}-chat-${suspectId}`, JSON.stringify(messages)); }, [messages, busy, storageReady, suspectId]);
+  useEffect(() => { try { const saved = localStorage.getItem(`${K}-chat-${suspectId}`); if (saved) setMessages(restoredDialogue(JSON.parse(saved))); } catch { /* Invalid saves never prevent a fresh interview. */ } setStorageReady(true); }, [K, setMessages, suspectId]);
+  useEffect(() => { if (storageReady && !busy) { try { localStorage.setItem(`${K}-chat-${suspectId}`, JSON.stringify(messages)); } catch { /* Storage restrictions must not interrupt live replies. */ } } }, [K, messages, busy, storageReady, suspectId]);
   useEffect(() => { if (storageReady) cb.current.onCount(messages.filter((m) => m.role === "user").length); }, [messages, storageReady]);
   useEffect(() => {
     if (busy) return;
@@ -65,14 +67,16 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   useEffect(() => { const f = () => inputRef.current?.focus(); window.addEventListener("focus-question", f); return () => window.removeEventListener("focus-question", f); }, []);
 
   const submit = (text: string, action?: Action) => {
-    if (!text.trim() || busy) return;
+    if (!text.trim() || busy || !storageReady) return;
     const c = clueId ? clueById(clueId) : null;
     const tag = action ? `[${ACTIONS[action].tag}] ` : press ? "[PRESSING] " : "";
-    void sendMessage({ text: naturalText(`${tag}${text.trim()}`) }, { body: { caseCode: C.code, language, suspectId, press, stress, action: action ?? null, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null } });
+    requestBody.current = { caseCode: C.code, language, suspectId, press, stress, action: action ?? null, evidence: c ? { title: c.title, detail: c.detail.replace(/\*\*/g, "") } : null };
+    void sendMessage({ text: naturalText(`${tag}${text.trim()}`) }, { body: requestBody.current });
     if (action === "coldread") { setColdReadVisual(true); window.setTimeout(() => setColdReadVisual(false), 2400); }
     if (!action) { setInput(""); setClueId(null); }
     setTrapOpen(false); inputRef.current?.focus();
   };
+  if (!suspect) return null;
   const visible = messages.length ? messages : [{ id: "opening", role: "assistant", parts: [{ type: "text", text: suspect.opener }] } as UIMessage];
 
   return (
@@ -99,7 +103,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
             );
           })}
           {status === "submitted" && <div className="text-xs"><Shimmer>{`${suspect.short} weighs the question…`}</Shimmer></div>}
-          {error && <p className="rounded-sm border border-destructive/50 bg-destructive/10 p-3 text-xs text-destructive">{error.message}</p>}
+          {error && <div role="alert" className="rounded-sm border border-destructive/50 bg-destructive/10 p-3 text-xs text-destructive"><p>{error.message}</p><Button type="button" size="sm" variant="outline" className="mt-2" disabled={busy} onClick={() => void regenerate({ body: { caseCode: C.code, language, suspectId, press, stress, ...requestBody.current } })}>Retry reply</Button></div>}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>

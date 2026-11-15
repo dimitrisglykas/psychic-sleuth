@@ -1,5 +1,12 @@
 # Psychic Sleuth roadmap
 
+## Current conversation and branding repair
+- [x] Make active gameplay edge-to-edge with safe internal scrolling and a native fullscreen toggle
+- [x] Add standalone phone installation metadata and matching game icons without offline caching
+- [x] Add a lightweight first-load 3D animated intro without blocking game loading
+- [x] Harden saved suspect conversations and retry recovery; verify every persona and resumed dialogue
+- [x] Replace template branding and browser tab icon with the game mark and hide the published badge
+
 ## Stage 1 — redesign + full game loop
 - [x] Single-screen layout (portrait left, chat center, clues/actions right), no sidebar
 - [x] Case Goal bar with live objective + progress

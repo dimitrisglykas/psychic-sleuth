@@ -28,3 +28,7 @@
 - The opening defaults to its playable title screen with a case-data-driven evidence preview; credits and gesture-triggered music are opt-in so first entry never waits on a sequence.
 - Normalize long dash punctuation at the AI stream boundary and visible text boundary so restored dialogue and metadata follow the same copy rule without rewriting saved outcomes.
 - Use fluid document-flow app layouts and grid-based headers with inline language controls; scroll overlays from the top and offer scene hotspot controls in a wrapping grid so narrow or short viewports never hide required actions.
+- Load the first-visit 3D eye through a browser-only dynamic Three.js import, cap rendering resolution, and dispose all resources after its brief skippable display; game loading must never await graphics.
+- Serve SVG, raster, and touch favicons derived from the same game eye mark; template metadata and icons must not compete with game branding.
+- Active gameplay fills the dynamic viewport with safe-area HUD and actions plus an internally scrolling workspace; preserve access to the composer on small or keyboard-constrained screens.
+- Phone installation uses a manifest and game icons only, without service workers or offline caching; native fullscreen is offered only when the browser supports it.
