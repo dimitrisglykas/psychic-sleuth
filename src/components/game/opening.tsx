@@ -1,4 +1,4 @@
-import { ArrowRight, Eye, FastForward, Files, Play, RotateCcw, Search, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowRight, Eye, FastForward, Files, Play, Search, Volume2, VolumeX, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { CaseData } from "@/game/case";
@@ -86,7 +86,7 @@ export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: Ope
       {audioError && <p role="alert" className="absolute left-4 top-16 z-20 text-xs text-foreground">{audioError}</p>}
       {!titleReady ? (
         <>
-          <Button variant="ghost" size="sm" className="absolute right-4 top-4 z-20" onClick={skip}>
+          <Button variant="ghost" size="sm" className="absolute right-40 top-16 z-20 sm:top-4" onClick={skip}>
             <FastForward /> Skip opening
           </Button>
           {phase === "credits" ? <div className="opening-roll-window absolute inset-x-0 bottom-12 top-24 z-10 overflow-hidden px-6 text-center" aria-label="Opening credits roll"><div className="opening-roll"><p className="mb-10 font-display text-4xl text-primary sm:text-6xl">Psychic Sleuth</p>{credits.map((credit) => <div key={credit.role} className="mb-10"><p className="text-[10px] font-bold uppercase text-primary">{credit.role}</p><p className="mx-auto mt-2 max-w-lg font-display text-2xl sm:text-3xl">{credit.name}</p></div>)}<p className="text-xs text-muted-foreground">An original interactive mystery</p></div></div> : <div className="relative z-10 flex h-full items-center px-6 sm:px-12 lg:px-24">

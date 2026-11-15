@@ -1,13 +1,14 @@
 import el from "./locales/el.json";
 import es from "./locales/es.json";
 import fr from "./locales/fr.json";
+import { entryTranslations } from "./locales/entry";
 
 export const LANGUAGES = { en: "English", el: "Ελληνικά", es: "Español", fr: "Français" };
 export type Language = keyof typeof LANGUAGES;
 export const isLanguage = (value: unknown): value is Language => typeof value === "string" && value in LANGUAGES;
 export const initialLanguage = (saved: unknown): Language => isLanguage(saved) ? saved : "en";
 export const naturalText = (text: string) => text.replace(/[\u2013\u2014\u2015]/g, ",");
-const dictionaries: Record<string, Record<string, string>> = { el, es, fr };
+const dictionaries: Record<string, Record<string, string>> = { el: { ...el, ...entryTranslations.el }, es: { ...es, ...entryTranslations.es }, fr: { ...fr, ...entryTranslations.fr } };
 export function translate(text: string, language: Language): string {
   const clean = naturalText(text);
   const key = clean.replace(/\s+/g, " ").trim();

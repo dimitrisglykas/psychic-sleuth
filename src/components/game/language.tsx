@@ -19,10 +19,12 @@ export function LanguageGate({ children }: { children: ReactNode }) {
 // leaving React's canonical case data, player drafts, and saved outcomes intact.
 function LocalizedSurface({ language, children }: { language: Language; children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
+  const sourceTexts = useRef(new WeakMap<Text, { source: string; rendered: string }>());
+  const sourceAttrs = useRef(new WeakMap<Element, Map<string, { source: string; rendered: string }>>());
   useEffect(() => {
     const element = root.current; if (!element) return;
-    const sources = new WeakMap<Text, { source: string; rendered: string }>();
-    const attrs = new WeakMap<Element, Map<string, { source: string; rendered: string }>>();
+    const sources = sourceTexts.current;
+    const attrs = sourceAttrs.current;
     const update = () => {
       const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
       while (walker.nextNode()) {
