@@ -153,8 +153,8 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   return (
     <main className="game-shell flex h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
       <header className="game-hud grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-panel px-4 py-2">
-        <div className="min-w-0"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth · You are the consultant</p><h1 className="font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div><div className="flex items-center gap-1"><LanguageSwitcher /><FullscreenToggle /></div>
-        <div className="col-span-2 grid grid-cols-3 items-center gap-3 sm:flex sm:flex-wrap">
+        <div className="min-w-0"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth<span className="hidden sm:inline"> · You are the consultant</span></p><h1 className="font-display text-lg sm:text-xl">Case {C.code}<span className="hidden sm:inline">: {C.title}</span></h1></div><div className="flex items-center gap-1"><LanguageSwitcher /><FullscreenToggle /></div>
+        <div className="col-span-2 flex flex-wrap items-center gap-2">
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
         <CaseLobby caseCode={C.code} storageKey={K} clues={found} progress={localProgress} onSharedClues={mergeSharedClues} onSharedProgress={setSharedProgress} />
