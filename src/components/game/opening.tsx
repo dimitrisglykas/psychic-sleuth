@@ -90,7 +90,7 @@ export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: Ope
           <p className="absolute bottom-6 left-6 z-10 text-[9px] font-bold uppercase tracking-[.24em] text-foreground/55 sm:left-12">An original interactive mystery</p>
         </>
       ) : (
-        <div className="opening-title relative z-10 flex h-full flex-col justify-end p-5 sm:justify-center sm:p-12 lg:p-24">
+        <div className="opening-title relative z-10 flex h-full flex-col justify-start p-5 sm:justify-center sm:p-12 lg:p-24">
           <div className="max-w-2xl">
             <div className="mb-5 flex items-center gap-3 text-primary"><span className="grid size-11 place-items-center rounded-full border border-primary/60 bg-background/50 backdrop-blur"><Eye className="size-5" /></span><span className="h-px w-20 bg-primary/60" /></div>
             <p className="text-[10px] font-bold uppercase tracking-[.3em] text-primary">An original mystery series</p>

@@ -4,6 +4,7 @@ import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
+import { Route as rootRoute } from "@/routes/__root";
 
 function renderAt(path: string) {
   const queryClient = new QueryClient();
@@ -13,7 +14,7 @@ function renderAt(path: string) {
     history: createMemoryHistory({ initialEntries: [path] }),
   });
   // TanStack's document shell mounts <html>; isolate the shell in unit tests.
-  routeTree.options.shellComponent = ({ children }) => <>{children}</>;
+  rootRoute.options.shellComponent = ({ children }) => <>{children}</>;
   return render(<RouterProvider router={router} />);
 }
 
