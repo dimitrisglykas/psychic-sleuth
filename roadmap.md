@@ -56,3 +56,8 @@
 - [x] Add an original cinematic opening credits sequence and title screen
 - [x] Connect a solved episode directly to the next playable case
 - [x] Remove oversized dash punctuation from all player-facing text
+
+## Message repair and expanded opening
+- [ ] Diagnose suspect message failures, preserve saved conversations, and verify replies
+- [ ] Add a title card, rolling credits, and an original full opening theme
+- [ ] Play the opening end to end and verify entering the case
