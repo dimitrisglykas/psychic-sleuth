@@ -8,6 +8,7 @@ import { Interrogation, type Meta } from "@/components/game/interrogation";
 import { Desk } from "@/components/game/desk";
 import { CaseLobby } from "@/components/game/lobby";
 import { OpeningCredits } from "@/components/game/opening";
+import { IntroSplash } from "@/components/game/intro-splash";
 import { Attribution } from "@/components/game/attribution";
 import { LanguageGate, LanguageSwitcher, useLanguage } from "@/components/game/language";
 import { translate } from "@/game/language";
@@ -39,8 +40,7 @@ function MysteryGame() {
   const pick = (c: string) => { localStorage.setItem("psychic-case", c); setCode(c); };
   const C = CASES[code] ?? CASES["001"];
   if (!C) return null;
-  if (opening) return <OpeningCredits activeCase={C} cases={Object.values(CASES)} onEnter={() => setOpening(false)} onChooseCase={(next) => { pick(next); sessionStorage.setItem("psychic-opening-seen", "true"); setOpening(false); }} />;
-  return <CaseContext.Provider value={C}><Game key={code} C={C} onPickCase={pick} /></CaseContext.Provider>;
+  return <><IntroSplash />{opening ? <OpeningCredits activeCase={C} cases={Object.values(CASES)} onEnter={() => setOpening(false)} onChooseCase={(next) => { pick(next); sessionStorage.setItem("psychic-opening-seen", "true"); setOpening(false); }} /> : <CaseContext.Provider value={C}><Game key={code} C={C} onPickCase={pick} /></CaseContext.Provider>}</>;
 }
 
 function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => void }) {

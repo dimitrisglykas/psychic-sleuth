@@ -141,6 +141,9 @@
 .game-shell [data-streamdown] { overflow-wrap: anywhere; }
 .game-overlay :where(.grid > *, .flex > *) { min-width: 0; }
 .discover-pop { max-height: calc(100dvh - 7rem); overflow-y: auto; overflow-wrap: anywhere; }
+.intro-splash { animation: intro-splash-exit 2s ease both; }
+.intro-splash canvas { display: block; width: 100%; height: 100%; }
+@keyframes intro-splash-exit { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
   .opening-frame-active, .opening-credit, .opening-title, .opening-shutter, .opening-roll { animation: none !important; }
