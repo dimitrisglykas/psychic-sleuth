@@ -129,6 +129,8 @@
 .opening-stage .opening-title { overflow-y: auto; padding-top: 5rem; }
 .opening-title { animation: opening-title .8s ease both; }
 .opening-shutter { background-image: linear-gradient(90deg, transparent 0 47%, color-mix(in oklch, var(--color-primary) 12%, transparent) 50%, transparent 53%); animation: opening-shutter 3s ease-in-out infinite; }
+.landing-title { animation: opening-title .6s ease both; }
+.landing-title h1 { max-width: 100%; overflow-wrap: anywhere; }
 
 @media (prefers-reduced-motion: reduce) {
   .opening-frame-active, .opening-credit, .opening-title, .opening-shutter, .opening-roll { animation: none !important; }

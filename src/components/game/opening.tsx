@@ -1,7 +1,10 @@
-import { Eye, FastForward, Files, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { ArrowRight, Eye, FastForward, Files, Play, Search, Volume2, VolumeX, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { CaseData } from "@/game/case";
+import { Attribution } from "./attribution";
+import { useLanguage } from "./language";
+import { translate } from "@/game/language";
 
 type OpeningProps = {
   activeCase: CaseData;
@@ -18,8 +21,12 @@ const beats = [
 
 export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: OpeningProps) {
   const [beat, setBeat] = useState(0);
-  const [phase, setPhase] = useState<"intro" | "credits" | "title">("intro");
-  const [titleReady, setTitleReady] = useState(false);
+  const [phase, setPhase] = useState<"intro" | "credits" | "title">("title");
+  const [titleReady, setTitleReady] = useState(true);
+  const [inspecting, setInspecting] = useState(false);
+  const language = useLanguage();
+  const t = (text: string) => translate(text, language);
+  const firstClue = activeCase.clues.find((clue) => clue.id === activeCase.guide.clue);
   const [showCases, setShowCases] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [replay, setReplay] = useState(0);
@@ -28,6 +35,7 @@ export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: Ope
   const caseImages = useMemo(() => cases.flatMap((item) => [item.scene.image, ...item.suspectIds.map((id) => item.suspects[id]?.image).filter((image): image is string => Boolean(image))]), [cases]);
 
   useEffect(() => {
+    if (replay === 0) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setTitleReady(true); setPhase("title");
       return;
@@ -53,7 +61,7 @@ export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: Ope
   const credits = [{ role: "Consulting investigator", name: "Patrick Jane" }, { role: "Case liaison", name: "Teresa Lisbon" }, ...cases.map((item) => ({ role: `Episode ${item.code}`, name: item.title })), { role: "Original score", name: "The Moment Before the Lie" }, { role: "Lead detective", name: "You" }];
 
   return (
-    <main className="opening-stage fixed inset-0 z-[100] overflow-hidden bg-background text-foreground" aria-label="Psychic Sleuth opening">
+    <main className="opening-stage fixed inset-0 z-[100] overflow-y-auto bg-background text-foreground" aria-label="Psychic Sleuth opening">
       <audio ref={audioRef} src="/audio/psychic-sleuth-theme.mp3" preload="auto" onEnded={() => setPlaying(false)} />
       <div className="absolute inset-0">
         {caseImages.slice(0, 6).map((image, index) => (
@@ -61,23 +69,24 @@ export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: Ope
             key={image}
             src={image}
             alt=""
-            className={`opening-frame absolute inset-0 h-full w-full object-cover ${index === (phase === "credits" ? 3 : beat) ? "opening-frame-active" : ""}`}
+            className={`opening-frame absolute inset-0 h-full w-full object-cover ${!titleReady && index === (phase === "credits" ? 3 : beat) ? "opening-frame-active" : ""}`}
             width={1280}
             height={720}
           />
         ))}
+        {titleReady && <img src={activeCase.scene.image} alt={activeCase.scene.alt} className="absolute inset-0 h-full w-full object-cover" width={1920} height={1280} />}
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50" />
         <div className="opening-shutter absolute inset-0" />
       </div>
 
-      <div className="absolute left-4 top-4 z-20 flex items-center gap-2">
+      <div className={`absolute left-4 top-4 z-20 flex items-center gap-2 ${titleReady ? "hidden" : ""}`}>
         <Button variant="outline" size="sm" onClick={() => playing ? silence() : replayOpening()} aria-label={playing ? "Mute opening theme" : "Play opening with sound"}>{playing ? <Volume2 /> : <VolumeX />} {playing ? "Sound on" : "Play with sound"}</Button>
       </div>
       {audioError && <p role="alert" className="absolute left-4 top-16 z-20 text-xs text-foreground">{audioError}</p>}
       {!titleReady ? (
         <>
-          <Button variant="ghost" size="sm" className="absolute right-4 top-4 z-20" onClick={skip}>
+          <Button variant="ghost" size="sm" className="absolute right-40 top-16 z-20 sm:top-4" onClick={skip}>
             <FastForward /> Skip opening
           </Button>
           {phase === "credits" ? <div className="opening-roll-window absolute inset-x-0 bottom-12 top-24 z-10 overflow-hidden px-6 text-center" aria-label="Opening credits roll"><div className="opening-roll"><p className="mb-10 font-display text-4xl text-primary sm:text-6xl">Psychic Sleuth</p>{credits.map((credit) => <div key={credit.role} className="mb-10"><p className="text-[10px] font-bold uppercase text-primary">{credit.role}</p><p className="mx-auto mt-2 max-w-lg font-display text-2xl sm:text-3xl">{credit.name}</p></div>)}<p className="text-xs text-muted-foreground">An original interactive mystery</p></div></div> : <div className="relative z-10 flex h-full items-center px-6 sm:px-12 lg:px-24">
@@ -90,22 +99,27 @@ export function OpeningCredits({ activeCase, cases, onEnter, onChooseCase }: Ope
           <p className="absolute bottom-6 left-6 z-10 text-[9px] font-bold uppercase tracking-[.24em] text-foreground/55 sm:left-12">An original interactive mystery</p>
         </>
       ) : (
-        <div className="opening-title relative z-10 flex h-full flex-col justify-start p-5 sm:justify-center sm:p-12 lg:p-24">
-          <div className="max-w-2xl">
-            <div className="mb-5 flex items-center gap-3 text-primary"><span className="grid size-11 place-items-center rounded-full border border-primary/60 bg-background/50 backdrop-blur"><Eye className="size-5" /></span><span className="h-px w-20 bg-primary/60" /></div>
-            <p className="text-[10px] font-bold uppercase tracking-[.3em] text-primary">An original mystery series</p>
-            <h1 className="mt-2 font-display text-6xl leading-[.88] sm:text-8xl lg:text-9xl">Psychic<br /><span className="text-primary">Sleuth</span></h1>
-            <p className="mt-5 max-w-lg font-display text-lg italic text-foreground/75 sm:text-xl">The truth always moves before the lie is spoken.</p>
-            <div className="mt-8 flex flex-col gap-2 sm:flex-row">
-              <Button className="h-12 px-6 text-base" onClick={enter}><Play /> Enter Case {activeCase.code}</Button>
-              <Button variant="outline" className="h-12 px-6" onClick={() => setShowCases((value) => !value)}><Files /> Case files</Button>
+        <div className="landing-title relative z-10 flex min-h-dvh flex-col">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/50 px-5 pr-40 sm:px-10 sm:pr-44"><Eye className="size-5 shrink-0 text-primary" /><span className="font-display text-lg">Psychic Sleuth</span></header>
+          <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 py-8 sm:px-10 sm:py-16">
+            <p className="flex items-center gap-2 text-[10px] font-semibold uppercase text-primary"><span className="h-px w-8 bg-primary" />{t("An original mystery series")}</p>
+            <h1 className="mt-3 font-display text-6xl leading-[.95] sm:text-8xl">Psychic <span className="text-primary">Sleuth</span></h1>
+            <p className="mt-4 max-w-lg text-sm leading-6 text-foreground/85 sm:text-base">{t("Read the scene. Question the suspects. Catch the lie that solves the murder.")}</p>
+            <div className="mt-6 flex flex-wrap gap-3"><Button className="h-12 px-5 text-sm" onClick={enter}><ArrowRight />{t("Start Investigation")}</Button><Button variant="outline" className="h-12 bg-background/40" onClick={() => setShowCases((value) => !value)}><Files />{t("Case files")}</Button></div>
+            {showCases && <div className="mt-4 grid max-w-xl gap-2 sm:grid-cols-2">{cases.map((item) => <Button key={item.code} variant={item.code === activeCase.code ? "secondary" : "outline"} className="h-auto justify-start whitespace-normal px-3 py-3 text-left" onClick={() => { silence(); if (item.code === activeCase.code) enter(); else onChooseCase(item.code); }}><span><span className="block text-[10px] text-primary">{t("Case")} {item.code}</span><span className="block text-xs">{t(item.title)}</span></span></Button>)}</div>}
+            <div className="mt-8 max-w-xl border-t border-primary/40 pt-5 sm:mt-12">
+              <p className="text-[10px] uppercase text-primary">{t("Case")} {activeCase.code} · {t("Your first clue")}</p>
+              <h2 className="mt-1 font-display text-xl sm:text-2xl">{t(activeCase.title)}</h2>
+              <p className="mt-1 text-xs leading-5 text-foreground/75">{t(activeCase.tagline)}</p>
+              {firstClue && <article className="mt-4 flex overflow-hidden rounded-sm border border-border/80 bg-panel/90 backdrop-blur">
+                <div className={`evidence-slot-${firstClue.visualSlot} relative w-28 shrink-0 overflow-hidden bg-muted sm:w-40`}><img src={activeCase.scene.evidenceImage} alt={t(firstClue.title)} className="evidence-sheet max-w-none" width={1600} height={1008} /></div>
+                <div className="min-w-0 flex-1 p-3 sm:p-4"><p className="font-display text-lg">{t(firstClue.title)}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{t(firstClue.detail).replace(/\*\*/g, "")}</p><Button size="sm" variant="ghost" className="mt-2 h-8 px-0 text-primary" onClick={() => setInspecting(true)}><Search />{t("Inspect")}</Button></div>
+              </article>}
             </div>
-            <Button variant="ghost" size="sm" className="mt-3" onClick={replayOpening}><RotateCcw /> Replay opening</Button>
-            {showCases && <div className="mt-3 grid max-w-xl gap-2 sm:grid-cols-2">{cases.map((item) => <Button key={item.code} variant={item.code === activeCase.code ? "secondary" : "outline"} className="h-auto justify-start px-3 py-2 text-left" onClick={() => { silence(); if (item.code === activeCase.code) enter(); else onChooseCase(item.code); }}><span><span className="block text-[9px] uppercase tracking-[.16em] text-primary">Case {item.code}</span><span className="block text-xs">{item.title}</span></span></Button>)}</div>}
-            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 border-t border-border/70 pt-4 text-[10px] uppercase tracking-[.16em] text-muted-foreground">
-              <span>Episode {activeCase.code}</span><span>{activeCase.title}</span><span>{activeCase.scene.stamp}</span>
-            </div>
-          </div>
+            <Button variant="ghost" size="sm" className="mt-4 w-fit px-0 text-xs text-muted-foreground" onClick={replayOpening}><Play className="size-3" />{t("Watch opening")}</Button>
+          </section>
+          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 bg-background/70 px-5 py-4 sm:px-10"><span className="text-[10px] text-muted-foreground">Psychic Sleuth · {t("An original interactive mystery")}</span><Attribution /></footer>
+          {inspecting && firstClue && <div className="fixed inset-0 z-30 grid place-items-center overflow-y-auto bg-background/95 p-5" role="dialog" aria-modal="true" aria-label={t(firstClue.title)}><div className="w-full max-w-xl"><div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-display text-2xl">{t(firstClue.title)}</h2><Button size="icon" variant="outline" aria-label={t("Close")} onClick={() => setInspecting(false)}><X /></Button></div><div className={`evidence-slot-${firstClue.visualSlot} relative aspect-[4/3] overflow-hidden rounded-sm border`}><img src={activeCase.scene.evidenceImage} alt={t(firstClue.title)} className="evidence-sheet evidence-sheet-large max-w-none" width={1600} height={1008} /></div><p className="mt-4 text-sm leading-6">{t(firstClue.detail).replace(/\*\*/g, "")}</p><Button className="mt-5 w-full" onClick={enter}><ArrowRight />{t("Start Investigation")}</Button></div></div>}
         </div>
       )}
     </main>
