@@ -44,7 +44,7 @@ export function CaseLobby({ caseCode, storageKey, clues, progress, onSharedClues
     finally { setSending(false); }
   };
   return <>
-    <Button variant="ghost" size="sm" onClick={() => setOpen(true)}><Users /> <span className="hidden sm:inline">{credentials ? `${state?.members.length ?? 1} in room` : "Play together"}</span>{credentials && <span className="size-1.5 rounded-full bg-success" />}</Button>
+    <Button variant="ghost" size="sm" className="min-h-11" aria-label="Case room" onClick={() => setOpen(true)}><Users /> <span className="hidden sm:inline">{credentials ? `${state?.members.length ?? 1} in room` : "Play together"}</span>{credentials && <span className="size-1.5 rounded-full bg-success" />}</Button>
     {open && <Overlay label="Case room" onClose={() => setOpen(false)} className="max-w-2xl">
       {credentials ? <><Eyebrow>Live case room</Eyebrow><h2 className="font-display text-2xl">Investigate together</h2><p className="mt-1 text-sm text-muted-foreground">Clues and the final result are shared. Interviews, stress, notes, and intuition stay private.</p>
         <div className="mt-4 rounded-sm border border-primary/40 bg-accent/50 p-4"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">Invite code</p><div className="mt-1 flex items-center gap-2"><strong className="flex-1 font-mono text-xl tracking-[.18em]">{credentials.inviteCode}</strong><Button size="icon" variant="outline" onClick={() => navigator.clipboard.writeText(credentials.inviteCode)} aria-label="Copy invite code"><Copy /></Button></div></div>

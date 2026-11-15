@@ -9,7 +9,7 @@ import { Desk } from "@/components/game/desk";
 import { CaseLobby } from "@/components/game/lobby";
 import { OpeningCredits } from "@/components/game/opening";
 import { Attribution } from "@/components/game/attribution";
-import { LanguageGate, useLanguage } from "@/components/game/language";
+import { LanguageGate, LanguageSwitcher, useLanguage } from "@/components/game/language";
 import { translate } from "@/game/language";
 import { Cases, HintShop, HowToPlay, Intuition, SeasonPass } from "@/components/game/overlays";
 import { Eyebrow, Overlay, Rich, StressBar, stressLabel } from "@/components/game/ui";
@@ -152,7 +152,7 @@ function Game({ C, onPickCase }: { C: CaseData; onPickCase: (code: string) => vo
   return (
     <main className="game-shell mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col justify-between bg-background px-4 text-foreground sm:px-6 lg:px-8">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-panel py-4">
-        <div className="col-span-2 min-w-0 pr-36"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth · You are the consultant</p><h1 className="font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div>
+        <div className="min-w-0"><p className="text-[10px] font-semibold uppercase text-primary">Psychic Sleuth · You are the consultant</p><h1 className="font-display text-lg sm:text-xl">Case {C.code}: {C.title}</h1></div><LanguageSwitcher />
         <div className="col-span-2 grid grid-cols-3 items-center gap-3 sm:flex sm:flex-wrap">
         <Timer startedAt={startedAt} pausedAt={calmSince} />
         <Button variant="ghost" size="icon" onClick={sipTea} aria-label="Sip tea" title="Sip tea"><Coffee className="text-primary" /></Button>
