@@ -8,6 +8,7 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea, PromptInputTools } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { clueOf, useCase, type ClueId, type PersonId } from "@/game/case";
+import { interrogationFetch } from "@/lib/chat-transport";
 
 export type Meta = { stress: number; observation: string; tell: string; jane?: string | undefined };
 export type Action = "coldread" | "bluff" | "detail" | "blink";
@@ -43,7 +44,7 @@ export function Interrogation({ suspectId, stress, injected, onMeta, onCount, he
   const [coldReadVisual, setColdReadVisual] = useState(false);
   const [clueId, setClueId] = useState<ClueId | null>(null);
   const [storageReady, setStorageReady] = useState(false);
-  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
+  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat", fetch: interrogationFetch }), []);
   const { messages, sendMessage, status, stop, error, setMessages } = useChat({ id: `${K}-${suspectId}`, transport, onFinish: () => inputRef.current?.focus() });
   const busy = status === "submitted" || status === "streaming";
   const cb = useRef({ onMeta, onCount }); cb.current = { onMeta, onCount };

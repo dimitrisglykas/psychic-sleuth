@@ -1,6 +1,6 @@
-import { createOpenAI } from "@ai-sdk/openai";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import { attachRunId, createRunIdFetch, requestRunId } from "./run-id.server";
+import { GatewayError, streamResponse } from "@lovable.dev/ai-gateway";
+import { createUIMessageStream, createUIMessageStreamResponse, type UIMessage } from "ai";
+import { dialogueHistory } from "./chat-history";
 
 type Body = {
   messages?: UIMessage[];
@@ -13,8 +13,6 @@ type Body = {
 };
 
 export async function handleMysteryChat(request: Request) {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) return Response.json({ message: "The interrogation service is not configured." }, { status: 401 });
   const payload = (await request.json()) as Body;
   const caseCode = payload.caseCode === "002" ? "002" : "001";
   if (!Array.isArray(payload.messages) || typeof payload.suspectId !== "string") {
@@ -50,20 +48,51 @@ Then, on a new final line, output exactly one metadata tag and nothing after it:
 <<META {"stress": <integer 0-100>, "observation": "<short third-person non-verbal cue, e.g. 'Julian fidgets with his cufflink'>", "tell": "<2 sentences in the voice of Patrick Jane, the Mentalist, explaining what that cue truly reveals about the suspect's hidden state or lie>", "jane": "<only for a cold read, otherwise omit>"}>>
 Stress rules: start from ${stress}. Vague or polite questions: -5 to +3. Aggressive pressing: +5 to +12. Accurate questions touching the hidden truth or presented evidence that threatens the secret: +10 to +25. Irrelevant evidence lets them relax: -3 to -8.`;
 
-  const runId = createRunIdFetch(requestRunId(request));
-  const provider = createOpenAI({
-    baseURL: "https://ai.gateway.lovable.dev/v1",
-    apiKey,
-    headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    fetch: runId.fetch,
-  });
-  const result = streamText({
-    model: provider.responses("openai/gpt-6-astra"),
-    system,
-    messages: await convertToModelMessages(payload.messages),
-    abortSignal: request.signal,
-    providerOptions: { openai: { forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
-  });
-  const response = result.toUIMessageStreamResponse({ originalMessages: payload.messages, sendReasoning: false });
-  return attachRunId(response, runId);
+  try {
+    const runId = request.headers.get("X-Lovable-AIG-Run-ID");
+    const result = await streamResponse({
+      model: "openai/gpt-6-astra",
+      instructions: system,
+      input: dialogueHistory(payload.messages),
+      reasoning: { effort: "low", summary: "auto" },
+      include: ["reasoning.encrypted_content"],
+    }, { signal: request.signal, ...(runId ? { runId } : {}) });
+    const stream = createUIMessageStream({
+      originalMessages: payload.messages,
+      execute: async ({ writer }) => {
+        const id = "suspect-reply";
+        let started = false;
+        for await (const event of result) {
+          if (event.type === "response.output_text.delta") {
+            if (!started) { writer.write({ type: "text-start", id }); started = true; }
+            writer.write({ type: "text-delta", id, delta: event.delta });
+          }
+          if (event.type === "response.refusal.delta") throw new Error(event.delta || "The conversation request was declined.");
+          if (event.type === "response.incomplete") throw new Error("The reply was interrupted. Your conversation is saved.");
+        }
+        if (!started) throw new Error("No reply was returned. Your conversation is saved.");
+        writer.write({ type: "text-end", id });
+        writer.write({ type: "finish", finishReason: "stop" });
+      },
+      onError: (error) => {
+        if (error instanceof GatewayError) {
+          console.error("Interrogation service error", error.toJSON());
+          return error.message;
+        }
+        console.error("Interrogation stream error", error instanceof Error ? error.message : "Unknown stream failure");
+        return "The reply was interrupted. Your conversation is saved. Please try again when the connection returns.";
+      },
+    });
+    const headers = new Headers();
+    if (result.runId) { headers.set("X-Lovable-AIG-Run-ID", result.runId); headers.set("Access-Control-Expose-Headers", "X-Lovable-AIG-Run-ID"); }
+    return createUIMessageStreamResponse({ stream, headers });
+  } catch (error) {
+    if (request.signal.aborted) return new Response(null, { status: 499 });
+    if (error instanceof GatewayError) {
+      console.error("Interrogation service error", error.toJSON());
+      return Response.json({ message: error.message }, { status: error.httpStatus ?? 503 });
+    }
+    console.error("Interrogation request error", error instanceof Error ? error.message : "Unknown request failure");
+    return Response.json({ message: "The conversation could not start. Your case progress is saved." }, { status: 500 });
+  }
 }
